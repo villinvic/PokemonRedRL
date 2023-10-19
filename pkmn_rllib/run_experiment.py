@@ -10,7 +10,7 @@ from pkmn_rllib.rllib.vmpo.PokemonBaseModel import PokemonBaseModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 256
+run_steps = 2048
 
 sess_path = f'session_{str(uuid.uuid4())[:8]}'
 
@@ -63,10 +63,10 @@ config = VmpoConfig().training(
         "fcnet_size": 64,
     }
 ).rollouts(
-    num_rollout_workers=4,
+    num_rollout_workers=120,
     sample_async=True,
     create_env_on_local_worker=False,
-    rollout_fragment_length=run_steps,
+    rollout_fragment_length=256,
     batch_mode="truncate_episodes"
 ).callbacks(PokemonCallbacks
 ).environment(

@@ -258,7 +258,7 @@ class RedGymEnv(Env):
             )
         else:
             # check for nearest frame and add if current 
-            labels, distances = self.knn_index.knn_query(frame_vec, k = 1)
+            labels, distances = self.knn_index.knn_query(frame_vec, k=1)
             if distances[0] > self.similar_frame_dist:
                 self.knn_index.add_items(
                     frame_vec, np.array([self.knn_index.get_current_count()])
