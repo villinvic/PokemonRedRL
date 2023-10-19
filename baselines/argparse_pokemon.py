@@ -17,13 +17,13 @@ def get_args(usage_string=None, ep_length=None, sess_path=None, headless=True):
     parser.add_argument('--save_final_state', type=bool, default=True, help='Whether to save the final state of the environment')
     parser.add_argument('--early_stop', type=bool, default=False, help='Whether to stop the environment early')
     parser.add_argument('--action_freq', type=int, default=24, help='Frequency of actions')
-    parser.add_argument('--init_state', type=str, default='../has_pokedex_nballs.state', help='Initial state of the environment')
+    parser.add_argument('--init_state', type=str, default='has_pokedex_nballs.state', help='Initial state of the environment')
     parser.add_argument('--max_steps', type=int, default=ep_length, help='Maximum number of steps in the environment')
     parser.add_argument('--print_rewards', type=bool, default=True, help='Whether to print rewards')
-    parser.add_argument('--save_video', type=bool, default=True, help='Whether to save a video of the environment')
+    parser.add_argument('--save_video', type=bool, default=False, help='Whether to save a video of the environment')
     parser.add_argument('--fast_video', type=bool, default=False, help='Whether to save a fast video of the environment')
     parser.add_argument('--session_path', type=str, default=sess_path, help='Path to the session')
-    parser.add_argument('--gb_path', type=str, default='../PokemonRed.gb', help='Path to the gameboy ROM')
+    parser.add_argument('--gb_path', type=str, default='PokemonRed.gb', help='Path to the gameboy ROM')
     parser.add_argument('--debug', type=bool, default=False, help='Whether to run the environment in debug mode')
     parser.add_argument('--sim_frame_dist', type=float, default=2_000_000.0, help='Simulation frame distance')
     args, unknown_args= parser.parse_known_args() # Parses only the known args to fix an issue with argv[1] being used as a save path
@@ -31,7 +31,7 @@ def get_args(usage_string=None, ep_length=None, sess_path=None, headless=True):
 
 def change_env(env_config, args):
     #Changes the environment based on the arguments given a env_config dictionary and args
-    env_config = {
+    env_config.update(**{
         'headless': args.headless,
         'save_final_state': args.save_final_state,
         'early_stop': args.early_stop,
@@ -45,5 +45,5 @@ def change_env(env_config, args):
         'gb_path': args.gb_path,
         'debug': args.debug,
         'sim_frame_dist': args.sim_frame_dist
-    }
+    })
     return env_config

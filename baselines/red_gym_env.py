@@ -20,7 +20,6 @@ from pyboy.utils import WindowEvent
 
 class RedGymEnv(Env):
 
-
     def __init__(
         self, config=None):
 
@@ -30,7 +29,7 @@ class RedGymEnv(Env):
         self.print_rewards = config['print_rewards']
         self.vec_dim = 4320 #1000
         self.headless = config['headless']
-        self.num_elements = 20000 # max
+        self.num_elements = config['knn_elements']
         self.init_state = config['init_state']
         self.act_freq = config['action_freq']
         self.max_steps = config['max_steps']
@@ -102,7 +101,7 @@ class RedGymEnv(Env):
         self.pyboy.set_emulation_speed(0 if config['headless'] else 6)
         self.reset()
 
-    def reset(self, seed=None):
+    def reset(self, options=None, seed=None):
         self.seed = seed
         # restart game, skipping credits
         with open(self.init_state, "rb") as f:
