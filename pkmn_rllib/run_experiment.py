@@ -38,7 +38,7 @@ ModelCatalog.register_custom_model(
     )
 
 num_workers = 120
-rollout_fragment_length = 256
+rollout_fragment_length = 128
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
@@ -55,7 +55,7 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=10.,
     opt_type="rmsprop",
-    train_batch_size=num_workers*256,
+    train_batch_size=num_workers*rollout_fragment_length,
     gamma=0.993,
     model={
         "custom_model": "pokemon_base_model",
@@ -69,7 +69,7 @@ config = VmpoConfig().training(
     num_rollout_workers=num_workers,
     sample_async=True,
     create_env_on_local_worker=False,
-    rollout_fragment_length=256,
+    rollout_fragment_length=rollout_fragment_length,
     batch_mode="truncate_episodes"
 ).callbacks(PokemonCallbacks
 ).environment(

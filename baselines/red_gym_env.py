@@ -268,7 +268,7 @@ class RedGymEnv(Env):
             labels, distances = self.knn_index.knn_query(frame_vec, k=1)
             if distances[0] > self.similar_frame_dist:
                 self.knn_index.add_items(
-                    frame_vec, np.array([self.knn_index.get_current_count()])
+                    frame_vec, np.array([self.knn_index.get_current_count() % self.num_elements])
                 )
                 self.distinct_frames_observed += 1
 
