@@ -1,1 +1,1 @@
-sudo apt install -y libsdl2-dev ffmpeg tmux htop zip
+sudo apt install libsdl2-dev ffmpeg

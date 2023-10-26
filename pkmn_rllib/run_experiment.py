@@ -10,7 +10,7 @@ from pkmn_rllib.rllib.vmpo.PokemonBaseModel import PokemonBaseModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 2048
+run_steps = 16384
 
 sess_path = f'session_{str(uuid.uuid4())[:8]}'
 
@@ -37,6 +37,9 @@ ModelCatalog.register_custom_model(
         PokemonBaseModel,
     )
 
+num_workers = 120
+rollout_fragment_length = 256
+
 config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=1e-2,
@@ -52,8 +55,8 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=10.,
     opt_type="rmsprop",
-    train_batch_size=run_steps*4,
-    gamma=0.99,
+    train_batch_size=num_workers*256,
+    gamma=0.993,
     model={
         "custom_model": "pokemon_base_model",
         "conv_filters": [
@@ -63,7 +66,7 @@ config = VmpoConfig().training(
         "fcnet_size": 64,
     }
 ).rollouts(
-    num_rollout_workers=120,
+    num_rollout_workers=num_workers,
     sample_async=True,
     create_env_on_local_worker=False,
     rollout_fragment_length=256,

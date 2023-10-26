@@ -35,7 +35,7 @@ class PokemonCallbacks(
         if hasattr(episode, "custom_metrics"):
 
             episode.custom_metrics.update(
-                knn_explore=sub_inv.base_explore,
+                distinct_frames_observed=sub_inv.distinct_frames_observed,
                 maximum_opponent_level=sub_inv.max_opponent_level,
                 event_rewards=sub_inv.max_event_rew,
                 level_reward=sub_inv.max_level_rew,

@@ -117,6 +117,7 @@ class RedGymEnv(Env):
             dtype=np.uint8)
 
         self.agent_stats = []
+        self.distinct_frames_observed = 0
         
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
@@ -246,16 +247,22 @@ class RedGymEnv(Env):
 
     def update_frame_knn_index(self, frame_vec):
         
-        if self.get_levels_sum() >= 22 and not self.levels_satisfied:
-            self.levels_satisfied = True
-            self.base_explore = self.knn_index.get_current_count()
-            self.init_knn()
+        # if self.get_levels_sum() >= 22 and not self.levels_satisfied:
+        #     self.levels_satisfied = True
+        #     self.base_explore = self.knn_index.get_current_count()
+        #     self.init_knn()
+
+        if len(self.agent_stats) >= 2:
+            # Event appened
+            if self.agent_stats[-1]["event"] != self.agent_stats[-2]["event"]:
+                self.init_knn()
 
         if self.knn_index.get_current_count() == 0:
             # if index is empty add current frame
             self.knn_index.add_items(
                 frame_vec, np.array([self.knn_index.get_current_count()])
             )
+            self.distinct_frames_observed += 1
         else:
             # check for nearest frame and add if current 
             labels, distances = self.knn_index.knn_query(frame_vec, k=1)
@@ -263,6 +270,7 @@ class RedGymEnv(Env):
                 self.knn_index.add_items(
                     frame_vec, np.array([self.knn_index.get_current_count()])
                 )
+                self.distinct_frames_observed += 1
 
     def update_reward(self):
         # compute reward

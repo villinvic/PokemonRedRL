@@ -25,7 +25,6 @@ from pyboy.utils import WindowEvent
 
 class RedGymEnv(gym.Env):
 
-
     def __init__(
         self, config=None):
 
