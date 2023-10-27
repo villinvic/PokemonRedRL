@@ -53,6 +53,7 @@ if __name__ == '__main__':
         disable_input=False,
         window_type='headless',
         hide_window=True,
+        disable_renderer=True
     )
 
     screen = console.botsupport_manager().screen()
@@ -64,7 +65,7 @@ if __name__ == '__main__':
 
     while True:
         console.tick()
-
+        print(screen.screen_ndarray())
         print(
             read_party_ptypes(console),
             read_party_health(console),

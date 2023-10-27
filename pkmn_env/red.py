@@ -240,7 +240,9 @@ class PkmnRedEnv(Env):
             disable_input=False,
             window_type='headless' if config['headless'] else 'SDL2',
             hide_window='--quiet' in sys.argv,
+            disable_renderer=not (self.save_video or self.fast_video)
         )
+
 
         self.screen = self.pyboy.botsupport_manager().screen()
         self.pyboy.set_emulation_speed(0 if config['headless'] else 6)
