@@ -240,7 +240,7 @@ class PkmnRedEnv(Env):
             disable_input=False,
             window_type='headless' if config['headless'] else 'SDL2',
             hide_window='--quiet' in sys.argv,
-            disable_renderer=not (self.save_video or self.fast_video)
+            disable_renderer=False #not (self.save_video or self.fast_video)
         )
 
 
