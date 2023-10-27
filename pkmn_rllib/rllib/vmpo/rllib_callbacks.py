@@ -39,6 +39,10 @@ class PokemonCallbacks(
             )
 
             episode.custom_metrics.update(
+                distinct_frames_observed=sub_env.distinct_frames_observed
+            )
+
+            episode.custom_metrics.update(
                 **{metric: sum(sub_env.game_stats[metric]) for metric in sub_env.game_stats if "reward" in metric}
             )
 

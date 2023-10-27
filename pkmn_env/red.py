@@ -181,7 +181,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=PkmnRedEnv.MONEY,
-                scale=1e-4
+                scale=5e-6
             ),
             VariableGetter(
                 name=PkmnRedEnv.SEEN_POKEMONS,
@@ -365,7 +365,6 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         total_experience = sum(party_experience)
-        self.maximum_experience_in_party_so_far = np.maximum(total_experience, self.maximum_experience_in_party_so_far)
         self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE].append(party_experience)
         self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE].append(sum(party_experience))
         badges = self.read_badges()
@@ -399,6 +398,10 @@ class PkmnRedEnv(Env):
         reward = self.get_game_state_reward(obs)
         self.episode_reward += reward
 
+        self.maximum_experience_in_party_so_far = np.maximum(
+            self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1],
+            self.maximum_experience_in_party_so_far
+        )
 
         done = self.step_count > self.max_steps_noised
         if done:
@@ -451,7 +454,7 @@ class PkmnRedEnv(Env):
         if self.save_video:
             self.full_frame_writer.close()
 
-        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAPS_VISITED])))
+        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAP_ID])))
 
     def get_game_state_reward(self, obs):
         """
@@ -475,8 +478,8 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
                 ),
                 PkmnRedEnv.TOTAL_EXPERIENCE: (
-                    np.maximum(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1] - self.maximum_experience_in_party_so_far,
-                               0.)
+                    np.cbrt(np.maximum(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1] - self.maximum_experience_in_party_so_far,
+                               0.))
                 ),
                 PkmnRedEnv.SEEN_POKEMONS : (
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
