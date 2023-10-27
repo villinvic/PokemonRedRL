@@ -98,7 +98,7 @@ stopping_config = {
         }
 
 run_config = air.RunConfig(
-    name="initial",
+    name="v1.2",
     local_dir="rllib_runs",
     stop=stopping_config,
     checkpoint_config=ckpt_config,
