@@ -103,6 +103,7 @@ class PkmnRedEnv(Env):
     MONEY = "money"
     PARTY_EXPERIENCE = "party_experience"
     TOTAL_EXPERIENCE = "total_experience"
+    TOTAL_BLACKOUT = "total_blackouts"
     PARTY_LEVELS = "party_levels"
     TOTAL_LEVELS = "total_levels"
     PARTY_HEALTH = "party_health"
@@ -116,7 +117,8 @@ class PkmnRedEnv(Env):
         TOTAL_LEVELS,
         TOTAL_EXPERIENCE,
         SEEN_POKEMONS,
-        CAUGHT_POKEMONS
+        CAUGHT_POKEMONS,
+        TOTAL_BLACKOUT,
     )
 
     def __init__(
@@ -456,6 +458,7 @@ class PkmnRedEnv(Env):
             self.full_frame_writer.close()
 
         self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAP_ID])))
+        self.game_stats[PkmnRedEnv.TOTAL_BLACKOUT].append(sum(self.game_stats[PkmnRedEnv.BLACKOUT]))
 
     def get_game_state_reward(self, obs):
         """
