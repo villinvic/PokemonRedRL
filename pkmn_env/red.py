@@ -429,16 +429,20 @@ class PkmnRedEnv(Env):
             self.knn_index.add_items(
                 frame_vector, np.array([self.knn_index.get_current_count()])
             )
-            self.distinct_frames_observed += 1
+            self.distinct_frames_observed += 0
         else:
-            # check for nearest frame and add if current
+
             labels, distances = self.knn_index.knn_query(frame_vector, k=1)
             distance = distances[0][0]
+
             if distance > self.similar_frame_dist:
+
                 self.knn_index.add_items(
                     frame_vector, np.array([self.knn_index.get_current_count() % self.num_elements])
                 )
                 self.distinct_frames_observed += 1
+
+                print("HELLLOOOO")
 
                 return 1. #np.minimum(distance, self.similar_frame_dist)
 
