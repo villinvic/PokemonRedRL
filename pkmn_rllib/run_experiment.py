@@ -60,7 +60,7 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=10.,
     opt_type="rmsprop",
-    train_batch_size=num_workers*rollout_fragment_length,
+    train_batch_size=8192,
     gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",
