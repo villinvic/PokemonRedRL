@@ -21,7 +21,7 @@ env_config = {
                 'headless': True, 'save_final_state': True, 'early_stop': False,
                 'action_freq': 24, 'init_state': 'has_pokedex_nballs.state', 'max_steps': run_steps,
                 'print_rewards': False, 'save_video': False, 'session_path': sess_path,
-                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 50_000_000.,
+                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 100_000_000.,
                 'knn_elements': 1000,
             }
 

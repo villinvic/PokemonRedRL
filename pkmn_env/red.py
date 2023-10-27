@@ -375,7 +375,11 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.PARTY_HEALTH].append(party_health)
-        self.game_stats[PkmnRedEnv.BLACKOUT].append(int(sum(party_health) == 0))
+        self.game_stats[PkmnRedEnv.BLACKOUT].append(
+            int(sum(party_health) == 0)
+            and
+            (len(self.game_stats[PkmnRedEnv.BLACKOUT]) == 0 or self.game_stats[PkmnRedEnv.BLACKOUT][-1] == 0)
+        )
         self.game_stats[PkmnRedEnv.MAP_ID].append(self.read_map_id())
 
         idx = 0
@@ -446,7 +450,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return np.minimum(distance, self.similar_frame_dist)
+                return np.minimum(distance-self.similar_frame_dist, self.similar_frame_dist)
 
         return 0.
 
@@ -482,8 +486,8 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
                 ),
                 PkmnRedEnv.TOTAL_EXPERIENCE: (
-                    np.cbrt(np.maximum(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1] - self.maximum_experience_in_party_so_far,
-                               0.))
+                    np.maximum(np.cbrt(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1]) - np.cbrt(self.maximum_experience_in_party_so_far),
+                               0.)
                 ),
                 PkmnRedEnv.SEEN_POKEMONS : (
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
