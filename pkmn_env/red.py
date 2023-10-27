@@ -217,7 +217,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT         :   0.,
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   1.,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   10.,
             PkmnRedEnv.BADGE_SUM        :   100,
 
             # Additional
@@ -487,8 +487,8 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
                 ),
                 PkmnRedEnv.TOTAL_EXPERIENCE: (
-                    np.cbrt(np.maximum(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1] - self.maximum_experience_in_party_so_far,
-                               0.))
+                    np.maximum(np.cbrt(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1]) - np.cbrt(self.maximum_experience_in_party_so_far),
+                               0.)
                 ),
                 PkmnRedEnv.SEEN_POKEMONS : (
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
