@@ -486,13 +486,13 @@ class PkmnRedEnv(Env):
                 )
             })
 
+        total_reward = 0
         for reward_name, reward in rewards.items():
-            self.game_stats["reward_"+reward_name].append(reward)
+            scaled_reward = reward * self.reward_function_config[reward_name]
+            self.game_stats["reward_"+reward_name].append(scaled_reward)
+            total_reward += scaled_reward
 
-        return sum([
-            reward * self.reward_function_config[reward_name]
-            for reward_name, reward in rewards.items()
-        ])
+        return total_reward
 
     def save_screenshot(self, folder, name):
         ss_dir = self.s_path / Path(folder)
