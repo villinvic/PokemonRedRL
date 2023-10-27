@@ -9,7 +9,7 @@ from ray.rllib.utils.typing import AgentID, PolicyID
 
 import numpy as np
 
-from baselines.red_gym_env import RedGymEnv
+from pkmn_env.red import PkmnRedEnv
 
 
 class PokemonCallbacks(
@@ -30,22 +30,15 @@ class PokemonCallbacks(
         **kwargs,
     ) -> None:
 
-        sub_inv: RedGymEnv = base_env.get_sub_environments()[env_index]
+        sub_env: PkmnRedEnv = base_env.get_sub_environments()[env_index]
 
         if hasattr(episode, "custom_metrics"):
 
             episode.custom_metrics.update(
-                distinct_frames_observed=sub_inv.distinct_frames_observed,
-                maximum_opponent_level=sub_inv.max_opponent_level,
-                event_rewards=sub_inv.max_event_rew,
-                level_reward=sub_inv.max_level_rew,
-                total_levels=sub_inv.get_levels_sum(),
-                total_heatlh=sub_inv.last_health,
-                healing_rewards=sub_inv.total_healing_rew,
-                blackouts=sub_inv.died_count,
-                exploration=sub_inv.progress_reward["explore"],
-                badges=sub_inv.get_badges(),
-                pokemon_counts=sub_inv.read_m(0xD163)
+                **{metric: sub_env.game_stats[metric][-1] for metric in sub_env.LOGGABLE_VALUES}
             )
 
+            episode.custom_metrics.update(
+                **{metric: sum(sub_env.game_stats[metric]) for metric in sub_env.game_stats if "reward" in metric}
+            )
 

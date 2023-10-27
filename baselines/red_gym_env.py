@@ -18,6 +18,18 @@ import pandas as pd
 from gymnasium import Env, spaces
 from pyboy.utils import WindowEvent
 
+# TODO: - rewrite code
+#       - make observation as dict
+#           possible additional observations:
+#               - pos_x and pos_y
+#               - money
+#               - pokemon levels
+#               - events
+#               - ... maybe do not add too much for now
+#       - try reducing the size of image, change downsampling method, grayscale, no event in image
+
+
+
 class RedGymEnv(Env):
 
     def __init__(
@@ -141,6 +153,7 @@ class RedGymEnv(Env):
         self.progress_reward = self.get_game_state_reward()
         self.total_reward = sum([val for _, val in self.progress_reward.items()])
         self.reset_count += 1
+        self.max_steps_noised = self.max_steps + np.random.randint(-256, 256)
         return self.render(), {}
     
     def init_knn(self):
@@ -254,7 +267,11 @@ class RedGymEnv(Env):
 
         if len(self.agent_stats) >= 2:
             # Event appened
-            if self.agent_stats[-1]["event"] != self.agent_stats[-2]["event"]:
+            if (
+                    self.agent_stats[-1]["event"] != self.agent_stats[-2]["event"]
+                    or
+                    self.agent_stats[-1]["badges"] != self.agent_stats[-2]["badges"]
+            ):
                 self.init_knn()
 
         if self.knn_index.get_current_count() == 0:
@@ -338,7 +355,7 @@ class RedGymEnv(Env):
             if self.step_count > 128 and self.recent_memory.sum() < (255 * 1):
                 done = True
         else:
-            done = self.step_count >= self.max_steps
+            done = self.step_count >= self.max_steps_noised
         #done = self.read_hp_fraction() == 0
         return done
 
@@ -348,7 +365,7 @@ class RedGymEnv(Env):
             for key, val in self.progress_reward.items():
                 prog_string += f' {key}: {val:5.2f}'
             prog_string += f' sum: {self.total_reward:5.2f}'
-            print(f'\r{prog_string}', end='', flush=True)
+            #print(f'\r{prog_string}', end='', flush=True)
         
         if self.step_count % 50 == 0:
             plt.imsave(
@@ -356,7 +373,7 @@ class RedGymEnv(Env):
                 self.render(reduce_res=False))
 
         if self.print_rewards and done:
-            print('', flush=True)
+            #print('', flush=True)
             if self.save_final_state:
                 fs_path = self.s_path / Path('final_states')
                 fs_path.mkdir(exist_ok=True)

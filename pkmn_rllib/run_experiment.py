@@ -1,12 +1,13 @@
 import uuid
 from baselines.argparse_pokemon import get_args, change_env
-from baselines.red_gym_env import RedGymEnv
 
 from ray.rllib.models import ModelCatalog
 from ray.tune.registry import register_env
 from ray import air, tune
 
-from pkmn_rllib.rllib.vmpo.PokemonBaseModel import PokemonBaseModel
+from pkmn_env.red import PkmnRedEnv
+from pkmn_rllib.rllib.models.PokemonBaseModel import PokemonBaseModel
+from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
@@ -17,24 +18,28 @@ sess_path = f'session_{str(uuid.uuid4())[:8]}'
 args = get_args('run_baseline.py', ep_length=run_steps, sess_path=sess_path)
 
 env_config = {
-                'headless': True, 'save_final_state': False, 'early_stop': False,
+                'headless': True, 'save_final_state': True, 'early_stop': False,
                 'action_freq': 24, 'init_state': 'has_pokedex_nballs.state', 'max_steps': run_steps,
                 'print_rewards': False, 'save_video': False, 'session_path': sess_path,
                 'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 2_000_000.0,
-                'knn_elements': 300,
+                'knn_elements': 1000,
             }
 
 env_config = change_env(env_config, args)
 
-
 def make_env(env_config_):
-    return RedGymEnv(config=env_config_)
+    return PkmnRedEnv(config=env_config_)
 
 register_env("PokemonRed", make_env)
 
 ModelCatalog.register_custom_model(
         "pokemon_base_model",
         PokemonBaseModel,
+    )
+
+ModelCatalog.register_custom_model(
+        "pokemon_lstm_model",
+        PokemonLstmModel,
     )
 
 num_workers = 120
@@ -58,12 +63,13 @@ config = VmpoConfig().training(
     train_batch_size=num_workers*rollout_fragment_length,
     gamma=0.993,
     model={
-        "custom_model": "pokemon_base_model",
+        "custom_model": "pokemon_lstm_model",
         "conv_filters": [
             [16, [8, 8], 4],
             [32, [4, 4], 2],
         ],
         "fcnet_size": 64,
+        "lstm_size": 128,
     }
 ).rollouts(
     num_rollout_workers=num_workers,

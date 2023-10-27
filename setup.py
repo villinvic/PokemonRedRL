@@ -30,6 +30,7 @@ setup(
         "einops==0.6.1",
         "hnswlib==0.7.0",
         "mediapy @ git+https://github.com/PWhiddy/mediapy.git@45101800d4f6adeffe814cad93de1db67c1bd614"
+        ""
     ],
 
     packages=["pkmn_rllib"]
