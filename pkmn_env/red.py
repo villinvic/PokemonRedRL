@@ -214,8 +214,8 @@ class PkmnRedEnv(Env):
 
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT         :   0.,
-            PkmnRedEnv.SEEN_POKEMONS    :   0.3,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   0.3,
+            PkmnRedEnv.SEEN_POKEMONS    :   0.5,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   0.5,
             PkmnRedEnv.BADGE_SUM        :   100,
 
             # Additional
@@ -320,7 +320,7 @@ class PkmnRedEnv(Env):
             self.full_frame_writer = media.VideoWriter(base_dir / full_name, (144, 160), fps=60)
             self.full_frame_writer.__enter__()
 
-        noise = int(0.2 * self.max_steps)
+        noise = int(0.5 * self.max_steps)
         self.max_steps_noised = self.max_steps + np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
