@@ -220,9 +220,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            # 27816568.
-
-            "novelty"                   :   1e-10
+            "novelty"                   :   1e-3 / (self.similar_frame_dist)
 
         }
 
@@ -364,7 +362,6 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.PARTY_LEVELS].append(party_levels)
         self.game_stats[PkmnRedEnv.TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
-        total_experience = sum(party_experience)
         self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE].append(party_experience)
         self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE].append(sum(party_experience))
         badges = self.read_badges()
@@ -436,14 +433,16 @@ class PkmnRedEnv(Env):
         else:
             # check for nearest frame and add if current
             labels, distances = self.knn_index.knn_query(frame_vector, k=1)
-            if distances[0] > self.similar_frame_dist:
+            distance = distances[0][0]
+            if distance > self.similar_frame_dist:
                 self.knn_index.add_items(
                     frame_vector, np.array([self.knn_index.get_current_count() % self.num_elements])
                 )
                 self.distinct_frames_observed += 1
 
+                print(distance-self.similar_frame_dist)
 
-                return distances[0] - self.similar_frame_dist
+                return np.maximum(distance, self.similar_frame_dist)
 
         return 0.
 

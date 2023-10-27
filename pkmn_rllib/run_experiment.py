@@ -21,7 +21,7 @@ env_config = {
                 'headless': True, 'save_final_state': True, 'early_stop': False,
                 'action_freq': 24, 'init_state': 'has_pokedex_nballs.state', 'max_steps': run_steps,
                 'print_rewards': False, 'save_video': False, 'session_path': sess_path,
-                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 2_000_000.0,
+                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 10_000_000.,
                 'knn_elements': 1000,
             }
 
@@ -42,7 +42,7 @@ ModelCatalog.register_custom_model(
         PokemonLstmModel,
     )
 
-num_workers = 120
+num_workers = 1
 rollout_fragment_length = 128
 
 config = VmpoConfig().training(
