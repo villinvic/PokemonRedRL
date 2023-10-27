@@ -13,7 +13,7 @@ from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
 run_steps = 512 * 4 #16384
 
-sess_path = f'session_{str(uuid.uuid4())[:8]}'
+sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
 args = get_args('run_baseline.py', ep_length=run_steps, sess_path=sess_path)
 
@@ -61,7 +61,7 @@ config = VmpoConfig().training(
     grad_clip=10.,
     opt_type="rmsprop",
     train_batch_size=num_workers*rollout_fragment_length,
-    gamma=0.993,
+    gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [

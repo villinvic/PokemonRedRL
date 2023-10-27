@@ -104,7 +104,7 @@ class PkmnRedEnv(Env):
     PARTY_EXPERIENCE = "party_experience"
     TOTAL_EXPERIENCE = "total_experience"
     PARTY_LEVELS = "party_levels"
-    TOTAL_LEVELS = "total_experience"
+    TOTAL_LEVELS = "total_levels"
     PARTY_HEALTH = "party_health"
     SEEN_POKEMONS = "seen_pokemons"
     CAUGHT_POKEMONS = "caught_pokemons"
@@ -214,13 +214,13 @@ class PkmnRedEnv(Env):
 
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT         :   0.,
-            PkmnRedEnv.SEEN_POKEMONS    :   0.1,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   0.1,
+            PkmnRedEnv.SEEN_POKEMONS    :   0.3,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   0.3,
             PkmnRedEnv.BADGE_SUM        :   100,
 
             # Additional
 
-            "novelty"                   :   1e-2 / (self.similar_frame_dist)
+            "novelty"                   :   1e-3 / (self.similar_frame_dist)
 
         }
 
