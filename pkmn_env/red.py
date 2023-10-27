@@ -222,7 +222,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   1e-2 / (self.similar_frame_dist)
+            "novelty"                   :   1e-3 / (self.similar_frame_dist)
 
         }
 
@@ -374,12 +374,13 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
         party_health = self.read_party_health()
-        self.game_stats[PkmnRedEnv.PARTY_HEALTH].append(party_health)
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
             int(sum(party_health) == 0)
             and
-            (len(self.game_stats[PkmnRedEnv.BLACKOUT]) == 0 or self.game_stats[PkmnRedEnv.BLACKOUT][-1] == 0)
+            (len(self.game_stats[PkmnRedEnv.PARTY_HEALTH]) == 0 or sum(self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1]) > 0)
         )
+        self.game_stats[PkmnRedEnv.PARTY_HEALTH].append(party_health)
+
         self.game_stats[PkmnRedEnv.MAP_ID].append(self.read_map_id())
 
         idx = 0
