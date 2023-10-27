@@ -220,7 +220,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   1e-3 #/ (self.similar_frame_dist)
+            "novelty"                   :   1e-2 / (self.similar_frame_dist)
 
         }
 
@@ -442,7 +442,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return 1. #np.minimum(distance, self.similar_frame_dist)
+                return np.minimum(distance, self.similar_frame_dist)
 
         return 0.
 
