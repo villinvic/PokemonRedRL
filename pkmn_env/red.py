@@ -442,8 +442,6 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                print("HELLLOOOO")
-
                 return 1. #np.minimum(distance, self.similar_frame_dist)
 
         return 0.
@@ -473,7 +471,7 @@ class PkmnRedEnv(Env):
 
         if self.step_count >= 2:
 
-            rewards = {
+            rewards.update(**{
                 PkmnRedEnv.BLACKOUT: -self.game_stats[PkmnRedEnv.BLACKOUT][-1],
                 PkmnRedEnv.BADGE_SUM: (
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
@@ -486,7 +484,7 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 )
-            }
+            })
 
         for reward_name, reward in rewards.items():
             self.game_stats["reward_"+reward_name].append(reward)
