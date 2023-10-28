@@ -451,7 +451,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return np.minimum(distance-self.similar_frame_dist, self.similar_frame_dist)
+                return 1.#np.minimum(distance-self.similar_frame_dist, self.similar_frame_dist)
 
         return 0.
 
