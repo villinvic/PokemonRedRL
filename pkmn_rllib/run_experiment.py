@@ -22,7 +22,7 @@ env_config = {
                 'action_freq': 24, 'init_state': 'has_pokedex_nballs.state', 'max_steps': run_steps,
                 'print_rewards': False, 'save_video': True, 'fast_video': True,
                 'session_path': sess_path,
-                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 27_000_000.,
+                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 29_000_000.,
                 'knn_elements': 1000,
             }
 
