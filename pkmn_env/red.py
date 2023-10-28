@@ -186,7 +186,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=PkmnRedEnv.MONEY,
-                scale=6e-7
+                scale=5e-7
             ),
             VariableGetter(
                 name=PkmnRedEnv.SEEN_POKEMONS,
@@ -194,7 +194,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=PkmnRedEnv.CAUGHT_POKEMONS,
-                scale=0.2
+                scale=0.1
             ),
             VariableGetter(
                 dim=6,
@@ -219,15 +219,15 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT         :   0.,
+            PkmnRedEnv.BLACKOUT         :   -0.1,
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   1.,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   0.5,
             PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   0.1,
+            PkmnRedEnv.MAPS_VISITED     :   0.02,
 
             # Additional
 
-            "novelty"                   :   1e-3 #/ (self.similar_frame_dist)
+            "novelty"                   :   2e-3 #/ (self.similar_frame_dist)
 
 
         }

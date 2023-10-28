@@ -16,8 +16,8 @@ class PokemonLstmModel(TFModelV2):
         # learns to play as one character, against many characters
 
         self.num_outputs = action_space.n
-        self.fcnet_size = model_config.get("fcnet_size", 64)
-        self.lstm_size = model_config.get("lstm_size", 128)
+        self.fcnet_size = model_config.get("fcnet_size")
+        self.lstm_size = model_config.get("lstm_size")
 
 
         super(PokemonLstmModel, self).__init__(
@@ -67,7 +67,7 @@ class PokemonLstmModel(TFModelV2):
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
-            activation="relu",
+            activation="swish",
         )(screen_and_stats_pre_embedding)
 
         # fc2 = tf.keras.layers.Dense(
