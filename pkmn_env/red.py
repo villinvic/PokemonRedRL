@@ -221,13 +221,13 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT         :   0.,
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   10.,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   1.,
             PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   1.,
+            PkmnRedEnv.MAPS_VISITED     :   0.1,
 
             # Additional
 
-            "novelty"                   :   1e-5 #/ (self.similar_frame_dist)
+            "novelty"                   :   1e-3 #/ (self.similar_frame_dist)
 
 
         }
@@ -490,15 +490,19 @@ class PkmnRedEnv(Env):
 
         if self.step_count >= 2:
 
+            # we gain more experience as game moves on:
+            delta_exp = np.maximum(
+                np.cbrt(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1])
+                - np.cbrt(self.maximum_experience_in_party_so_far),
+                0.)
+
+
             rewards.update(**{
                 PkmnRedEnv.BLACKOUT: -self.game_stats[PkmnRedEnv.BLACKOUT][-1],
                 PkmnRedEnv.BADGE_SUM: (
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
                 ),
-                PkmnRedEnv.TOTAL_EXPERIENCE: (
-                    np.maximum(np.cbrt(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1]) - np.cbrt(self.maximum_experience_in_party_so_far),
-                               0.)
-                ),
+                PkmnRedEnv.TOTAL_EXPERIENCE: delta_exp / np.cbrt(self.maximum_experience_in_party_so_far+1),
                 PkmnRedEnv.SEEN_POKEMONS : (
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
