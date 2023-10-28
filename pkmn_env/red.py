@@ -227,7 +227,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   2e-3 #/ (self.similar_frame_dist)
+            "novelty"                   :   1e-3 #/ (self.similar_frame_dist)
 
 
         }
@@ -460,7 +460,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return 1.#np.minimum(distance-self.similar_frame_dist, self.similar_frame_dist)
+                return 1. * self.knn_index.get_current_count()
 
         return 0.
 
@@ -503,7 +503,7 @@ class PkmnRedEnv(Env):
                 )
 
             rewards.update(**{
-                PkmnRedEnv.BLACKOUT: -self.game_stats[PkmnRedEnv.BLACKOUT][-1],
+                PkmnRedEnv.BLACKOUT: self.game_stats[PkmnRedEnv.BLACKOUT][-1],
                 PkmnRedEnv.BADGE_SUM: (
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
                 ),
