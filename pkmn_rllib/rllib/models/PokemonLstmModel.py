@@ -70,18 +70,18 @@ class PokemonLstmModel(TFModelV2):
             activation="relu",
         )(screen_and_stats_pre_embedding)
 
-        fc2 = tf.keras.layers.Dense(
-            self.fcnet_size,
-            name="fc2",
-            activation="relu",
-        )(fc1)
+        # fc2 = tf.keras.layers.Dense(
+        #     self.fcnet_size,
+        #     name="fc2",
+        #     activation="relu",
+        # )(fc1)
 
         state_in_h = tf.keras.layers.Input(shape=(self.lstm_size,), name="h")
         state_in_c = tf.keras.layers.Input(shape=(self.lstm_size,), name="c")
         seq_in = tf.keras.layers.Input(shape=(), name="seq_in", dtype=tf.int32)
 
         lstm_input = tf.keras.layers.Concatenate(axis=-1, name="lstm_input")(
-            [fc2, previous_reward_input, action_one_hot])
+            [fc1, previous_reward_input, action_one_hot])
 
         timed_input = add_time_dimension(
             padded_inputs=lstm_input, seq_lens=seq_in, framework="tf"

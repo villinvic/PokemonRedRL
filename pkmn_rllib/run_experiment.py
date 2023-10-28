@@ -44,7 +44,7 @@ ModelCatalog.register_custom_model(
     )
 
 num_workers = 120
-rollout_fragment_length = 20*10
+rollout_fragment_length = 20*20
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
@@ -55,13 +55,13 @@ config = VmpoConfig().training(
     entropy_coeff=0.,
     learner_queue_size=128,
     lr=8e-4,
-    statistics_lr=5e-2,
+    statistics_lr=5e-1,
     momentum=0.,
     epsilon=1e-5,
     decay=0.99,
-    grad_clip=10.,
+    grad_clip=2.,
     opt_type="rmsprop",
-    train_batch_size=8192*4,
+    train_batch_size=4096,
     gamma=0.998,
     model={
         "custom_model": "pokemon_lstm_model",
