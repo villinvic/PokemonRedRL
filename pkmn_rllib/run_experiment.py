@@ -20,8 +20,9 @@ args = get_args('run_baseline.py', ep_length=run_steps, sess_path=sess_path)
 env_config = {
                 'headless': True, 'save_final_state': True, 'early_stop': False,
                 'action_freq': 24, 'init_state': 'has_pokedex_nballs.state', 'max_steps': run_steps,
-                'print_rewards': False, 'save_video': False, 'session_path': sess_path,
-                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 10_000_000.,
+                'print_rewards': False, 'save_video': True, 'fast_video': True,
+                'session_path': sess_path,
+                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 2_000_000.,
                 'knn_elements': 1000,
             }
 
@@ -43,7 +44,7 @@ ModelCatalog.register_custom_model(
     )
 
 num_workers = 120
-rollout_fragment_length = 64
+rollout_fragment_length = 20*10
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
