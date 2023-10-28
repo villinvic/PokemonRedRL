@@ -3,6 +3,7 @@ from typing import List
 from pyboy.pyboy import PyBoy
 
 
+
 def read_m(console, addr):
     return console.get_memory_value(addr)
 
@@ -17,10 +18,8 @@ def read_triple(console, start_addr):
     )
 
 def read_party_ptypes(console):
-    return [
-        read_m(console, addr)
-        for addr in [0xD164, 0xD165, 0xD166, 0xD167, 0xD168, 0xD169]
-    ]
+
+    return console.get_memory_batch(0xD164, 0xD169)
 
 def read_party_experience(console) -> List:
     return [
@@ -46,6 +45,20 @@ def read_party_health(console) -> List:
         [(0xD16C, 0xD18D), (0xD198, 0xD1B9), (0xD1C4, 0xD1E5), (0xD1F0, 0xD211), (0xD21C, 0xD23D), (0xD248, 0xD269)]
     ]
 
+def read_caught_raw(console) -> int:
+
+    total_caught = [
+        bin(read_m(console, addr)) for addr in range(0xD2F7, 0xD309)
+    ]
+    return total_caught
+
+def read_seen_raw(console) -> int:
+
+    total_seen = [
+        bin(read_m(console, addr)) for addr in range(0xD30A, 0xD31C)
+    ]
+    return total_seen
+
 if __name__ == '__main__':
     console = PyBoy(
         "PokemonRed.gb",
@@ -58,6 +71,7 @@ if __name__ == '__main__':
 
     screen = console.botsupport_manager().screen()
     console.set_emulation_speed(0)
+    #console.get_memory_value("bh")
 
     with open("has_pokedex_nballs.state", "rb") as f:
         console.load_state(f)
@@ -65,10 +79,9 @@ if __name__ == '__main__':
 
     while True:
         console.tick()
-        print(screen.screen_ndarray())
+        #print(screen.screen_ndarray())
         print(
-            read_party_ptypes(console),
-            read_party_health(console),
-            read_party_levels(console),
-            read_party_experience(console))
+            read_caught_raw(console),
+            read_seen_raw(console),
+        )
         input()

@@ -144,7 +144,7 @@ class PkmnRedEnv(Env):
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
         self.video_interval = 256 * self.act_freq
-        self.screen_shape = (72, 80)
+        self.screen_shape = (36, 40) #(72, 80)
         self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
@@ -222,10 +222,12 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
             PkmnRedEnv.TOTAL_EXPERIENCE :   10.,
             PkmnRedEnv.BADGE_SUM        :   100,
+            PkmnRedEnv.MAPS_VISITED     :   1,
 
             # Additional
 
-            "novelty"                   :   4e-3 #/ (self.similar_frame_dist)
+            "novelty"                   :   1e-5 #/ (self.similar_frame_dist)
+
 
         }
 
@@ -384,7 +386,10 @@ class PkmnRedEnv(Env):
         )
         self.game_stats[PkmnRedEnv.PARTY_HEALTH].append(party_health)
 
-        self.game_stats[PkmnRedEnv.MAP_ID].append(self.read_map_id())
+        map_id= self.read_map_id()
+        if len(self.game_stats[PkmnRedEnv.MAP_ID]) == 0 or map_id != self.game_stats[PkmnRedEnv.MAP_ID][-1]:
+            self.game_stats[PkmnRedEnv.MAP_ID].append(self.read_map_id())
+        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAP_ID])))
 
         idx = 0
         for getter in self.observed_stats_config:
@@ -465,7 +470,6 @@ class PkmnRedEnv(Env):
         if self.save_video:
             self.full_frame_writer.close()
 
-        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAP_ID])))
         self.game_stats[PkmnRedEnv.TOTAL_BLACKOUT].append(sum(self.game_stats[PkmnRedEnv.BLACKOUT]))
         self.reset_count += 1
 
@@ -497,6 +501,9 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.SEEN_POKEMONS : (
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
+                ),
+                PkmnRedEnv.MAPS_VISITED: (
+                    self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2]
                 )
             })
 
