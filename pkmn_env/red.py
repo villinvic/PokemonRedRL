@@ -346,8 +346,6 @@ class PkmnRedEnv(Env):
             interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
 
-        print(grayscale_downsampled_screen.shape)
-
         return grayscale_downsampled_screen
 
     def render(self):
