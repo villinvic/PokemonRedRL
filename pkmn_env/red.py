@@ -467,6 +467,7 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAP_ID])))
         self.game_stats[PkmnRedEnv.TOTAL_BLACKOUT].append(sum(self.game_stats[PkmnRedEnv.BLACKOUT]))
+        self.reset_count += 1
 
     def get_game_state_reward(self, obs):
         """
