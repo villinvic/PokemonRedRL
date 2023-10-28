@@ -71,6 +71,7 @@ config = VmpoConfig().training(
         ],
         "fcnet_size": 256,
         "lstm_size": 256,
+        "max_seq_lens": 100,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
