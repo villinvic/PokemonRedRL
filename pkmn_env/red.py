@@ -222,7 +222,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   1e-3 / (self.similar_frame_dist)
+            "novelty"                   :   1e-3 #/ (self.similar_frame_dist)
 
         }
 
@@ -315,7 +315,6 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
-
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
