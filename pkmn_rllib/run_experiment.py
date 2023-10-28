@@ -62,7 +62,7 @@ config = VmpoConfig().training(
     grad_clip=10.,
     opt_type="rmsprop",
     train_batch_size=8192*4,
-    gamma=0.996,
+    gamma=0.997,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
