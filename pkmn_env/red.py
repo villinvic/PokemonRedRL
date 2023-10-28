@@ -401,7 +401,7 @@ class PkmnRedEnv(Env):
 
         assert idx == self.additional_features_shape[0], (idx, self.additional_features_shape[0])
 
-        print(np.max(np.abs(self.observed_stats)))
+        print(self.observed_stats)
 
         return self.observed_stats
 
