@@ -491,18 +491,23 @@ class PkmnRedEnv(Env):
         if self.step_count >= 2:
 
             # we gain more experience as game moves on:
-            delta_exp = np.maximum(
-                np.cbrt(self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1])
-                - np.cbrt(self.maximum_experience_in_party_so_far),
-                0.)
-
+            total_delta_exp = 0
+            for i in range(6):
+                # Can be hacked with pc, let's see :)
+                total_delta_exp += np.maximum(
+                    self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
+                    - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]
+                    , 0.
+                ) / np.maximum(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1][i]**3,
+                               1.
+                )
 
             rewards.update(**{
                 PkmnRedEnv.BLACKOUT: -self.game_stats[PkmnRedEnv.BLACKOUT][-1],
                 PkmnRedEnv.BADGE_SUM: (
                     np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
                 ),
-                PkmnRedEnv.TOTAL_EXPERIENCE: delta_exp / np.cbrt(self.maximum_experience_in_party_so_far+1),
+                PkmnRedEnv.TOTAL_EXPERIENCE: total_delta_exp,
                 PkmnRedEnv.SEEN_POKEMONS : (
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
