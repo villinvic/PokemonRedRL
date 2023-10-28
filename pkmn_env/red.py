@@ -221,8 +221,8 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BLACKOUT         :   0.,
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
             PkmnRedEnv.TOTAL_EXPERIENCE :   10.,
-            PkmnRedEnv.BADGE_SUM        :   100,
-            PkmnRedEnv.MAPS_VISITED     :   1,
+            PkmnRedEnv.BADGE_SUM        :   100.,
+            PkmnRedEnv.MAPS_VISITED     :   1.,
 
             # Additional
 
