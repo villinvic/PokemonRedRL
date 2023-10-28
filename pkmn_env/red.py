@@ -138,6 +138,9 @@ class PkmnRedEnv(Env):
         self.save_video = config['save_video'] and self.worker_index == 1
         self.fast_video = config['fast_video'] and self.worker_index == 1
 
+        if self.save_video :
+            print("RENDERING")
+
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
         self.video_interval = 256 * self.act_freq
