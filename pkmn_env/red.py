@@ -186,7 +186,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=PkmnRedEnv.MONEY,
-                scale=5e-6
+                scale=6e-7
             ),
             VariableGetter(
                 name=PkmnRedEnv.SEEN_POKEMONS,
@@ -202,6 +202,7 @@ class PkmnRedEnv(Env):
             ),
 
             # Needs 1_200_000 exp max to reach level 100
+            # We will need better information that that
             VariableGetter(
                 dim=6,
                 name=PkmnRedEnv.PARTY_EXPERIENCE,
