@@ -92,7 +92,7 @@ config = VmpoConfig().training(
 
 ckpt_config = air.CheckpointConfig(
     num_to_keep=3,
-    checkpoint_frequency=1000,
+    checkpoint_frequency=100,
     checkpoint_at_end=True)
 
 stopping_config = {
