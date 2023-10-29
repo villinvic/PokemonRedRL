@@ -523,7 +523,7 @@ class PkmnRedEnv(Env):
             self.game_stats["reward_"+reward_name].append(scaled_reward)
             total_reward += scaled_reward
 
-        return total_reward
+        return total_reward - 1e5
 
     def save_screenshot(self, folder, name):
         ss_dir = self.s_path / Path(folder)
