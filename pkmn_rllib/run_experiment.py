@@ -107,12 +107,24 @@ run_config = air.RunConfig(
     verbose=0
 )
 
-tuner = tune.Tuner(
-        trainable=Vmpo,
-        param_space=config.to_dict(),
-        run_config=run_config,
-)
+# tuner = tune.Tuner(
+#         trainable=Vmpo,
+#         param_space=config.to_dict(),
+#         run_config=run_config,
+# )
+# tuner.fit()
 
-tuner.fit()
+exp = tune.run(
+        Vmpo,
+        name=run_config.name,
+        config=config.to_dict(),
+        checkpoint_at_end=ckpt_config.checkpoint_at_end,
+        checkpoint_freq=ckpt_config.checkpoint_frequency,
+        keep_checkpoints_num=ckpt_config.checkpoint_at_end,
+        stop=stopping_config,
+        local_dir=run_config.local_dir,
+        restore="checkpoints/ssbm/PPO_ssbm_b0796_00000_0_2023-05-25_17-06-13/checkpoint_003200"
+    )
+
 
 
