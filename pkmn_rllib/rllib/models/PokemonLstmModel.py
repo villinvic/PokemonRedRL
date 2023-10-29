@@ -67,7 +67,7 @@ class PokemonLstmModel(TFModelV2):
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
-            activation="swish",
+            activation="relu",
         )(screen_and_stats_pre_embedding)
 
         # fc2 = tf.keras.layers.Dense(
@@ -81,7 +81,7 @@ class PokemonLstmModel(TFModelV2):
         seq_in = tf.keras.layers.Input(shape=(), name="seq_in", dtype=tf.int32)
 
         lstm_input = tf.keras.layers.Concatenate(axis=-1, name="lstm_input")(
-            [fc1, previous_reward_input, action_one_hot])
+            [fc1, tf.float32(previous_reward_input > 0.), action_one_hot])
 
         timed_input = add_time_dimension(
             padded_inputs=lstm_input, seq_lens=seq_in, framework="tf"
