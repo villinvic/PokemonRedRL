@@ -219,15 +219,15 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT         :   -1.,
+            PkmnRedEnv.BLACKOUT         :   0.,
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   0.5,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   0., # 0.5
             PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   0.02,
+            PkmnRedEnv.MAPS_VISITED     :   0.,
 
             # Additional
 
-            "novelty"                   :   2e-2 #/ (self.similar_frame_dist)
+            "novelty"                   :   1e-3  #/ (self.similar_frame_dist)
 
 
         }
