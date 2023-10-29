@@ -219,7 +219,7 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT         :   -0.1,
+            PkmnRedEnv.BLACKOUT         :   -1.,
             PkmnRedEnv.SEEN_POKEMONS    :   1.,
             PkmnRedEnv.TOTAL_EXPERIENCE :   0.5,
             PkmnRedEnv.BADGE_SUM        :   100.,
@@ -227,7 +227,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   1e-3 #/ (self.similar_frame_dist)
+            "novelty"                   :   2e-2 #/ (self.similar_frame_dist)
 
 
         }
@@ -460,7 +460,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return 1. * self.knn_index.get_current_count()
+                return 1. #* self.knn_index.get_current_count()
 
         return 0.
 
