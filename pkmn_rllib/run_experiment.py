@@ -123,7 +123,7 @@ exp = tune.run(
         keep_checkpoints_num=ckpt_config.checkpoint_at_end,
         stop=stopping_config,
         local_dir=run_config.local_dir,
-        restore="checkpoints/ssbm/PPO_ssbm_b0796_00000_0_2023-05-25_17-06-13/checkpoint_003200"
+        #restore="checkpoints/ssbm/PPO_ssbm_b0796_00000_0_2023-05-25_17-06-13/checkpoint_003200"
     )
 
 
