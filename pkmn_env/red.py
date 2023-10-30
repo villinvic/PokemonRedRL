@@ -228,7 +228,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   2e-3  #/ (self.similar_frame_dist)
+            "novelty"                   :   4e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -474,7 +474,7 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.TOTAL_BLACKOUT].append(sum(self.game_stats[PkmnRedEnv.BLACKOUT]))
         self.reset_count += 1
-        self.max_steps += self.additional_steps_per_episode
+        self.max_steps *= self.additional_steps_per_episode
 
     def get_game_state_reward(self, obs):
         """

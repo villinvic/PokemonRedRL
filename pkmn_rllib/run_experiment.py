@@ -11,7 +11,7 @@ from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 256
+run_steps = 400
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -24,7 +24,7 @@ env_config = {
                 'session_path': sess_path,
                 'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 29_000_000.,
                 'knn_elements': 1000,
-                'additional_steps_per_episode': 4
+                'additional_steps_per_episode': 1.01
             }
 
 env_config = change_env(env_config, args)
@@ -48,14 +48,14 @@ num_workers = 120
 rollout_fragment_length = 20*20
 
 config = VmpoConfig().training(
-    eps_eta=2e-2,
+    eps_eta=1e-2,
     eps_alpha=5e-5,
     alpha=5.,
     target_network_update_freq=100,
     replay_proportion=0.,
     entropy_coeff=0.,
     learner_queue_size=128,
-    lr=8e-4,
+    lr=1e-4,
     statistics_lr=5e-1,
     momentum=0.,
     epsilon=1e-5,
@@ -72,7 +72,7 @@ config = VmpoConfig().training(
         ],
         "fcnet_size": 256,
         "lstm_size": 256,
-        "max_seq_lens": 100,
+        "max_seq_lens": 20,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
