@@ -228,7 +228,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   4e-3  #/ (self.similar_frame_dist)
+            "novelty"                   :   1e-3  #/ (self.similar_frame_dist)
 
 
         }
