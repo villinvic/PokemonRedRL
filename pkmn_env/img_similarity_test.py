@@ -38,5 +38,25 @@ def test():
                 frame_vector, np.array([i])
             )
 
+def test2():
+
+    _, _, images = next(os.walk("image_tests"))
+
+    tested = sorted([image for image in images if "original" in image])
+
+    loaded_images = [cv2.imread("image_tests/" + image, cv2.IMREAD_GRAYSCALE) for image in tested]
+
+    for l in loaded_images:
+        grayscale_downsampled_screen = cv2.resize(
+            l,
+            tuple(reversed((36, 40))),
+            interpolation=cv2.INTER_AREA,
+        )[:, :, np.newaxis]
+
+        cv2.imwrite("tmp.jpeg", grayscale_downsampled_screen)
+        input()
+
+
+
 if __name__ == '__main__':
-    test()
+    test2()

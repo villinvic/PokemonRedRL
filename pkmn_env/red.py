@@ -145,7 +145,7 @@ class PkmnRedEnv(Env):
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
         self.video_interval = 256 * self.act_freq
-        self.screen_shape = (36, 40)
+        self.screen_shape = (40, 48)
         self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
@@ -348,7 +348,7 @@ class PkmnRedEnv(Env):
         grayscale_downsampled_screen = cv2.resize(
             grayscale_screen,
             tuple(reversed(self.screen_shape)),
-            interpolation=cv2.INTER_NEAREST,
+            interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
 
         return grayscale_downsampled_screen
