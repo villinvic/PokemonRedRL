@@ -48,10 +48,10 @@ num_workers = 120
 rollout_fragment_length = 20*20
 
 config = VmpoConfig().training(
-    eps_eta=1e-2,
-    eps_alpha=5e-5,
+    eps_eta=2e-2,
+    eps_alpha=1e-3,
     alpha=5.,
-    target_network_update_freq=100,
+    target_network_update_freq=10,
     replay_proportion=0.,
     entropy_coeff=0.,
     learner_queue_size=128,
@@ -67,11 +67,11 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
-            [32, [8, 8], 4],
-            [64, [4, 4], 2],
+            [16, [4, 4], 2],
+            [32, [2, 2], 1],
         ],
-        "fcnet_size": 256,
-        "lstm_size": 256,
+        "fcnet_size": 128,
+        "lstm_size": 128,
         "max_seq_lens": 20,
     }
 ).rollouts(

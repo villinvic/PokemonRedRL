@@ -145,7 +145,7 @@ class PkmnRedEnv(Env):
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
         self.video_interval = 256 * self.act_freq
-        self.screen_shape = (72, 80)
+        self.screen_shape = (32, 40)
         self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
@@ -161,8 +161,8 @@ class PkmnRedEnv(Env):
             WindowEvent.PRESS_ARROW_UP,
             WindowEvent.PRESS_BUTTON_A,
             WindowEvent.PRESS_BUTTON_B,
-            WindowEvent.PRESS_BUTTON_START,
-            WindowEvent.PASS
+            #WindowEvent.PRESS_BUTTON_START,
+            #WindowEvent.PASS
         ]
 
         self.release_arrow = [
@@ -221,10 +221,10 @@ class PkmnRedEnv(Env):
 
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT         :   0.,
-            PkmnRedEnv.SEEN_POKEMONS    :   1.,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   0., # 0.5
+            PkmnRedEnv.SEEN_POKEMONS    :   0.,
+            PkmnRedEnv.TOTAL_EXPERIENCE :   0.1,  # 0.5
             PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   0.,
+            PkmnRedEnv.MAPS_VISITED     :   0.2,
 
             # Additional
 
@@ -263,6 +263,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.max_steps_noised = 0
         self.episode_reward = 0
+
         self.last_reward_dict = {}
 
         self.full_frame_writer = None
@@ -467,7 +468,7 @@ class PkmnRedEnv(Env):
 
     def on_episode_end(self):
         if self.save_final_state:
-            self.save_screenshot("final_states", f'frame_r{self.episode_reward:.4f}.jpeg')
+            self.save_screenshot("final_states", f'frame_r{self.episode_reward:.4f}_{self.distinct_frames_observed}.jpeg')
 
         if self.save_video:
             self.full_frame_writer.close()
@@ -515,7 +516,8 @@ class PkmnRedEnv(Env):
                                0.)
                 ),
                 PkmnRedEnv.MAPS_VISITED: (
-                    self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2]
+                    (self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
+                    * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1]
                 )
             })
 
