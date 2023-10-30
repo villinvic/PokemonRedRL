@@ -461,7 +461,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return 1. #* self.knn_index.get_current_count()
+                return self.knn_index.get_current_count()
 
         return 0.
 
