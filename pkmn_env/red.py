@@ -137,6 +137,7 @@ class PkmnRedEnv(Env):
         self.max_steps = config['max_steps']
         self.save_video = config['save_video'] and self.worker_index == 1
         self.fast_video = config['fast_video'] and self.worker_index == 1
+        self.additional_steps_per_episode = config['additional_steps_per_episode']
 
         if self.save_video :
             print("RENDERING")
@@ -227,7 +228,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                   :   1e-3  #/ (self.similar_frame_dist)
+            "novelty"                   :   2e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -329,7 +330,7 @@ class PkmnRedEnv(Env):
             self.full_frame_writer = media.VideoWriter(base_dir / full_name, (144, 160), fps=60)
             self.full_frame_writer.__enter__()
 
-        noise = int(0.5 * self.max_steps)
+        noise = int(0.1 * self.max_steps)
         self.max_steps_noised = self.max_steps + np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
@@ -473,6 +474,7 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.TOTAL_BLACKOUT].append(sum(self.game_stats[PkmnRedEnv.BLACKOUT]))
         self.reset_count += 1
+        self.max_steps += self.additional_steps_per_episode
 
     def get_game_state_reward(self, obs):
         """
