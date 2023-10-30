@@ -67,8 +67,8 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
-            [16, [8, 8], 4],
-            [32, [4, 4], 2],
+            [32, [8, 8], 4],
+            [64, [4, 4], 2],
         ],
         "fcnet_size": 256,
         "lstm_size": 256,
