@@ -11,7 +11,7 @@ from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 400
+run_steps = 1600
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
