@@ -256,6 +256,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.max_steps_noised = 0
         self.episode_reward = 0
+        self.visited_maps = set()
 
         self.last_reward_dict = {}
 
@@ -316,6 +317,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
+        self.visited_maps = set()
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
@@ -382,10 +384,11 @@ class PkmnRedEnv(Env):
         )
         self.game_stats[PkmnRedEnv.PARTY_HEALTH].append(party_health)
 
-        map_id= self.read_map_id()
-        if len(self.game_stats[PkmnRedEnv.MAP_ID]) == 0 or map_id != self.game_stats[PkmnRedEnv.MAP_ID][-1]:
-            self.game_stats[PkmnRedEnv.MAP_ID].append(self.read_map_id())
-        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(set(self.game_stats[PkmnRedEnv.MAP_ID])))
+        map_id = self.read_map_id()
+        self.game_stats[PkmnRedEnv.MAP_ID].append(map_id)
+
+        tmp = self.visited_maps | {map_id}
+        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(tmp))
 
         idx = 0
         for getter in self.observed_stats_config:
@@ -508,13 +511,21 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.MAPS_VISITED: 10*int(2 == self.game_stats[PkmnRedEnv.MAP_ID][-1] and
-                                         2 not in self.game_stats[PkmnRedEnv.MAP_ID][:-1])
-                                         + 5 *int(1 == self.game_stats[PkmnRedEnv.MAP_ID][-1] and
-                                         1 not in self.game_stats[PkmnRedEnv.MAP_ID][:-1])
+                PkmnRedEnv.MAPS_VISITED: 10*int(
+                    2 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                    and
+                    2 not in self.visited_maps
+                )
+                                         + 5 *int(
+                    1 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                    and
+                    1 not in self.visited_maps
+                )
                     # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
                     # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
             })
+
+        self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
 
         total_reward = 0
         for reward_name, reward in rewards.items():
