@@ -45,7 +45,7 @@ ModelCatalog.register_custom_model(
     )
 
 num_workers = 120
-rollout_fragment_length = 20
+rollout_fragment_length = 60
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
