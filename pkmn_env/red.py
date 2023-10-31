@@ -509,8 +509,8 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.MAPS_VISITED: (2 == self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] and
-                                         2 not in self.game_stats[PkmnRedEnv.MAPS_VISITED][:-1])
+                PkmnRedEnv.MAPS_VISITED: (2 == self.game_stats[PkmnRedEnv.MAP_ID][-1] and
+                                         2 not in self.game_stats[PkmnRedEnv.MAP_ID][:-1])
                     # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
                     # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
             })
