@@ -11,7 +11,7 @@ from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 400*100
+run_steps = 2048*8
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -24,7 +24,7 @@ env_config = {
                 'session_path': sess_path,
                 'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 29_000_000.,
                 'knn_elements': 1000,
-                'additional_steps_per_episode': 1.01
+                'additional_steps_per_episode': 1
             }
 
 env_config = change_env(env_config, args)
@@ -62,7 +62,7 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=1.,
     opt_type="rmsprop",
-    train_batch_size=400*20,
+    train_batch_size=32768,
     gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",

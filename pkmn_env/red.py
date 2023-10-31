@@ -25,15 +25,9 @@ from pyboy.utils import WindowEvent
 from python_utils.collections import DefaultOrderedDict
 
 
-# TODO: - rewrite code
-#       - make observation as dict
-#           possible additional observations:
-#               - pos_x and pos_y
-#               - money
-#               - pokemon levels
-#               - events
-#               - ... maybe do not add too much for now
-#       - try reducing the size of image, change downsampling method, grayscale, no event in image
+# TODO:
+#       - scale up novelty for each map we visit
+#       - run with stable lstm
 
 
 class VariableGetter:
@@ -224,11 +218,11 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.SEEN_POKEMONS    :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE :   0.1,  # 0.5
             PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   0.2,
+            PkmnRedEnv.MAPS_VISITED     :   10,
 
             # Additional
 
-            "novelty"                   :   1e-3  #/ (self.similar_frame_dist)
+            "novelty"                   :   0.#1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -515,10 +509,10 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.MAPS_VISITED: (
-                    (self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
-                    * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1]
-                )
+                PkmnRedEnv.MAPS_VISITED: (2 == self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] and
+                                         2 not in self.game_stats[PkmnRedEnv.MAPS_VISITED][:-1])
+                    # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
+                    # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
             })
 
         total_reward = 0
