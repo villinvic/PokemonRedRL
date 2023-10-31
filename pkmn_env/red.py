@@ -495,7 +495,7 @@ class PkmnRedEnv(Env):
                     self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
                     - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]
                     , 0.
-                ) / np.maximum(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1][i]**3,
+                ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
                                1.
                 )
 
@@ -509,8 +509,10 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.MAPS_VISITED: (2 == self.game_stats[PkmnRedEnv.MAP_ID][-1] and
+                PkmnRedEnv.MAPS_VISITED: 10*int(2 == self.game_stats[PkmnRedEnv.MAP_ID][-1] and
                                          2 not in self.game_stats[PkmnRedEnv.MAP_ID][:-1])
+                                         + 5 *int(1 == self.game_stats[PkmnRedEnv.MAP_ID][-1] and
+                                         1 not in self.game_stats[PkmnRedEnv.MAP_ID][:-1])
                     # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
                     # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
             })
