@@ -333,12 +333,11 @@ class PkmnRedEnv(Env):
 
     def preprocess_screen(self, screen):
         # don't care about order, image is already in gray
-        grayscale_screen = (
+        grayscale_screen = np.uint8(
                          0.299 * screen[:, :, 0]
                          + 0.587 * screen[:, :, 1]
                          + 0.114 * screen[:, :, 2]
                  )
-
 
         grayscale_downsampled_screen = cv2.resize(
             grayscale_screen,
@@ -346,7 +345,7 @@ class PkmnRedEnv(Env):
             interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
 
-        return grayscale_downsampled_screen
+        return np.uint8(grayscale_downsampled_screen)
 
     def render(self):
         screen = self.screen.screen_ndarray()  # (144, 160, 3)
