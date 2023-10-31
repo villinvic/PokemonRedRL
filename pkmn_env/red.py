@@ -138,7 +138,6 @@ class PkmnRedEnv(Env):
 
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
-        self.video_interval = 256 * self.act_freq
         self.screen_shape = (48, 56)
         self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0

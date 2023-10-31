@@ -45,7 +45,7 @@ class PokemonLstmModel(TFModelV2):
 
         last_layer = screen_input
 
-        for i, (out_size, kernel, stride) in enumerate(filters, 1):
+        for i, (out_size, kernel, stride, padding) in enumerate(filters, 1):
             last_layer = tf.keras.layers.Conv2D(
                 out_size,
                 kernel,
@@ -53,7 +53,7 @@ class PokemonLstmModel(TFModelV2):
                 if isinstance(stride, (list, tuple))
                 else (stride, stride),
                 activation="relu",
-                padding="valid" if i < len(filters) else "valid",
+                padding=padding,
                 data_format="channels_last",
                 name="conv{}".format(i),
             )(last_layer)
