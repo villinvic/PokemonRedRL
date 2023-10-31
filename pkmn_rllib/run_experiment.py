@@ -55,7 +55,7 @@ config = VmpoConfig().training(
     replay_proportion=0.,
     entropy_coeff=0.,
     learner_queue_size=128,
-    lr=1e-4,
+    lr=8e-4,
     statistics_lr=5e-1,
     momentum=0.,
     epsilon=1e-5,
@@ -67,8 +67,8 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
-            [16, [4, 4], 2],
-            [32, [2, 2], 1],
+            [16, [8, 8], 4],
+            [32, [4, 4], 2],
         ],
         "fcnet_size": 128,
         "lstm_size": 128,
