@@ -497,8 +497,8 @@ class PkmnRedEnv(Env):
                     (self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
                     - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i] == 0.)
                     , 0.
-                ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1], 1.)**3,
-                )
+                ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
+                6.)
 
             rewards.update(**{
                 PkmnRedEnv.BLACKOUT: self.game_stats[PkmnRedEnv.BLACKOUT][-1],
