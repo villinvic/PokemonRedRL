@@ -519,6 +519,10 @@ class PkmnRedEnv(Env):
                     1 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
                     and
                     1 not in self.visited_maps
+                ) + 1 *int(
+                    12 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                    and
+                    12 not in self.visited_maps
                 )
                     # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
                     # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
