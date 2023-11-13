@@ -44,7 +44,7 @@ ModelCatalog.register_custom_model(
         PokemonLstmModel,
     )
 
-num_workers = 120
+num_workers = 124
 rollout_fragment_length = 60
 
 config = VmpoConfig().training(
