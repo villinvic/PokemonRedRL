@@ -103,6 +103,7 @@ class PkmnRedEnv(Env):
     PARTY_HEALTH = "party_health"
     SEEN_POKEMONS = "seen_pokemons"
     CAUGHT_POKEMONS = "caught_pokemons"
+    EVENTS_TRIGGERED = "events_triggered"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -113,6 +114,7 @@ class PkmnRedEnv(Env):
         SEEN_POKEMONS,
         CAUGHT_POKEMONS,
         TOTAL_BLACKOUT,
+        EVENTS_TRIGGERED
     )
 
     def __init__(
@@ -218,10 +220,11 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.TOTAL_EXPERIENCE :   2,  # 0.5
             PkmnRedEnv.BADGE_SUM        :   100.,
             PkmnRedEnv.MAPS_VISITED     :   1,
+            PkmnRedEnv.EVENTS_TRIGGERED :   1,
 
             # Additional
 
-            "novelty"                   :   0.#1e-3  #/ (self.similar_frame_dist)
+            "novelty"                   :   0.  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -375,6 +378,8 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.BADGE_SUM].append(sum(badges))
         self.game_stats[PkmnRedEnv.SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
+        events = self.read_events()
+        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(sum(events))
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
             int(sum(party_health) == 0)
@@ -509,20 +514,25 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.MAPS_VISITED: 50*int(
-                    2 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
-                    and
-                    2 not in self.visited_maps
+                PkmnRedEnv.EVENTS_TRIGGERED: self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] * (
+                        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1]
+                        - self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-2]
                 )
-                                         + 25 *int(
-                    1 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
-                    and
-                    1 not in self.visited_maps
-                ) + 1 *int(
-                    12 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
-                    and
-                    12 not in self.visited_maps
-                )
+
+                # PkmnRedEnv.MAPS_VISITED: 50*int(
+                #     2 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                #     and
+                #     2 not in self.visited_maps
+                # )
+                #                          + 25 *int(
+                #     1 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                #     and
+                #     1 not in self.visited_maps
+                # ) + 1 *int(
+                #     12 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                #     and
+                #     12 not in self.visited_maps
+                # )
                     # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
                     # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
             })
@@ -637,6 +647,9 @@ class PkmnRedEnv(Env):
         binary = self.read_m(0xD356).bit_count()
 
         return [int(i < binary) for i in range(8)]
+
+    def read_events(self) -> List:
+        return [self.read_m(i).bit_count() for i in range(0xD747, 0xD886)]
 
 
 
