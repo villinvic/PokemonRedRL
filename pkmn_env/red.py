@@ -96,6 +96,7 @@ class PkmnRedEnv(Env):
     BADGES = "badges"
     BADGE_SUM = "badge_sum"
     MONEY = "money"
+    COORDINATES = "coordinates"
     PARTY_EXPERIENCE = "party_experience"
     TOTAL_EXPERIENCE = "total_experience"
     TOTAL_BLACKOUT = "total_blackouts"
@@ -231,6 +232,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
+            PkmnRedEnv.COORDINATES              :   -1.,
 
             # Additional
 
@@ -342,7 +344,7 @@ class PkmnRedEnv(Env):
 
         noise = int(0.1 * self.max_steps)
         self.max_steps_noised = self.max_steps + (
-            (int(0.3 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
+            (int(0.1 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
         ) # np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
@@ -407,6 +409,10 @@ class PkmnRedEnv(Env):
 
         tmp = self.visited_maps | {map_id}
         self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(tmp))
+
+        pos = self.read_pos()
+
+        self.game_stats[PkmnRedEnv.COORDINATES] = pos + [map_id]
 
         idx = 0
         for getter in self.observed_stats_config:
@@ -550,6 +556,13 @@ class PkmnRedEnv(Env):
                 # )
                 (self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
                 #* self.game_stats[PkmnRedEnv.MAPS_VISITED][-1]
+                ),
+
+                # Punish non-optimized walks
+                PkmnRedEnv.COORDINATES: int(
+                    self.game_stats[PkmnRedEnv.COORDINATES][-1]
+                    in
+                    self.game_stats[PkmnRedEnv.COORDINATES][-5:-1]
                 )
             })
 
@@ -561,7 +574,7 @@ class PkmnRedEnv(Env):
             self.game_stats["reward_"+reward_name].append(scaled_reward)
             total_reward += scaled_reward
 
-        return total_reward - 1e-5
+        return total_reward
 
     def save_screenshot(self, folder, name):
         ss_dir = self.s_path / Path(folder)
@@ -666,6 +679,9 @@ class PkmnRedEnv(Env):
 
     def read_events(self) -> List:
         return [self.read_m(i).bit_count() for i in range(0xD747, 0xD886)]
+
+    def read_pos(self) -> List:
+        return [self.read_m(0xD362), self.read_m(0xD361)]
 
 
 
