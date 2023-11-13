@@ -84,7 +84,7 @@ config = VmpoConfig().training(
 ).environment(
     env="PokemonRed",
     env_config=env_config
-).reporting(min_train_timesteps_per_iteration=20, metrics_episode_collection_timeout_s=2*60
+).reporting(min_train_timesteps_per_iteration=20, metrics_episode_collection_timeout_s=4*60
 ).experimental(_disable_preprocessor_api=True,
 ).resources(num_gpus=1
 ).framework(framework="tf")

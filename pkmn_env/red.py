@@ -332,7 +332,9 @@ class PkmnRedEnv(Env):
             self.full_frame_writer.__enter__()
 
         noise = int(0.1 * self.max_steps)
-        self.max_steps_noised = int(self.max_steps * (1 + (self.worker_index) * (0.1) / (124.))) #+ np.random.randint(-noise, noise)
+        self.max_steps_noised = self.max_steps + (
+            (int(0.1 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
+        ) # np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
 
