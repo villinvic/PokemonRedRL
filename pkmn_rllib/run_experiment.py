@@ -62,7 +62,7 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=1.,
     opt_type="rmsprop",
-    train_batch_size=9000,
+    train_batch_size=10000,
     gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",
@@ -84,7 +84,7 @@ config = VmpoConfig().training(
 ).environment(
     env="PokemonRed",
     env_config=env_config
-).reporting(min_time_s_per_iteration=20,
+).reporting(min_train_timesteps_per_iteration=int(run_steps*num_workers*1.1)
 ).experimental(_disable_preprocessor_api=True,
 ).resources(num_gpus=1
 ).framework(framework="tf")

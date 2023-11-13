@@ -332,7 +332,7 @@ class PkmnRedEnv(Env):
             self.full_frame_writer.__enter__()
 
         noise = int(0.1 * self.max_steps)
-        self.max_steps_noised = self.max_steps #+ np.random.randint(-noise, noise)
+        self.max_steps_noised = int(self.max_steps * (1 + (self.worker_index) * (0.1) / (124.))) #+ np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
 
@@ -422,7 +422,7 @@ class PkmnRedEnv(Env):
             self.maximum_experience_in_party_so_far
         )
 
-        done = self.step_count > self.max_steps_noised
+        done = self.step_count >= self.max_steps_noised
         if done:
             self.on_episode_end()
 
