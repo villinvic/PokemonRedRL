@@ -233,7 +233,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   5.,
-            PkmnRedEnv.COORDINATES              :   - 0.001,
+            PkmnRedEnv.COORDINATES              :   0.001,
 
             # Additional
 
@@ -351,7 +351,7 @@ class PkmnRedEnv(Env):
 
         noise = int(0.1 * self.max_steps)
         self.max_steps_noised = self.max_steps + (
-            (int(0.1 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
+            (int(0.2 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
         ) # np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
@@ -565,11 +565,11 @@ class PkmnRedEnv(Env):
                 #* self.game_stats[PkmnRedEnv.MAPS_VISITED][-1]
                 ),
 
-                # Punish non-optimized walks
+                # reward optimized walks
                 PkmnRedEnv.COORDINATES: int(
                     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
-                    in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-5:-1])
+                    not in
+                    self.game_stats[PkmnRedEnv.COORDINATES][-10:-1])
                     and
                     walked
                 )
