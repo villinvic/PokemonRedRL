@@ -124,7 +124,6 @@ class PkmnRedEnv(Env):
     ):
 
         self.worker_index = 1 if not hasattr(config, "worker_index") else config.worker_index
-        time.sleep(self.worker_index)  # desync workers, adds on training stability
 
         self.debug = config['debug']
         self.s_path = config['session_path']
@@ -267,6 +266,8 @@ class PkmnRedEnv(Env):
 
         self.full_frame_writer = None
 
+        self.inited = False
+
     def init_knn(self):
 
         self.knn_index = hnswlib.Index(space='l2', dim=np.prod(self.screen_shape))
@@ -307,6 +308,10 @@ class PkmnRedEnv(Env):
             self.add_video_frame()
 
     def reset(self, options=None, seed=None):
+
+        if not self.inited:
+            time.sleep(self.worker_index)  # desync workers, adds on training stability
+            self.inited = True
 
         del self.game_stats
 
