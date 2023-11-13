@@ -528,9 +528,9 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.EVENTS_TRIGGERED: (
-                        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1]
-                        - self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-2]
+                PkmnRedEnv.TOTAL_EVENTS_TRIGGERED: (
+                        self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED][-1]
+                        - self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED][-2]
                       #                       * (self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] - 11
                 ),
 
