@@ -249,7 +249,6 @@ class PkmnRedEnv(Env):
             disable_renderer=False #not (self.save_video or self.fast_video)
         )
 
-
         self.screen = self.pyboy.botsupport_manager().screen()
         self.pyboy.set_emulation_speed(0 if config['headless'] else 6)
 
@@ -265,8 +264,6 @@ class PkmnRedEnv(Env):
         self.last_reward_dict = {}
 
         self.full_frame_writer = None
-
-        self.inited = False
 
     def init_knn(self):
 
@@ -308,10 +305,6 @@ class PkmnRedEnv(Env):
             self.add_video_frame()
 
     def reset(self, options=None, seed=None):
-
-        if not self.inited:
-            time.sleep(self.worker_index)  # desync workers, adds on training stability
-            self.inited = True
 
         del self.game_stats
 
