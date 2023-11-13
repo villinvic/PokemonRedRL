@@ -1,4 +1,5 @@
 import sys
+import time
 import uuid
 import os
 from functools import partial
@@ -123,6 +124,7 @@ class PkmnRedEnv(Env):
     ):
 
         self.worker_index = 1 if not hasattr(config, "worker_index") else config.worker_index
+        time.sleep(self.worker_index)  # desync workers, adds on training stability
 
         self.debug = config['debug']
         self.s_path = config['session_path']
