@@ -107,6 +107,7 @@ class PkmnRedEnv(Env):
     CAUGHT_POKEMONS = "caught_pokemons"
     EVENTS_TRIGGERED = "events_triggered"
     TOTAL_EVENTS_TRIGGERED = "total_events_triggered"
+    ORIENTATION = "orientation"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -418,7 +419,7 @@ class PkmnRedEnv(Env):
 
         pos = self.read_pos()
 
-        self.game_stats[PkmnRedEnv.COORDINATES] = pos + [map_id]
+        self.game_stats[PkmnRedEnv.COORDINATES].append(pos + [map_id])
 
         idx = 0
         for getter in self.observed_stats_config:
@@ -566,9 +567,9 @@ class PkmnRedEnv(Env):
 
                 # Punish non-optimized walks
                 PkmnRedEnv.COORDINATES: int(
-                    self.game_stats[PkmnRedEnv.COORDINATES][-1]
+                    (self.game_stats[PkmnRedEnv.COORDINATES][-1]
                     in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-5:-1]
+                    self.game_stats[PkmnRedEnv.COORDINATES][-5:-1])
                     and
                     walked
                 )
@@ -693,6 +694,9 @@ class PkmnRedEnv(Env):
 
     def read_walk_animation(self) -> int:
         return self.read_m(0xC108)
+
+    def read_orientation(self) -> int:
+        return self.read_m(0xC109)
 
 
 
