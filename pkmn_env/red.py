@@ -265,6 +265,8 @@ class PkmnRedEnv(Env):
 
         self.full_frame_writer = None
 
+        self.inited = False
+
     def init_knn(self):
 
         self.knn_index = hnswlib.Index(space='l2', dim=np.prod(self.screen_shape))
@@ -330,7 +332,7 @@ class PkmnRedEnv(Env):
             self.full_frame_writer.__enter__()
 
         noise = int(0.1 * self.max_steps)
-        self.max_steps_noised = self.max_steps + np.random.randint(-noise, noise)
+        self.max_steps_noised = self.max_steps #+ np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
 
@@ -407,6 +409,10 @@ class PkmnRedEnv(Env):
         return self.observed_stats
 
     def step(self, action):
+
+        if not self.inited:
+            time.sleep(self.worker_index)  # desync workers, adds on training stability
+            self.inited = True
 
         self.run_action_on_emulator(action)
         obs = self._get_obs()
