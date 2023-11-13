@@ -105,6 +105,7 @@ class PkmnRedEnv(Env):
     SEEN_POKEMONS = "seen_pokemons"
     CAUGHT_POKEMONS = "caught_pokemons"
     EVENTS_TRIGGERED = "events_triggered"
+    TOTAL_EVENTS_TRIGGERED = "total_events_triggered"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -115,7 +116,7 @@ class PkmnRedEnv(Env):
         SEEN_POKEMONS,
         CAUGHT_POKEMONS,
         TOTAL_BLACKOUT,
-        EVENTS_TRIGGERED
+        TOTAL_EVENTS_TRIGGERED
     )
 
     def __init__(
@@ -206,6 +207,14 @@ class PkmnRedEnv(Env):
                 post_process_fn=np.cbrt,
                 scale=1/np.cbrt(1e6)
             ),
+            VariableGetter(
+                name=PkmnRedEnv.TOTAL_EVENTS_TRIGGERED,
+                scale=0.01 #319
+            ),
+            VariableGetter(
+                name=PkmnRedEnv.MAPS_VISITED,
+                scale=0.05  # 319
+            ),
 
             # VariableGetter(
             #     dim=8,
@@ -216,16 +225,16 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT         :   0.,
-            PkmnRedEnv.SEEN_POKEMONS    :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE :   2,  # 0.5
-            PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   1.,
-            PkmnRedEnv.EVENTS_TRIGGERED :   1.,
+            PkmnRedEnv.BLACKOUT                 :   0.,
+            PkmnRedEnv.SEEN_POKEMONS            :   0.,
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   2,  # 0.5
+            PkmnRedEnv.BADGE_SUM                :   100.,
+            PkmnRedEnv.MAPS_VISITED             :   1.,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
 
             # Additional
 
-            "novelty"                   :   0.  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   0.  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -333,7 +342,7 @@ class PkmnRedEnv(Env):
 
         noise = int(0.1 * self.max_steps)
         self.max_steps_noised = self.max_steps + (
-            (int(0.1 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
+            (int(0.3 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
         ) # np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
@@ -383,7 +392,8 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
         events = self.read_events()
-        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(sum(events))
+        self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(sum(events))
+        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(events)
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
             int(sum(party_health) == 0)
@@ -518,12 +528,13 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.EVENTS_TRIGGERED: (self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] - 11) * (
+                PkmnRedEnv.EVENTS_TRIGGERED: (
                         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1]
                         - self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-2]
-                )
+                      #                       * (self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] - 11
+                ),
 
-                # PkmnRedEnv.MAPS_VISITED: 50*int(
+                PkmnRedEnv.MAPS_VISITED: (
                 #     2 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
                 #     and
                 #     2 not in self.visited_maps
@@ -537,8 +548,9 @@ class PkmnRedEnv(Env):
                 #     and
                 #     12 not in self.visited_maps
                 # )
-                    # ((self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
-                    # * self.game_stats[PkmnRedEnv.MAPS_VISITED][-1])
+                (self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
+                #* self.game_stats[PkmnRedEnv.MAPS_VISITED][-1]
+                )
             })
 
         self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])

@@ -11,7 +11,7 @@ from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 2000*9
+run_steps = 20000*30
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -45,13 +45,13 @@ ModelCatalog.register_custom_model(
     )
 
 num_workers = 124
-rollout_fragment_length = 2000
+rollout_fragment_length = 1000
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=1e-3,
     alpha=5.,
-    target_network_update_freq=20,
+    target_network_update_freq=50,
     replay_proportion=0.,
     entropy_coeff=0.,
     learner_queue_size=128,
