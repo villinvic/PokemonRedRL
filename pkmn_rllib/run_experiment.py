@@ -45,13 +45,13 @@ ModelCatalog.register_custom_model(
     )
 
 num_workers = 124
-rollout_fragment_length = 9000
+rollout_fragment_length = 2000
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=1e-3,
     alpha=5.,
-    target_network_update_freq=100,
+    target_network_update_freq=20,
     replay_proportion=0.,
     entropy_coeff=0.,
     learner_queue_size=128,
@@ -84,7 +84,7 @@ config = VmpoConfig().training(
 ).environment(
     env="PokemonRed",
     env_config=env_config
-).reporting(min_train_timesteps_per_iteration=int(run_steps*num_workers*1.1)
+).reporting(min_train_timesteps_per_iteration=20, metrics_episode_collection_timeout_s=2*60
 ).experimental(_disable_preprocessor_api=True,
 ).resources(num_gpus=1
 ).framework(framework="tf")
