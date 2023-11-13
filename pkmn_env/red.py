@@ -232,7 +232,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   5.,
-            PkmnRedEnv.COORDINATES              :   -0.05,
+            PkmnRedEnv.COORDINATES              :   -0.02,
 
             # Additional
 
@@ -568,7 +568,7 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES: int(
                     self.game_stats[PkmnRedEnv.COORDINATES][-1]
                     in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-7:-1]
+                    self.game_stats[PkmnRedEnv.COORDINATES][-5:-1]
                     and
                     walked
                 )
