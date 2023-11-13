@@ -219,8 +219,8 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.SEEN_POKEMONS    :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE :   2,  # 0.5
             PkmnRedEnv.BADGE_SUM        :   100.,
-            PkmnRedEnv.MAPS_VISITED     :   1,
-            PkmnRedEnv.EVENTS_TRIGGERED :   1,
+            PkmnRedEnv.MAPS_VISITED     :   1.,
+            PkmnRedEnv.EVENTS_TRIGGERED :   1.,
 
             # Additional
 
@@ -514,7 +514,7 @@ class PkmnRedEnv(Env):
                     np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.EVENTS_TRIGGERED: self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] * (
+                PkmnRedEnv.EVENTS_TRIGGERED: (self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] - 11) * (
                         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1]
                         - self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-2]
                 )
