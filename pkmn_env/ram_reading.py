@@ -1,7 +1,7 @@
 from typing import List
 
 from pyboy.pyboy import PyBoy
-
+from pyboy.utils import WindowEvent
 
 
 def read_m(console, addr):
@@ -59,15 +59,67 @@ def read_seen_raw(console) -> int:
     ]
     return total_seen
 
+def read_pos(console) -> List:
+    return [read_m(console, 0xD362), read_m(console, 0xD361)]
+
+def read_walking_animation(console):
+    return read_m(console, 0xC108)
+
+valid_actions = [
+            WindowEvent.PRESS_ARROW_DOWN,
+            WindowEvent.PRESS_ARROW_LEFT,
+            WindowEvent.PRESS_ARROW_RIGHT,
+            WindowEvent.PRESS_ARROW_UP,
+            WindowEvent.PRESS_BUTTON_A,
+            WindowEvent.PRESS_BUTTON_B,
+]
+release_arrow = [
+            WindowEvent.RELEASE_ARROW_DOWN,
+            WindowEvent.RELEASE_ARROW_LEFT,
+            WindowEvent.RELEASE_ARROW_RIGHT,
+            WindowEvent.RELEASE_ARROW_UP
+        ]
+
+release_button = [
+            WindowEvent.RELEASE_BUTTON_A,
+            WindowEvent.RELEASE_BUTTON_B
+        ]
+
+def step(console, action):
+
+    # press button then release after some steps
+    console.send_input(valid_actions[action])
+    walked = False
+    for i in range(24):
+        # release action, so they are stateless
+        if not walked:
+            walked = read_walking_animation(console) > 0
+        if i == 8:
+
+            if action < 4:
+                # release arrow
+                console.send_input(release_arrow[action])
+
+            if 3 < action < 6:
+                # release button
+                console.send_input(release_button[action - 4])
+
+            if action == WindowEvent.PRESS_BUTTON_START:
+                console.send_input(WindowEvent.RELEASE_BUTTON_START)
+        console.tick()
+    return walked
+
 if __name__ == '__main__':
     console = PyBoy(
         "PokemonRed.gb",
         debugging=False,
-        disable_input=False,
+        disable_input=True,
         window_type='headless',
         hide_window=True,
         disable_renderer=True
     )
+
+    print(valid_actions[5])
 
     screen = console.botsupport_manager().screen()
     console.set_emulation_speed(0)
@@ -76,12 +128,12 @@ if __name__ == '__main__':
     with open("has_pokedex_nballs.state", "rb") as f:
         console.load_state(f)
 
-
+    walked = 0
     while True:
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_caught_raw(console),
-            read_seen_raw(console),
+            read_pos(console),
+            walked
         )
-        input()
+        walked = step(console, int(input("input:")))

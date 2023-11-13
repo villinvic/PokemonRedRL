@@ -232,7 +232,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
-            PkmnRedEnv.COORDINATES              :   -1.,
+            PkmnRedEnv.COORDINATES              :   -0.05,
 
             # Additional
 
@@ -295,8 +295,11 @@ class PkmnRedEnv(Env):
     def run_action_on_emulator(self, action):
         # press button then release after some steps
         self.pyboy.send_input(self.valid_actions[action])
+        walked = False
         for i in range(self.act_freq):
             # release action, so they are stateless
+            if not walked:
+                walked = self.read_walk_animation() > 0
             if i == 8:
                 if action < 4:
                     # release arrow
@@ -316,6 +319,9 @@ class PkmnRedEnv(Env):
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
+
+        return walked
+
 
     def reset(self, options=None, seed=None):
 
@@ -428,11 +434,11 @@ class PkmnRedEnv(Env):
 
     def step(self, action):
 
-        self.run_action_on_emulator(action)
+        walked = self.run_action_on_emulator(action)
         obs = self._get_obs()
         self.step_count += 1
 
-        reward = self.get_game_state_reward(obs)
+        reward = self.get_game_state_reward(obs, walked)
         self.episode_reward += reward
 
         self.maximum_experience_in_party_so_far = np.maximum(
@@ -497,7 +503,7 @@ class PkmnRedEnv(Env):
         self.reset_count += 1
         self.max_steps *= self.additional_steps_per_episode
 
-    def get_game_state_reward(self, obs):
+    def get_game_state_reward(self, obs, walked):
         """
         proposed reward function:
             - knn (reset every important event, hopefully)
@@ -562,7 +568,9 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES: int(
                     self.game_stats[PkmnRedEnv.COORDINATES][-1]
                     in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-5:-1]
+                    self.game_stats[PkmnRedEnv.COORDINATES][-7:-1]
+                    and
+                    walked
                 )
             })
 
@@ -682,6 +690,10 @@ class PkmnRedEnv(Env):
 
     def read_pos(self) -> List:
         return [self.read_m(0xD362), self.read_m(0xD361)]
+
+    def read_walk_animation(self) -> int:
+        return self.read_m(0xC108)
+
 
 
 
