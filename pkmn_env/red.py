@@ -228,11 +228,11 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT                 :   0.,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   2,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   10,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   1.,
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
-            PkmnRedEnv.COORDINATES              :   -0.01,
+            PkmnRedEnv.MAPS_VISITED             :   5.,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   5.,
+            PkmnRedEnv.COORDINATES              :   -0.05,
 
             # Additional
 
