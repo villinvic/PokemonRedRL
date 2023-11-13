@@ -410,10 +410,6 @@ class PkmnRedEnv(Env):
 
     def step(self, action):
 
-        if not self.inited:
-            time.sleep(self.worker_index)  # desync workers, adds on training stability
-            self.inited = True
-
         self.run_action_on_emulator(action)
         obs = self._get_obs()
         self.step_count += 1
