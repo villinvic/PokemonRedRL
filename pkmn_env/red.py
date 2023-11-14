@@ -162,7 +162,7 @@ class PkmnRedEnv(Env):
             WindowEvent.PRESS_BUTTON_B,
             #WindowEvent.PRESS_BUTTON_START,
             #WindowEvent.PASS
-        ]max_steps
+        ]
 
         self.release_arrow = [
             WindowEvent.RELEASE_ARROW_DOWN,
