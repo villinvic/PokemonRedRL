@@ -229,7 +229,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT                 :   0.,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   10,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   50,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
@@ -350,7 +350,7 @@ class PkmnRedEnv(Env):
             self.full_frame_writer.__enter__()
 
         noise = int(0.1 * self.max_steps)
-        if self.inited > 3:
+        if self.inited > 2:
             self.max_steps_noised = self.max_steps# + (
             #(int(0.2 * (self.worker_index / 124) * self.max_steps) // 2048) * 2048
             #) # np.random.randint(-noise, noise)
