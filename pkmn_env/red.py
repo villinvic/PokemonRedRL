@@ -203,11 +203,16 @@ class PkmnRedEnv(Env):
 
             # Needs 1_200_000 exp max to reach level 100
             # We will need better information that that
+            # VariableGetter(
+            #     dim=6,
+            #     name=PkmnRedEnv.PARTY_EXPERIENCE,
+            #     post_process_fn=np.cbrt,
+            #     scale=1/np.cbrt(1e6)
+            # ),
             VariableGetter(
                 dim=6,
-                name=PkmnRedEnv.PARTY_EXPERIENCE,
-                post_process_fn=np.cbrt,
-                scale=1/np.cbrt(1e6)
+                name=PkmnRedEnv.PARTY_LEVELS,
+                scale=0.01,
             ),
             VariableGetter(
                 name=PkmnRedEnv.TOTAL_EVENTS_TRIGGERED,
@@ -229,7 +234,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT                 :   0.,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   10,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   7.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
