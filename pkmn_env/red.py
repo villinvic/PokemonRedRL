@@ -277,7 +277,7 @@ class PkmnRedEnv(Env):
 
         self.full_frame_writer = None
 
-        self.inited = False
+        self.inited = 0
 
     def init_knn(self):
 
@@ -350,14 +350,14 @@ class PkmnRedEnv(Env):
             self.full_frame_writer.__enter__()
 
         noise = int(0.1 * self.max_steps)
-        if self.inited:
+        if self.inited > 3:
             self.max_steps_noised = self.max_steps# + (
             #(int(0.2 * (self.worker_index / 124) * self.max_steps) // 2048) * 2048
             #) # np.random.randint(-noise, noise)
         else:
-            self.inited = True
+            self.inited += 1
+
             self.max_steps_noised = 2048 + (2048 * self.worker_index % self.max_steps)
-            print(self.max_steps_noised)
 
         return self._get_obs(), {}
 
