@@ -162,7 +162,7 @@ class PkmnRedEnv(Env):
             WindowEvent.PRESS_BUTTON_B,
             #WindowEvent.PRESS_BUTTON_START,
             #WindowEvent.PASS
-        ]
+        ]max_steps
 
         self.release_arrow = [
             WindowEvent.RELEASE_ARROW_DOWN,
@@ -356,7 +356,8 @@ class PkmnRedEnv(Env):
             #) # np.random.randint(-noise, noise)
         else:
             self.inited = True
-            self.max_steps_noised = 2048 * self.worker_index % self.max_steps
+            self.max_steps_noised = 2048 + (2048 * self.worker_index % self.max_steps)
+            print(self.max_steps_noised)
 
         return self._get_obs(), {}
 
