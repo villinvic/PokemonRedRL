@@ -233,7 +233,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   5.,
-            PkmnRedEnv.COORDINATES              :   0.001,
+            PkmnRedEnv.COORDINATES              :   2e-4,
 
             # Additional
 
@@ -351,7 +351,7 @@ class PkmnRedEnv(Env):
 
         noise = int(0.1 * self.max_steps)
         self.max_steps_noised = self.max_steps + (
-            (int(0.2 * (self.worker_index / 124) * self.max_steps) // 2000) * 2000
+            (int(0.2 * (self.worker_index / 124) * self.max_steps) // 2048) * 2048
         ) # np.random.randint(-noise, noise)
 
         return self._get_obs(), {}
