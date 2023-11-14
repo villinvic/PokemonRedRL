@@ -50,7 +50,7 @@ rollout_fragment_length = 128
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
-    eps_alpha=2e-3,
+    eps_alpha=5e-3,
     alpha=5.,
     target_network_update_freq=4096,
     replay_proportion=0.,
