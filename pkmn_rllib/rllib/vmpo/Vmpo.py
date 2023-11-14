@@ -226,11 +226,9 @@ class Vmpo(Impala):
 
                 if not self.config._enable_learner_api:
                     # Create and start the learner thread.
-                    print(config["num_sgd_iter"], config["minibatch_buffer_size"])
                     self._learner_thread = VmpoLearnerThread(
                         self.workers.local_worker(),
                         minibatch_buffer_size=config["minibatch_buffer_size"],
-                        mini
                         num_sgd_iter=config["num_sgd_iter"],
                         learner_queue_size=config["learner_queue_size"],
                         learner_queue_timeout=config["learner_queue_timeout"],
