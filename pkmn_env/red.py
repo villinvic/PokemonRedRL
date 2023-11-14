@@ -356,7 +356,7 @@ class PkmnRedEnv(Env):
             #) # np.random.randint(-noise, noise)
         else:
             self.inited = True
-            self.max_steps_noised = 2048 * (1 + int((self.worker_index / 124) * self.max_steps)//2048)
+            self.max_steps_noised = 2048 * self.worker_index % self.max_steps
 
         return self._get_obs(), {}
 
