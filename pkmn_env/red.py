@@ -144,7 +144,7 @@ class PkmnRedEnv(Env):
 
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
-        self.screen_shape = (48, 56)
+        self.screen_shape = (72, 80)  # (48, 56)
         self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
@@ -229,7 +229,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT                 :   0.,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   50,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   10,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
