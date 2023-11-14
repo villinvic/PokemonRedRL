@@ -11,7 +11,7 @@ from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
-run_steps = 2048*20
+run_steps = 2048*10
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -52,7 +52,7 @@ config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=1e-3,
     alpha=5.,
-    target_network_update_freq=20_000,
+    target_network_update_freq=3200,
     replay_proportion=0.,
     entropy_coeff=0.,
     learner_queue_size=128,
@@ -64,8 +64,8 @@ config = VmpoConfig().training(
     grad_clip=1.,
     opt_type="rmsprop",
     train_batch_size=8192,
-    num_sgd_iter=32,
-    minibatch_buffer_size=650,
+    num_sgd_iter=16,
+    minibatch_buffer_size=200,
     gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",
