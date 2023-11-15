@@ -127,7 +127,7 @@ exp = tune.run(
         keep_checkpoints_num=ckpt_config.checkpoint_at_end,
         stop=stopping_config,
         local_dir="rllib_runs",
-        #restore="/home/goji/Documents/PokemonRedRL/rllib_runs/v1_2/Vmpo_PokemonRed_3217e_00000_0_2023-11-14_21-27-13/checkpoint_000800"
+        restore="/home/goji/Documents/PokemonRedRL/rllib_runs/v1_2/Vmpo_PokemonRed_64508_00000_0_2023-11-15_10-57-31/checkpoint_002100"
     )
 
 
