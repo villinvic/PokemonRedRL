@@ -220,7 +220,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=PkmnRedEnv.MAPS_VISITED,
-                scale=0.05  # 319
+                scale=0.05
             ),
 
             # VariableGetter(
@@ -579,7 +579,7 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES: int(
                     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
                     in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-10:-1])
+                    self.game_stats[PkmnRedEnv.COORDINATES][-7:-1])
                     and
                     walked
                 )
