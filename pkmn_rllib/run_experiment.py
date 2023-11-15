@@ -63,18 +63,18 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=1.,
     opt_type="rmsprop",
-    train_batch_size=8192,
+    train_batch_size=4096,
     num_sgd_iter=12,
-    minibatch_buffer_size=128,
+    minibatch_buffer_size=256,
     gamma=0.994,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
-            [16, [8, 8], 4, "valid"],
-            [32, [4, 4], 2, "same"],
+            [32, [8, 8], 4, "valid"],
+            [64, [4, 4], 2, "same"],
         ],
-        "fcnet_size": 128,
-        "lstm_size": 128,
+        "fcnet_size": 256,
+        "lstm_size": 256,
         "max_seq_lens": 32,
     }
 ).rollouts(
@@ -127,7 +127,7 @@ exp = tune.run(
         keep_checkpoints_num=ckpt_config.checkpoint_at_end,
         stop=stopping_config,
         local_dir="rllib_runs",
-        #restore="/home/goji/Documents/PokemonRedRL/rllib_runs/v1_2/Vmpo_PokemonRed_0795a_00000_0_2023-11-14_14-02-13/checkpoint_000800"
+        #restore="/home/goji/Documents/PokemonRedRL/rllib_runs/v1_2/Vmpo_PokemonRed_3217e_00000_0_2023-11-14_21-27-13/checkpoint_000800"
     )
 
 
