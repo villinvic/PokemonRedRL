@@ -226,7 +226,7 @@ class PkmnRedEnv(Env):
             VariableGetter(
                 dim=5,
                 name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
-                scale=0.1
+                scale=0.2
             ),
             # VariableGetter(
             #     dim=8,
@@ -243,7 +243,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   -1e-4,
+            PkmnRedEnv.COORDINATES              :   -2e-5,
 
             # Additional
 
@@ -608,7 +608,7 @@ class PkmnRedEnv(Env):
 
         if walked:
             self.visited_coordinates[curr_coords] = np.minimum(
-                self.visited_coordinates[curr_coords] + 1, 10
+                self.visited_coordinates[curr_coords] + 1, 5
             )
 
         total_reward = 0
