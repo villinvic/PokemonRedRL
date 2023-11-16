@@ -108,6 +108,7 @@ class PkmnRedEnv(Env):
     EVENTS_TRIGGERED = "events_triggered"
     TOTAL_EVENTS_TRIGGERED = "total_events_triggered"
     ORIENTATION = "orientation"
+    SURROUNDING_TILES_VISITATION = "surrounding_tiles_visitation"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -222,7 +223,11 @@ class PkmnRedEnv(Env):
                 name=PkmnRedEnv.MAPS_VISITED,
                 scale=0.05
             ),
-
+            VariableGetter(
+                dim=5,
+                name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
+                scale=0.1
+            ),
             # VariableGetter(
             #     dim=8,
             #     name="party_fills",
@@ -238,7 +243,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   -1e-4,
+            PkmnRedEnv.COORDINATES              :   -1e-3,
 
             # Additional
 
@@ -433,6 +438,15 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.COORDINATES].append(pos + [map_id])
 
+        x, y = pos
+        self.game_stats[PkmnRedEnv.SURROUNDING_TILES_VISITATION].append([
+            self.visited_coordinates[(x, y, map_id)],
+            self.visited_coordinates[(x+1, y, map_id)],
+            self.visited_coordinates[(x-1, y, map_id)],
+            self.visited_coordinates[(x, y+1, map_id)],
+            self.visited_coordinates[(x, y-1, map_id)],
+        ])
+
         idx = 0
         for getter in self.observed_stats_config:
             idx = getter(
@@ -527,7 +541,7 @@ class PkmnRedEnv(Env):
         and going to areas with higher level pokemons (more exp)
         :return:
         """
-
+        curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
         rewards = {"novelty": self.update_frame_knn_index(obs["screen"])}
 
         if self.step_count >= 2:
@@ -579,7 +593,7 @@ class PkmnRedEnv(Env):
 
                 # reward optimized walks
                 PkmnRedEnv.COORDINATES: (
-                    self.visited_coordinates[tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])]
+                    self.visited_coordinates[curr_coords]
                 ) if walked else 0.
                 #     int(
                 #     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
@@ -593,7 +607,9 @@ class PkmnRedEnv(Env):
         self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
 
         if walked:
-            self.visited_coordinates[tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])] += 1
+            self.visited_coordinates[curr_coords] = np.minimum(
+                self.visited_coordinates[curr_coords] + 1, 10
+            )
 
         total_reward = 0
         for reward_name, reward in rewards.items():
