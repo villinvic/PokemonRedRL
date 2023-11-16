@@ -238,7 +238,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   -2e-4,
+            PkmnRedEnv.COORDINATES              :   -1e-4,
 
             # Additional
 
@@ -277,7 +277,7 @@ class PkmnRedEnv(Env):
         self.max_steps_noised = 0
         self.episode_reward = 0
         self.visited_maps = set()
-
+        self.visited_coordinates = defaultdict(lambda: 0)
         self.last_reward_dict = {}
 
         self.full_frame_writer = None
@@ -346,6 +346,8 @@ class PkmnRedEnv(Env):
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
         self.visited_maps = set()
+        self.visited_coordinates = defaultdict(lambda: 0)
+
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
@@ -576,16 +578,22 @@ class PkmnRedEnv(Env):
                 ),
 
                 # reward optimized walks
-                PkmnRedEnv.COORDINATES: int(
-                    (self.game_stats[PkmnRedEnv.COORDINATES][-1]
-                    in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-128:-1])
-                    and
-                    walked
-                )
+                PkmnRedEnv.COORDINATES: (
+                    self.visited_coordinates[tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])]
+                ) if walked else 0.
+                #     int(
+                #     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
+                #     in
+                #     self.game_stats[PkmnRedEnv.COORDINATES][-128:-1])
+                #     and
+                #     walked
+                # )
             })
 
         self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
+
+        if walked:
+            self.visited_coordinates[tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])] += 1
 
         total_reward = 0
         for reward_name, reward in rewards.items():
