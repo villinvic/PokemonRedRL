@@ -243,7 +243,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   5.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   -1e-3,
+            PkmnRedEnv.COORDINATES              :   -1e-4,
 
             # Additional
 
