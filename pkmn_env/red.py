@@ -579,7 +579,7 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES: int(
                     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
                     in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-7:-1])
+                    self.game_stats[PkmnRedEnv.COORDINATES][-128:-1])
                     and
                     walked
                 )

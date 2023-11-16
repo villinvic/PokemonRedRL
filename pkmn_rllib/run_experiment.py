@@ -50,11 +50,11 @@ rollout_fragment_length = 1024
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
-    eps_alpha=5e-3,
+    eps_alpha=1e-3,
     alpha=5.,
     target_network_update_freq=1536,
     replay_proportion=0.,
-    entropy_coeff=1e-4,
+    entropy_coeff=2e-4,
     learner_queue_size=512,
     lr=1e-4,
     statistics_lr=5e-1,
@@ -66,7 +66,7 @@ config = VmpoConfig().training(
     train_batch_size=8096,
     num_sgd_iter=12,
     minibatch_buffer_size=128,
-    gamma=0.995,
+    gamma=0.996,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
