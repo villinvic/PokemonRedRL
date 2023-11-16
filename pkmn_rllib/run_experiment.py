@@ -46,7 +46,7 @@ ModelCatalog.register_custom_model(
 
 num_workers = 124
 num_envs_per_worker = 1
-rollout_fragment_length = 128
+rollout_fragment_length = 1024
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
@@ -66,7 +66,7 @@ config = VmpoConfig().training(
     train_batch_size=8096,
     num_sgd_iter=12,
     minibatch_buffer_size=128,
-    gamma=0.994,
+    gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
@@ -75,7 +75,7 @@ config = VmpoConfig().training(
         ],
         "fcnet_size": 256,
         "lstm_size": 256,
-        "max_seq_lens": 32,
+        "max_seq_lens": 64,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
