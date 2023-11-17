@@ -617,7 +617,7 @@ class PkmnRedEnv(Env):
                 ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
                 6.)
 
-                if self.game_stats[PkmnRedEnv.PARTY_FILLS][-2][i] and not self.game_stats[PkmnRedEnv.BLACKOUT][-2]:
+                if self.game_stats[PkmnRedEnv.PARTY_FILLS][-2][i] and not self.game_stats[PkmnRedEnv.BLACKOUT][-1]:
                     total_healing += np.maximum(
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
                         , 0.)
