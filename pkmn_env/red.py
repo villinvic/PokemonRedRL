@@ -256,7 +256,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.TOTAL_EXPERIENCE         :   9.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   2.,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
             PkmnRedEnv.COORDINATES + "_NEG"     :   0.015 * 0.95,
             PkmnRedEnv.COORDINATES + "_POS"     :   0.015,
             PkmnRedEnv.PARTY_HEALTH             :   0.1,
@@ -618,9 +618,11 @@ class PkmnRedEnv(Env):
                 6.)
 
                 if self.game_stats[PkmnRedEnv.PARTY_FILLS][-2][i] and not self.game_stats[PkmnRedEnv.BLACKOUT][-1]:
-                    total_healing += np.maximum(
+                    total_healing += int(
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
-                        , 0.)
+                        >
+                        0.5
+                    )
 
             rewards.update(**{
                 PkmnRedEnv.BLACKOUT: self.game_stats[PkmnRedEnv.BLACKOUT][-1],
