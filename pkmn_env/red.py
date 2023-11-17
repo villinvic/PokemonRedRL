@@ -559,7 +559,7 @@ class PkmnRedEnv(Env):
 
             dx = abs(curr_coords[0] - self.entrance_coords[0])
             dy = abs(curr_coords[1] - self.entrance_coords[1])
-            if dx + dy > 9 * 2: # we do not reward for navigating in small rooms
+            if dx > 10 or dy > 10: # we do not reward for navigating in small rooms
                 past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
                 dx2 = abs(past_coords[0] - self.entrance_coords[0])
                 dy2 = abs(past_coords[1] - self.entrance_coords[1])
