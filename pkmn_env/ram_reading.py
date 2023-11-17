@@ -62,6 +62,9 @@ def read_seen_raw(console) -> int:
 def read_pos(console) -> List:
     return [read_m(console, 0xD362), read_m(console, 0xD361)]
 
+def read_map(console) -> List:
+    return read_m(console, 0xD35E)
+
 def read_walking_animation(console):
     return read_m(console, 0xC108)
 
@@ -133,7 +136,7 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_pos(console),
+            read_pos(console), read_map(console),
             walked
         )
         walked = step(console, int(input("input:")))

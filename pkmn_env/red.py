@@ -549,13 +549,24 @@ class PkmnRedEnv(Env):
         and going to areas with higher level pokemons (more exp)
         :return:
         """
-        curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
-        if self.entrance_coords is None or self.entrance_coords[-1] != curr_coords[-1]:
-            self.entrance_coords = curr_coords
 
         rewards = {"novelty": self.update_frame_knn_index(obs["screen"])}
 
         if self.step_count >= 2:
+
+            curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
+            past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
+
+            if (
+                    self.entrance_coords is None
+                    or
+                    (
+                        self.entrance_coords[-1] != curr_coords[-1]
+                        and
+                        curr_coords[-1] == past_coords[-1]
+                    )
+            ):
+                self.entrance_coords = curr_coords
 
             if self.entrance_coords != curr_coords:
                 dx = abs(curr_coords[0] - self.entrance_coords[0])
@@ -565,13 +576,14 @@ class PkmnRedEnv(Env):
                 past_coords = self.game_stats[PkmnRedEnv.COORDINATES][-2]
                 d = abs(past_coords[0]-curr_coords[0]) + abs(past_coords[1]-curr_coords[1])
 
-                if d == 1:
-                    dx2 = abs(past_coords[0] - self.entrance_coords[0])
-                    dy2 = abs(past_coords[1] - self.entrance_coords[1])
+                assert d == 1, (curr_coords, past_coords, self.entrance_coords)
 
-                    r_nav = dx - dx2 + dy - dy2
-                    if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
-                        r_nav = np.minimum(r_nav, 0.)
+                dx2 = abs(past_coords[0] - self.entrance_coords[0])
+                dy2 = abs(past_coords[1] - self.entrance_coords[1])
+
+                r_nav = dx - dx2 + dy - dy2
+                if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
+                    r_nav = np.minimum(r_nav, 0.)
             else:
                 r_nav = 0.
 
