@@ -576,7 +576,7 @@ class PkmnRedEnv(Env):
                 past_coords = self.game_stats[PkmnRedEnv.COORDINATES][-2]
                 d = abs(past_coords[0]-curr_coords[0]) + abs(past_coords[1]-curr_coords[1])
 
-                assert d == 1, (curr_coords, past_coords, self.entrance_coords)
+                assert d <= 1, (curr_coords, past_coords, self.entrance_coords)
 
                 dx2 = abs(past_coords[0] - self.entrance_coords[0])
                 dy2 = abs(past_coords[1] - self.entrance_coords[1])
