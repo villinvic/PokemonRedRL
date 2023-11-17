@@ -242,13 +242,13 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.2,
+            PkmnRedEnv.BLACKOUT                 :   -0.4,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   7.,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   16.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   0.002,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   2.,
+            PkmnRedEnv.COORDINATES              :   0.004,
 
             # Additional
 
@@ -286,7 +286,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.max_steps_noised = 0
         self.episode_reward = 0
-        self.visited_maps = set()
+        self.visited_maps = {37, 38, 39}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
         self.entrance_coords = None
         self.last_reward_dict = {}
@@ -591,6 +591,8 @@ class PkmnRedEnv(Env):
                 r_nav = -1.
             else:
                 r_nav = 0.
+            if r_nav < 0:
+                r_nav *= 0.95
 
 
             # we gain more experience as game moves on:
@@ -664,6 +666,9 @@ class PkmnRedEnv(Env):
             scaled_reward = reward * self.reward_function_config[reward_name]
             self.game_stats["reward_"+reward_name].append(scaled_reward)
             total_reward += scaled_reward
+
+        if total_reward == 0:
+            total_reward = 1.6e-5
 
         return total_reward
 
