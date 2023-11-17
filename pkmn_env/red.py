@@ -248,7 +248,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   0.005,
+            PkmnRedEnv.COORDINATES              :   0.002,
 
             # Additional
 
@@ -570,7 +570,9 @@ class PkmnRedEnv(Env):
             ):
                 self.entrance_coords = curr_coords
 
-            if self.entrance_coords != curr_coords and (curr_coords[-1] == past_coords[-1] == past_3_coords[-1]):
+            if self.entrance_coords != curr_coords and (
+                    curr_coords[-1] == past_coords[-1] == past_3_coords[-1] == self.entrance_coords[-1]
+            ):
                 dx = abs(curr_coords[0] - self.entrance_coords[0])
                 dy = abs(curr_coords[1] - self.entrance_coords[1])
                 # the past coord might be far away if we teleported, but should not happen as we still have to walk away
@@ -581,8 +583,12 @@ class PkmnRedEnv(Env):
                 assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[PkmnRedEnv.COORDINATES][-6:]
 
                 r_nav = dx - dx2 + dy - dy2
-                if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
-                    r_nav = np.minimum(r_nav, 0.)
+
+                # if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
+                #     r_nav = np.minimum(r_nav, 0.)
+
+            elif self.entrance_coords[-1] != curr_coords[-1]:
+                r_nav = -1.
             else:
                 r_nav = 0.
 
