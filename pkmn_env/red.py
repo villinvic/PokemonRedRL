@@ -617,11 +617,14 @@ class PkmnRedEnv(Env):
                 ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
                 6.)
 
-                if self.game_stats[PkmnRedEnv.PARTY_FILLS][-2][i] and not self.game_stats[PkmnRedEnv.BLACKOUT][-1]:
+            if not any(self.game_stats[PkmnRedEnv.BLACKOUT][-2:]):
+                for i in range(6):
+                    # We need to make sure one of the pokemons wasnt KO and healed
                     total_healing += int(
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
-                        >
-                        0.5
+                        > 0.
+                        and
+                        self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i] > 0
                     )
 
             rewards.update(**{
@@ -673,7 +676,7 @@ class PkmnRedEnv(Env):
                 #     walked
                 # )
 
-                PkmnRedEnv.PARTY_HEALTH: int(total_healing) > 0
+                PkmnRedEnv.PARTY_HEALTH: int(total_healing > 0)
             })
 
             if total_healing > 0:
