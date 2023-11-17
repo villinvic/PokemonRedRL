@@ -103,6 +103,7 @@ class PkmnRedEnv(Env):
     PARTY_LEVELS = "party_levels"
     TOTAL_LEVELS = "total_levels"
     PARTY_HEALTH = "party_health"
+    PARTY_FILLS = "party_fills"
     SEEN_POKEMONS = "seen_pokemons"
     CAUGHT_POKEMONS = "caught_pokemons"
     EVENTS_TRIGGERED = "events_triggered"
@@ -214,15 +215,19 @@ class PkmnRedEnv(Env):
             VariableGetter(
                 dim=6,
                 name=PkmnRedEnv.PARTY_LEVELS,
-                scale=0.01,
+                scale=0.02,
             ),
             VariableGetter(
                 name=PkmnRedEnv.TOTAL_EVENTS_TRIGGERED,
-                scale=0.01 #319
+                scale=0.02 #319
             ),
             VariableGetter(
                 name=PkmnRedEnv.MAPS_VISITED,
                 scale=0.05
+            ),
+            VariableGetter(
+                dim=6,
+                name=PkmnRedEnv.PARTY_FILLS,
             ),
             # VariableGetter(
             #     dim=5,
@@ -239,16 +244,22 @@ class PkmnRedEnv(Env):
             #     post_process_fn=np.cbrt,
             #     scale=1 / np.cbrt(1e6)
             # ),
+
+            # TODO :
+            # Group items (healing, pokeballs) and count
+            # Give reward for money ?
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.4,
+            PkmnRedEnv.BLACKOUT                 :   -1.,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   16.,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   14.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   2.,
-            PkmnRedEnv.COORDINATES              :   0.004,
+            PkmnRedEnv.COORDINATES + "_NEG"     :   0.015 * 0.95,
+            PkmnRedEnv.COORDINATES + "_POS"     :   0.015,
+            PkmnRedEnv.PARTY_HEALTH             :   0.1,
 
             # Additional
 
@@ -427,6 +438,7 @@ class PkmnRedEnv(Env):
         events = self.read_events()
         self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(sum(events))
         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(events)
+        self.game_stats[PkmnRedEnv.PARTY_FILLS].append(self.read_party_fills())
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
             int(sum(party_health) == 0)
@@ -591,12 +603,11 @@ class PkmnRedEnv(Env):
                 r_nav = -1.
             else:
                 r_nav = 0.
-            if r_nav < 0:
-                r_nav *= 0.98
 
 
             # we gain more experience as game moves on:
             total_delta_exp = 0
+            total_healing = 0
             for i in range(6):
                 # Can be hacked with pc, let's see :)
                 total_delta_exp += np.maximum(
@@ -605,6 +616,11 @@ class PkmnRedEnv(Env):
                     , 0.
                 ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
                 6.)
+
+                if self.game_stats[PkmnRedEnv.PARTY_FILLS][-2][i] and not self.game_stats[PkmnRedEnv.BLACKOUT][-2]:
+                    total_healing += np.maximum(
+                        self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
+                        , 0.)
 
             rewards.update(**{
                 PkmnRedEnv.BLACKOUT: self.game_stats[PkmnRedEnv.BLACKOUT][-1],
@@ -641,7 +657,9 @@ class PkmnRedEnv(Env):
                 ),
 
                 # reward optimized walks
-                PkmnRedEnv.COORDINATES: r_nav
+                PkmnRedEnv.COORDINATES + "_NEG": np.minimum(r_nav, 0.),
+                PkmnRedEnv.COORDINATES + "_POS": np.maximum(r_nav, 0.),
+
                 #     (
                 #     self.visited_coordinates[curr_coords]
                 # ) if walked else 0.
@@ -652,6 +670,8 @@ class PkmnRedEnv(Env):
                 #     and
                 #     walked
                 # )
+
+                PkmnRedEnv.PARTY_HEALTH: int(total_healing) > 0
             })
 
         self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
