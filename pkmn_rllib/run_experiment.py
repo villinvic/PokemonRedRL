@@ -22,7 +22,7 @@ env_config = {
                 'action_freq': 24, 'init_state': 'has_pokedex_nballs.state', 'max_steps': run_steps,
                 'print_rewards': False, 'save_video': True, 'fast_video': True,
                 'session_path': sess_path,
-                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 29_000_000.,
+                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 70_000_000.,
                 'knn_elements': 1000,
                 'additional_steps_per_episode': 1
             }
@@ -50,11 +50,11 @@ rollout_fragment_length = 1024
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
-    eps_alpha=1e-3,
+    eps_alpha=5e-4,
     alpha=5.,
     target_network_update_freq=1536,
     replay_proportion=0.,
-    entropy_coeff=2e-4,
+    entropy_coeff=3e-4,
     learner_queue_size=512,
     lr=1e-4,
     statistics_lr=5e-1,
@@ -70,7 +70,7 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
-            [32, [8, 8], 8, "valid"],
+            [32, [8, 8], 4, "valid"],
             [64, [4, 4], 2, "same"],
         ],
         "fcnet_size": 256,

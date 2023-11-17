@@ -109,6 +109,7 @@ class PkmnRedEnv(Env):
     TOTAL_EVENTS_TRIGGERED = "total_events_triggered"
     ORIENTATION = "orientation"
     SURROUNDING_TILES_VISITATION = "surrounding_tiles_visitation"
+    NOVELTY_COUNT = "novelty_count"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -228,6 +229,10 @@ class PkmnRedEnv(Env):
                 name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
                 scale=0.2
             ),
+            VariableGetter(
+                name=PkmnRedEnv.NOVELTY_COUNT,
+                scale=0.01
+            ),
             # VariableGetter(
             #     dim=8,
             #     name="party_fills",
@@ -237,7 +242,7 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   0.,
+            PkmnRedEnv.BLACKOUT                 :   -0.15,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   7.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
@@ -247,7 +252,7 @@ class PkmnRedEnv(Env):
 
             # Additional
 
-            "novelty"                           :   0.  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   3.e-5  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -446,6 +451,7 @@ class PkmnRedEnv(Env):
             self.visited_coordinates[(x, y+1, map_id)],
             self.visited_coordinates[(x, y-1, map_id)],
         ])
+        self.game_stats[PkmnRedEnv.NOVELTY_COUNT].append(self.distinct_frames_observed)
 
         idx = 0
         for getter in self.observed_stats_config:
@@ -511,11 +517,11 @@ class PkmnRedEnv(Env):
             if distance > self.similar_frame_dist:
 
                 self.knn_index.add_items(
-                    frame_vector, np.array([self.knn_index.get_current_count() % self.num_elements])
+                    frame_vector, np.array([self.distinct_frames_observed % self.num_elements])
                 )
                 self.distinct_frames_observed += 1
 
-                return self.knn_index.get_current_count()
+                return np.minimum(self.distinct_frames_observed, 1000)
 
         return 0.
 
