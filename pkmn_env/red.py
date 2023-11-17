@@ -552,10 +552,12 @@ class PkmnRedEnv(Env):
 
         rewards = {"novelty": self.update_frame_knn_index(obs["screen"])}
 
-        if self.step_count >= 2:
+        if self.step_count >= 4:
 
             curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
             past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
+            past_2_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-3])
+            past_3_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-4])
 
             if (
                     self.entrance_coords is None
@@ -563,23 +565,20 @@ class PkmnRedEnv(Env):
                     (
                         self.entrance_coords[-1] != curr_coords[-1]
                         and
-                        curr_coords[-1] == past_coords[-1]
+                        curr_coords[-1] == past_coords[-1] == past_2_coords[-1]
                     )
             ):
                 self.entrance_coords = curr_coords
 
-            if self.entrance_coords != curr_coords:
+            if self.entrance_coords != curr_coords and (curr_coords[-1] == past_coords[-1] == past_3_coords[-1]):
                 dx = abs(curr_coords[0] - self.entrance_coords[0])
                 dy = abs(curr_coords[1] - self.entrance_coords[1])
                 # the past coord might be far away if we teleported, but should not happen as we still have to walk away
                 # from the entrance coord a bit before getting there
-                past_coords = self.game_stats[PkmnRedEnv.COORDINATES][-2]
-                d = abs(past_coords[0]-curr_coords[0]) + abs(past_coords[1]-curr_coords[1])
-
-                assert d <= 1, (self.game_stats[PkmnRedEnv.COORDINATES][-5:])
-
                 dx2 = abs(past_coords[0] - self.entrance_coords[0])
                 dy2 = abs(past_coords[1] - self.entrance_coords[1])
+
+                assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[PkmnRedEnv.COORDINATES][-6:]
 
                 r_nav = dx - dx2 + dy - dy2
                 if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
