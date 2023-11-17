@@ -224,15 +224,15 @@ class PkmnRedEnv(Env):
                 name=PkmnRedEnv.MAPS_VISITED,
                 scale=0.05
             ),
-            VariableGetter(
-                dim=5,
-                name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
-                scale=0.2
-            ),
-            VariableGetter(
-                name=PkmnRedEnv.NOVELTY_COUNT,
-                scale=0.01
-            ),
+            # VariableGetter(
+            #     dim=5,
+            #     name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
+            #     scale=0.2
+            # ),
+            # VariableGetter(
+            #     name=PkmnRedEnv.NOVELTY_COUNT,
+            #     scale=0.01
+            # ),
             # VariableGetter(
             #     dim=8,
             #     name="party_fills",
@@ -242,17 +242,17 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.15,
+            PkmnRedEnv.BLACKOUT                 :   -0.2,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   7.,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   6.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   5.,
+            PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   4.,
-            PkmnRedEnv.COORDINATES              :   -2e-5,
+            PkmnRedEnv.COORDINATES              :   -0.005,
 
             # Additional
 
-            "novelty"                           :   3.e-5  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   0.,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -288,6 +288,7 @@ class PkmnRedEnv(Env):
         self.episode_reward = 0
         self.visited_maps = set()
         self.visited_coordinates = defaultdict(lambda: 0)
+        self.entrance_coords = None
         self.last_reward_dict = {}
 
         self.full_frame_writer = None
@@ -356,6 +357,7 @@ class PkmnRedEnv(Env):
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
         self.visited_maps = set()
+        self.entrance_coords = None
         self.visited_coordinates = defaultdict(lambda: 0)
 
 
@@ -443,14 +445,14 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.COORDINATES].append(pos + [map_id])
 
-        x, y = pos
-        self.game_stats[PkmnRedEnv.SURROUNDING_TILES_VISITATION].append([
-            self.visited_coordinates[(x, y, map_id)],
-            self.visited_coordinates[(x+1, y, map_id)],
-            self.visited_coordinates[(x-1, y, map_id)],
-            self.visited_coordinates[(x, y+1, map_id)],
-            self.visited_coordinates[(x, y-1, map_id)],
-        ])
+        #x, y = pos
+        # self.game_stats[PkmnRedEnv.SURROUNDING_TILES_VISITATION].append([
+        #     self.visited_coordinates[(x, y, map_id)],
+        #     self.visited_coordinates[(x+1, y, map_id)],
+        #     self.visited_coordinates[(x-1, y, map_id)],
+        #     self.visited_coordinates[(x, y+1, map_id)],
+        #     self.visited_coordinates[(x, y-1, map_id)],
+        # ])
         self.game_stats[PkmnRedEnv.NOVELTY_COUNT].append(self.distinct_frames_observed)
 
         idx = 0
@@ -548,9 +550,23 @@ class PkmnRedEnv(Env):
         :return:
         """
         curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
+        if self.entrance_coords is None or self.entrance_coords[-1] != curr_coords[-1]:
+            self.entrance_coords = curr_coords
+
         rewards = {"novelty": self.update_frame_knn_index(obs["screen"])}
 
         if self.step_count >= 2:
+
+            dx = abs(curr_coords[0] - self.entrance_coords[0])
+            dy = abs(curr_coords[1] - self.entrance_coords[1])
+            if dx + dy > 9 * 2: # we do not reward for navigating in small rooms
+                past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
+                dx2 = abs(past_coords[0] - self.entrance_coords[0])
+                dy2 = abs(past_coords[1] - self.entrance_coords[1])
+                r_nav = dx - dx2 + dy - dy2
+            else:
+                r_nav = 0.
+
 
             # we gain more experience as game moves on:
             total_delta_exp = 0
@@ -598,9 +614,10 @@ class PkmnRedEnv(Env):
                 ),
 
                 # reward optimized walks
-                PkmnRedEnv.COORDINATES: (
-                    self.visited_coordinates[curr_coords]
-                ) if walked else 0.
+                PkmnRedEnv.COORDINATES: r_nav
+                #     (
+                #     self.visited_coordinates[curr_coords]
+                # ) if walked else 0.
                 #     int(
                 #     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
                 #     in
@@ -612,10 +629,10 @@ class PkmnRedEnv(Env):
 
         self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
 
-        if walked:
-            self.visited_coordinates[curr_coords] = np.minimum(
-                self.visited_coordinates[curr_coords] + 1, 5
-            )
+        # if walked:
+        #     self.visited_coordinates[curr_coords] = np.minimum(
+        #         self.visited_coordinates[curr_coords] + 1, 5
+        #     )
 
         total_reward = 0
         for reward_name, reward in rewards.items():
