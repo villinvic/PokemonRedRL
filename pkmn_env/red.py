@@ -356,7 +356,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
-        self.visited_maps = set()
+        self.visited_maps = {37, 38, 39}
         self.entrance_coords = None
         self.visited_coordinates = defaultdict(lambda: 0)
 
@@ -592,7 +592,7 @@ class PkmnRedEnv(Env):
             else:
                 r_nav = 0.
             if r_nav < 0:
-                r_nav *= 0.95
+                r_nav *= 0.98
 
 
             # we gain more experience as game moves on:
