@@ -680,6 +680,8 @@ class PkmnRedEnv(Env):
         #     self.visited_coordinates[curr_coords] = np.minimum(
         #         self.visited_coordinates[curr_coords] + 1, 5
         #     )
+        if total_healing > 0:
+            self.save_screenshot("debug", "healing")
 
         total_reward = 0
         for reward_name, reward in rewards.items():
