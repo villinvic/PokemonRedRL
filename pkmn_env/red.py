@@ -622,7 +622,7 @@ class PkmnRedEnv(Env):
                     # We need to make sure one of the pokemons wasnt KO and healed
                     total_healing += int(
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
-                        > 0.1
+                        > 0.5
                         and
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i] > 0
                     )
