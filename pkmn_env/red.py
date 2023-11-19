@@ -260,9 +260,9 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0.5,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.5,
-            PkmnRedEnv.COORDINATES              :   -0.01*0.08,
-            PkmnRedEnv.COORDINATES + "_NEG"     :   0.01 * 0.92,
-            PkmnRedEnv.COORDINATES + "_POS"     :   0.015,
+            PkmnRedEnv.COORDINATES              :   -0.009*0.09,
+            PkmnRedEnv.COORDINATES + "_NEG"     :   0.009* 0.92,
+            PkmnRedEnv.COORDINATES + "_POS"     :   0.009,
             PkmnRedEnv.PARTY_HEALTH             :   0.5,
 
             # Additional
@@ -586,7 +586,7 @@ class PkmnRedEnv(Env):
             ):
                 self.entrance_coords = curr_coords
 
-            if self.entrance_coords != curr_coords and (
+            if (
                     curr_coords[-1] == past_coords[-1] == past_3_coords[-1] == self.entrance_coords[-1]
             ):
                 dx = abs(curr_coords[0] - self.entrance_coords[0])
