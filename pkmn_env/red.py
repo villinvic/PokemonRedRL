@@ -248,6 +248,9 @@ class PkmnRedEnv(Env):
             # TODO :
             # Group items (healing, pokeballs) and count
             # Give reward for money ?
+            # observe opponent level
+            # Keep track of the highest leveled pokemon encountered and instead of observing level, observe fraction
+            # between our level and highest opponent level.
         ]
 
         self.reward_function_config = {
@@ -255,11 +258,12 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   9.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   1.,
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
-            PkmnRedEnv.COORDINATES + "_NEG"     :   0.015 * 0.95,
+            PkmnRedEnv.MAPS_VISITED             :   0.5,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.5,
+            PkmnRedEnv.COORDINATES              :   0.015*0.08,
+            PkmnRedEnv.COORDINATES + "_NEG"     :   0.015 * 0.92,
             PkmnRedEnv.COORDINATES + "_POS"     :   0.015,
-            PkmnRedEnv.PARTY_HEALTH             :   0.1,
+            PkmnRedEnv.PARTY_HEALTH             :   0.5,
 
             # Additional
 
@@ -665,16 +669,13 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES + "_NEG": np.minimum(r_nav, 0.),
                 PkmnRedEnv.COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
-                #     (
-                #     self.visited_coordinates[curr_coords]
-                # ) if walked else 0.
-                #     int(
-                #     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
-                #     in
-                #     self.game_stats[PkmnRedEnv.COORDINATES][-128:-1])
-                #     and
-                #     walked
-                # )
+                PkmnRedEnv.COORDINATES: int(
+                    (self.game_stats[PkmnRedEnv.COORDINATES][-1]
+                    in
+                    self.game_stats[PkmnRedEnv.COORDINATES][-4:-1])
+                    and
+                    walked
+                ),
 
                 PkmnRedEnv.PARTY_HEALTH: int(total_healing > 0)
             })
