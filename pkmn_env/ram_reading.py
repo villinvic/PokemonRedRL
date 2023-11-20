@@ -68,6 +68,10 @@ def read_map(console) -> List:
 def read_walking_animation(console):
     return read_m(console, 0xC108)
 
+def read_opp_level(console):
+    return read_m(console, 0xCFE8)
+
+
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
             WindowEvent.PRESS_ARROW_LEFT,
@@ -136,7 +140,6 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_pos(console), read_map(console),
-            walked
+            read_opp_level(console)
         )
         walked = step(console, int(input("input:")))

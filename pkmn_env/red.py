@@ -111,6 +111,7 @@ class PkmnRedEnv(Env):
     ORIENTATION = "orientation"
     SURROUNDING_TILES_VISITATION = "surrounding_tiles_visitation"
     NOVELTY_COUNT = "novelty_count"
+    DELTA_LEVEL = "Party_delta_level"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -215,7 +216,12 @@ class PkmnRedEnv(Env):
             VariableGetter(
                 dim=6,
                 name=PkmnRedEnv.PARTY_LEVELS,
-                scale=0.02,
+                scale=0.01,
+            ),
+            VariableGetter(
+                name=PkmnRedEnv.DELTA_LEVEL,
+                scale=0.2,
+                post_process_fn=lambda x: np.clip(x, -5., 5.)
             ),
             VariableGetter(
                 name=PkmnRedEnv.TOTAL_EVENTS_TRIGGERED,
@@ -304,6 +310,7 @@ class PkmnRedEnv(Env):
         self.visited_maps = {37, 38, 39}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
         self.entrance_coords = None
+        self.highest_opponent_level_so_far = 5.
         self.last_reward_dict = {}
 
         self.full_frame_writer = None
@@ -373,6 +380,7 @@ class PkmnRedEnv(Env):
         self.episode_reward = 0
         self.visited_maps = {37, 38, 39}
         self.entrance_coords = None
+        self.highest_opponent_level_so_far = 5.
         self.visited_coordinates = defaultdict(lambda: 0)
 
 
@@ -429,7 +437,10 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.MONEY].append(self.read_money())
         party_levels = self.read_party_levels()
+        self.highest_opponent_level_so_far = np.maximum(self.highest_opponent_level_so_far, self.read_opponent_level())
         self.game_stats[PkmnRedEnv.PARTY_LEVELS].append(party_levels)
+
+        self.game_stats[PkmnRedEnv.PARTY_DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
         self.game_stats[PkmnRedEnv.TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE].append(party_experience)
@@ -614,7 +625,9 @@ class PkmnRedEnv(Env):
             total_healing = 0
             for i in range(6):
                 # Can be hacked with pc, let's see :)
-                total_delta_exp += np.maximum(
+                level_fraction = np.maximum(1., self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1][i] - self.highest_opponent_level_so_far)
+
+                total_delta_exp += level_fraction * np.maximum(
                     (self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
                     - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i] != 0.)
                     , 0.
@@ -815,6 +828,8 @@ class PkmnRedEnv(Env):
     def read_orientation(self) -> int:
         return self.read_m(0xC109)
 
+    def read_opponent_level(self) -> int:
+        return self.read_m(0xCFE8)
 
 
 
