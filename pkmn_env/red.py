@@ -623,11 +623,12 @@ class PkmnRedEnv(Env):
             # we gain more experience as game moves on:
             total_delta_exp = 0
             total_healing = 0
+            level_fraction = np.maximum(1., max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])/self.highest_opponent_level_so_far)
             for i in range(6):
                 # Can be hacked with pc, let's see :)
-                level_fraction = np.maximum(1., self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1][i] - self.highest_opponent_level_so_far)
 
-                total_delta_exp += level_fraction * np.maximum(
+
+                total_delta_exp += np.square(level_fraction) * np.maximum(
                     (self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
                     - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i] != 0.)
                     , 0.
