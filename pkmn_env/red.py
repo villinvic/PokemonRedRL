@@ -440,7 +440,7 @@ class PkmnRedEnv(Env):
         self.highest_opponent_level_so_far = np.maximum(self.highest_opponent_level_so_far, self.read_opponent_level())
         self.game_stats[PkmnRedEnv.PARTY_LEVELS].append(party_levels)
 
-        self.game_stats[PkmnRedEnv.PARTY_DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
+        self.game_stats[PkmnRedEnv.DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
         self.game_stats[PkmnRedEnv.TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE].append(party_experience)
