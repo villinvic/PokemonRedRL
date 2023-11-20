@@ -78,7 +78,7 @@ class PokemonLstmModel(TFModelV2):
 
         fc3 = tf.keras.layers.Dense(
             self.fcnet_size,
-            name="fc2",
+            name="fc3",
             activation="relu",
         )(fc2)
 
