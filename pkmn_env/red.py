@@ -216,7 +216,7 @@ class PkmnRedEnv(Env):
             VariableGetter(
                 dim=6,
                 name=PkmnRedEnv.PARTY_LEVELS,
-                scale=0.01,
+                scale=0.02,
             ),
             VariableGetter(
                 name=PkmnRedEnv.DELTA_LEVEL,
