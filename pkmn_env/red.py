@@ -697,7 +697,7 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
                 PkmnRedEnv.COORDINATES: int(
-                    (self.game_stats[PkmnRedEnv.COORDINATES][-1]
+                    (curr_coords
                     in
                     self.last_walked_coordinates[-6:-1])
                     and
