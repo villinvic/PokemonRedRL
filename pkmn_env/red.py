@@ -266,14 +266,15 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0.5,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.5,
-            PkmnRedEnv.COORDINATES              :   -0.009*0.09,
-            PkmnRedEnv.COORDINATES + "_NEG"     :   0.009* 0.92,
-            PkmnRedEnv.COORDINATES + "_POS"     :   0.009,
-            PkmnRedEnv.PARTY_HEALTH             :   0.5,
+            PkmnRedEnv.COORDINATES              :   -0.005 * 0.06,
+            PkmnRedEnv.COORDINATES + "_NEG"     :   0.005 * 0.95,
+            PkmnRedEnv.COORDINATES + "_POS"     :   0.005,
+            PkmnRedEnv.PARTY_HEALTH             :   0.,
 
             # Additional
 
-            "novelty"                           :   0.,  # 1e-3  #/ (self.similar_frame_dist)
+            # Not really novelty but ok, we have to work on that
+            "novelty"                           :   0.01,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -312,6 +313,7 @@ class PkmnRedEnv(Env):
         self.entrance_coords = None
         self.highest_opponent_level_so_far = 5.
         self.last_reward_dict = {}
+        self.last_walked_coordinates = []
 
         self.full_frame_writer = None
 
@@ -382,6 +384,7 @@ class PkmnRedEnv(Env):
         self.entrance_coords = None
         self.highest_opponent_level_so_far = 5.
         self.visited_coordinates = defaultdict(lambda: 0)
+        self.last_walked_coordinates = []
 
 
         if self.save_video:
@@ -550,7 +553,7 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return np.minimum(self.distinct_frames_observed, 1000)
+                return int(self.distinct_frames_observed > 350)
 
         return 0.
 
@@ -580,11 +583,12 @@ class PkmnRedEnv(Env):
         rewards = {"novelty": self.update_frame_knn_index(obs["screen"])}
 
         if self.step_count >= 4:
-
             curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
             past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
             past_2_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-3])
             past_3_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-4])
+            if walked:
+                self.last_walked_coordinates.append(curr_coords)
 
             if (
                     self.entrance_coords is None
@@ -627,7 +631,7 @@ class PkmnRedEnv(Env):
             for i in range(6):
                 # Can be hacked with pc, let's see :)
 
-                total_delta_exp += np.square(level_fraction) * np.maximum(
+                total_delta_exp += level_fraction * np.maximum(
                     (self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
                     - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i] != 0.)
                     , 0.
@@ -685,7 +689,7 @@ class PkmnRedEnv(Env):
                 PkmnRedEnv.COORDINATES: int(
                     (self.game_stats[PkmnRedEnv.COORDINATES][-1]
                     in
-                    self.game_stats[PkmnRedEnv.COORDINATES][-4:-1])
+                    self.last_walked_coordinates[-6:-1])
                     and
                     walked
                 ),
@@ -711,7 +715,7 @@ class PkmnRedEnv(Env):
             total_reward += scaled_reward
 
         if total_reward == 0:
-            total_reward = 1.6e-5
+            total_reward = 3e-5
 
         return total_reward
 
