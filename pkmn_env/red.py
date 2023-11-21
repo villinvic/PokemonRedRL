@@ -111,7 +111,8 @@ class PkmnRedEnv(Env):
     ORIENTATION = "orientation"
     SURROUNDING_TILES_VISITATION = "surrounding_tiles_visitation"
     NOVELTY_COUNT = "novelty_count"
-    DELTA_LEVEL = "Party_delta_level"
+    DELTA_LEVEL = "party_delta_level"
+    ENTRANCE_DELTA_POS = "entrance_delta_pos"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -214,6 +215,11 @@ class PkmnRedEnv(Env):
             #     scale=1/np.cbrt(1e6)
             # ),
             VariableGetter(
+                dim=2,
+                name=PkmnRedEnv.ENTRANCE_DELTA_POS,
+                scale=0.05,
+            ),
+            VariableGetter(
                 dim=6,
                 name=PkmnRedEnv.PARTY_LEVELS,
                 scale=0.02,
@@ -310,7 +316,7 @@ class PkmnRedEnv(Env):
         self.episode_reward = 0
         self.visited_maps = {37, 38, 39}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
-        self.entrance_coords = None
+        self.entrance_coords = (5, 3, 40)
         self.highest_opponent_level_so_far = 5.
         self.last_reward_dict = {}
         self.last_walked_coordinates = []
@@ -381,7 +387,7 @@ class PkmnRedEnv(Env):
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
         self.visited_maps = {37, 38, 39}
-        self.entrance_coords = None
+        self.entrance_coords = (5, 30, 40)
         self.highest_opponent_level_so_far = 5.
         self.visited_coordinates = defaultdict(lambda: 0)
         self.last_walked_coordinates = []
@@ -475,7 +481,11 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.COORDINATES].append(pos + [map_id])
 
-        #x, y = pos
+        x, y = pos
+        x2, y2, _ = self.entrance_coords
+        self.game_stats[PkmnRedEnv.ENTRANCE_DELTA_POS].append([
+            x2 - x, y2 - y
+        ])
         # self.game_stats[PkmnRedEnv.SURROUNDING_TILES_VISITATION].append([
         #     self.visited_coordinates[(x, y, map_id)],
         #     self.visited_coordinates[(x+1, y, map_id)],

@@ -140,6 +140,6 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_opp_level(console)
+            read_pos(console), read_map(console)
         )
         walked = step(console, int(input("input:")))
