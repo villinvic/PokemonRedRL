@@ -268,12 +268,12 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.75,
+            PkmnRedEnv.BLACKOUT                 :   -0.6,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   0.5,
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
+            PkmnRedEnv.MAPS_VISITED             :   0.6,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.3,
             PkmnRedEnv.COORDINATES              :   -0.003 * 0.01,
             PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.97,
             PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
@@ -282,7 +282,7 @@ class PkmnRedEnv(Env):
             # Additional
 
             # Not really novelty but ok, we have to work on that
-            "novelty"                           :   0.015,  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   0.02,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
