@@ -144,9 +144,6 @@ class PkmnRedEnv(Env):
         self.fast_video = config['fast_video'] and self.worker_index == 1
         self.additional_steps_per_episode = config['additional_steps_per_episode']
 
-        if self.save_video :
-            print("RENDERING")
-
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
         self.screen_shape = (72, 80)  # (48, 56)
@@ -157,6 +154,10 @@ class PkmnRedEnv(Env):
 
         self.metadata = {"render.modes": []}
         self.reward_range = (-np.inf, np.inf)
+
+        self.pokemon_centers = {
+            41, 58, 64, 68, 81, 89, 133, 141, 154, 171, 174, 182,
+        }
 
         self.valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
@@ -180,6 +181,7 @@ class PkmnRedEnv(Env):
             WindowEvent.RELEASE_BUTTON_A,
             WindowEvent.RELEASE_BUTTON_B
         ]
+
 
         # Set these in ALL subclasses
         self.action_space = spaces.Discrete(len(self.valid_actions))
@@ -266,16 +268,16 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -1.,
+            PkmnRedEnv.BLACKOUT                 :   -0.75,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   9.,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   0.5,
+            PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.5,
-            PkmnRedEnv.COORDINATES              :   -0.005 * 0.05,
-            PkmnRedEnv.COORDINATES + "_NEG"     :   0.005 * 0.95,
-            PkmnRedEnv.COORDINATES + "_POS"     :   0.005,
-            PkmnRedEnv.PARTY_HEALTH             :   0.,
+            PkmnRedEnv.COORDINATES              :   -0.003 * 0.01,
+            PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.97,
+            PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
+            PkmnRedEnv.PARTY_HEALTH             :   1.,
 
             # Additional
 
@@ -648,7 +650,7 @@ class PkmnRedEnv(Env):
                 ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
                 6.)
 
-            if not any(self.game_stats[PkmnRedEnv.BLACKOUT][-2:]):
+            if not any(self.game_stats[PkmnRedEnv.BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
                 for i in range(6):
                     # We need to make sure one of the pokemons wasnt KO and healed
                     total_healing += int(
