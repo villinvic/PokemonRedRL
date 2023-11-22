@@ -216,11 +216,11 @@ class PkmnRedEnv(Env):
             #     post_process_fn=np.cbrt,
             #     scale=1/np.cbrt(1e6)
             # ),
-            VariableGetter(
-                dim=2,
-                name=PkmnRedEnv.ENTRANCE_DELTA_POS,
-                scale=0.05,
-            ),
+            # VariableGetter(
+            #     dim=2,
+            #     name=PkmnRedEnv.ENTRANCE_DELTA_POS,
+            #     scale=0.05,
+            # ),
             VariableGetter(
                 dim=6,
                 name=PkmnRedEnv.PARTY_LEVELS,
@@ -268,21 +268,21 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.5,
+            PkmnRedEnv.BLACKOUT                 :   -1,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0.75,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
-            PkmnRedEnv.COORDINATES              :   -0.003 * 0.05,
-            PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
-            PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
+            PkmnRedEnv.COORDINATES              :   -5e-4,
+            # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
+            # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
             PkmnRedEnv.PARTY_HEALTH             :   1.,
 
             # Additional
 
             # Not really novelty but ok, we have to work on that
-            "novelty"                           :   0.02,  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   0.03,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -488,11 +488,11 @@ class PkmnRedEnv(Env):
 
         self.game_stats[PkmnRedEnv.COORDINATES].append(pos + [map_id])
 
-        x, y = pos
-        x2, y2, _ = self.entrance_coords
-        self.game_stats[PkmnRedEnv.ENTRANCE_DELTA_POS].append([
-            x2 - x, y2 - y
-        ])
+        # x, y = pos
+        # x2, y2, _ = self.entrance_coords
+        # self.game_stats[PkmnRedEnv.ENTRANCE_DELTA_POS].append([
+        #     x2 - x, y2 - y
+        # ])
         # self.game_stats[PkmnRedEnv.SURROUNDING_TILES_VISITATION].append([
         #     self.visited_coordinates[(x, y, map_id)],
         #     self.visited_coordinates[(x+1, y, map_id)],
@@ -604,45 +604,44 @@ class PkmnRedEnv(Env):
 
         if self.step_count >= 4:
             curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
-            past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
-            past_2_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-3])
-            past_3_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-4])
+            # past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
+            # past_2_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-3])
+            # past_3_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-4])
             if walked:
                 self.last_walked_coordinates.append(curr_coords)
-
-            if (
-                    self.entrance_coords is None
-                    or
-                    (
-                        self.entrance_coords[-1] != curr_coords[-1]
-                        and
-                        curr_coords[-1] == past_coords[-1] == past_2_coords[-1]
-                    )
-            ):
-                self.entrance_coords = curr_coords
-
-            if (
-                    curr_coords[-1] == past_coords[-1] == past_3_coords[-1] == self.entrance_coords[-1]
-            ):
-                dx = abs(curr_coords[0] - self.entrance_coords[0])
-                dy = abs(curr_coords[1] - self.entrance_coords[1])
-                # the past coord might be far away if we teleported, but should not happen as we still have to walk away
-                # from the entrance coord a bit before getting there
-                dx2 = abs(past_coords[0] - self.entrance_coords[0])
-                dy2 = abs(past_coords[1] - self.entrance_coords[1])
-
-                assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[PkmnRedEnv.COORDINATES][-6:]
-
-                r_nav = dx - dx2 + dy - dy2
-
-                # if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
-                #     r_nav = np.minimum(r_nav, 0.)
-
-            elif self.entrance_coords[-1] != curr_coords[-1]:
-                r_nav = -1.
-            else:
-                r_nav = 0.
-
+            #
+            # if (
+            #         self.entrance_coords is None
+            #         or
+            #         (
+            #             self.entrance_coords[-1] != curr_coords[-1]
+            #             and
+            #             curr_coords[-1] == past_coords[-1] == past_2_coords[-1]
+            #         )
+            # ):
+            #     self.entrance_coords = curr_coords
+            #
+            # if (
+            #         curr_coords[-1] == past_coords[-1] == past_3_coords[-1] == self.entrance_coords[-1]
+            # ):
+            #     dx = abs(curr_coords[0] - self.entrance_coords[0])
+            #     dy = abs(curr_coords[1] - self.entrance_coords[1])
+            #     # the past coord might be far away if we teleported, but should not happen as we still have to walk away
+            #     # from the entrance coord a bit before getting there
+            #     dx2 = abs(past_coords[0] - self.entrance_coords[0])
+            #     dy2 = abs(past_coords[1] - self.entrance_coords[1])
+            #
+            #     assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[PkmnRedEnv.COORDINATES][-6:]
+            #
+            #     r_nav = dx - dx2 + dy - dy2
+            #
+            #     # if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
+            #     #     r_nav = np.minimum(r_nav, 0.)
+            #
+            # elif self.entrance_coords[-1] != curr_coords[-1]:
+            #     r_nav = -1.
+            # else:
+            #     r_nav = 0.
 
             # we gain more experience as game moves on:
             total_delta_exp = 0
@@ -663,7 +662,7 @@ class PkmnRedEnv(Env):
                     # We need to make sure one of the pokemons wasnt KO and healed
                     total_healing += int(
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
-                        > 0.5
+                        > 0.05
                         and
                         self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i] > 0
                     )
@@ -703,8 +702,8 @@ class PkmnRedEnv(Env):
                 ),
 
                 # reward optimized walks
-                PkmnRedEnv.COORDINATES + "_NEG": np.minimum(r_nav, 0.),
-                PkmnRedEnv.COORDINATES + "_POS": np.maximum(r_nav, 0.),
+                # PkmnRedEnv.COORDINATES + "_NEG": np.minimum(r_nav, 0.),
+                # PkmnRedEnv.COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
                 PkmnRedEnv.COORDINATES: int(
                     (curr_coords
@@ -735,7 +734,7 @@ class PkmnRedEnv(Env):
             total_reward += scaled_reward
 
         if total_reward == 0:
-            total_reward = 3e-5
+            total_reward = 2e-5
 
         return total_reward
 
