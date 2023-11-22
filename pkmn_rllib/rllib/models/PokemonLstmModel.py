@@ -65,7 +65,7 @@ class PokemonLstmModel(TFModelV2):
         flags_embedding = tf.keras.layers.Dense(
             self.flag_embedding_size,
             name="flags_dense_embedding",
-            activation="sigmoid",
+            activation="tanh",
         )(flags_input)
 
         concat_features = tf.keras.layers.Concatenate(axis=-1, name="screen_and_stats_pre_embedding")(
