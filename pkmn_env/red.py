@@ -432,7 +432,6 @@ class PkmnRedEnv(Env):
             tuple(reversed(self.screen_shape)),
             interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
-        print("BAHHHHHHHHHHHHHHHH")
 
         return np.uint8(grayscale_downsampled_screen)
 
