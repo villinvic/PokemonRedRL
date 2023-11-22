@@ -292,7 +292,7 @@ class PkmnRedEnv(Env):
         )
         self.observed_stats = np.zeros(self.additional_features_shape, dtype=np.float32)
 
-        self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
+        self.triggered_event_flags = np.zeros(10, dtype=np.uint8) #np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
 
         self.observation_space = spaces.Dict({
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
@@ -384,7 +384,7 @@ class PkmnRedEnv(Env):
             self.pyboy.load_state(f)
 
         self.game_stats = DefaultOrderedDict(list)
-        self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
+        self.triggered_event_flags = np.zeros(10, dtype=np.uint8) #np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
         self.last_reward_dict = {}
         self.init_knn()
 
@@ -468,7 +468,7 @@ class PkmnRedEnv(Env):
         event_flag_indices = self.read_extensive_events()
         self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(event_flag_indices)
-        self.triggered_event_flags[event_flag_indices] = 1
+        #self.triggered_event_flags[event_flag_indices] = 1
         self.game_stats[PkmnRedEnv.PARTY_FILLS].append(self.read_party_fills())
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
