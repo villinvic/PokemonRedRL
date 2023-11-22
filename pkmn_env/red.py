@@ -292,8 +292,7 @@ class PkmnRedEnv(Env):
         )
         self.observed_stats = np.zeros(self.additional_features_shape, dtype=np.float32)
 
-        self.triggered_event_flags = np.array([0] * (0xD886 - 0xD747) * 8, dtype=np.uint8)
-
+        self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
 
         self.observation_space = spaces.Dict({
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
@@ -385,7 +384,7 @@ class PkmnRedEnv(Env):
             self.pyboy.load_state(f)
 
         self.game_stats = DefaultOrderedDict(list)
-        self.triggered_event_flags = np.array([0] * (0xD886 - 0xD747) * 8, dtype=np.uint8)
+        self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
         self.last_reward_dict = {}
         self.init_knn()
 
