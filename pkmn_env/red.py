@@ -466,8 +466,9 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.BADGE_SUM].append(sum(badges))
         self.game_stats[PkmnRedEnv.SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
-        print("BAHHHHHHH")
         event_flag_indices = self.read_extensive_events()
+        print("BAHHHHHHH")
+
         self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(event_flag_indices)
         self.triggered_event_flags[event_flag_indices] = 1
