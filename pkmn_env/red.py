@@ -427,12 +427,12 @@ class PkmnRedEnv(Env):
                          + 0.114 * screen[:, :, 2]
                  )
 
-        print("BAHHHHHHHHHHHHHHHH")
         grayscale_downsampled_screen = cv2.resize(
             grayscale_screen,
             tuple(reversed(self.screen_shape)),
             interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
+        print("BAHHHHHHHHHHHHHHHH")
 
         return np.uint8(grayscale_downsampled_screen)
 
