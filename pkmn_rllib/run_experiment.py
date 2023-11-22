@@ -23,7 +23,7 @@ env_config = {
                 'print_rewards': False, 'save_video': True, 'fast_video': True,
                 'session_path': sess_path,
                 'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 70_000_000.,
-                'knn_elements': 1000,
+                'knn_elements': 1500,
                 'additional_steps_per_episode': 1
             }
 
@@ -77,6 +77,7 @@ config = VmpoConfig().training(
         ],
         "fcnet_size": 512,
         "lstm_size": 512,
+        "flag_embedding_size": 64,
         "max_seq_lens": 64,
     }
 ).rollouts(

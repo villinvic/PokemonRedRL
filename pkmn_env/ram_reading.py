@@ -1,5 +1,7 @@
+from time import time
 from typing import List
 
+import numpy as np
 from pyboy.pyboy import PyBoy
 from pyboy.utils import WindowEvent
 
@@ -71,6 +73,37 @@ def read_walking_animation(console):
 def read_opp_level(console):
     return read_m(console, 0xCFE8)
 
+def read_extensive_events(console) -> List[int]:
+    t = time()
+    binary_components = []
+
+    for i in range(0xD747, 0xD886):
+        value = read_m(console, i)
+        binary_components.extend([int(bit) for bit in format(value, '08b')])
+
+    print("time:", time()-t)
+    print(len(binary_components))
+
+    return binary_components
+
+def find_ones_indices(console) -> List[int]:
+    ones_indices = []
+    t = time()
+
+    for i in range(0xD747, 0xD886):
+        value = read_m(console, i)
+
+        index = 0
+        while value:
+            if value & 1:
+                ones_indices.append((i-0xD747) * 8 + index)
+            value >>= 1
+            index += 1
+
+    print("time2 :", time()-t)
+
+    return ones_indices
+
 
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
@@ -140,6 +173,7 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_pos(console), read_map(console)
+            np.argwhere(np.array(read_extensive_events(console))==1),
+            find_ones_indices(console)
         )
         walked = step(console, int(input("input:")))

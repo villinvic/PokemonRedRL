@@ -272,8 +272,8 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   1.,
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.5,
+            PkmnRedEnv.MAPS_VISITED             :   0.5,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   2.,
             PkmnRedEnv.COORDINATES              :   -0.003 * 0.01,
             PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.97,
             PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
@@ -292,9 +292,13 @@ class PkmnRedEnv(Env):
         )
         self.observed_stats = np.zeros(self.additional_features_shape, dtype=np.float32)
 
+        self.triggered_event_flags = np.array([0] * (0xD886 - 0xD747) * 8, dtype=np.uint8)
+
+
         self.observation_space = spaces.Dict({
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
+            "flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
         })
 
         self.pyboy = PyBoy(
@@ -322,7 +326,6 @@ class PkmnRedEnv(Env):
         self.highest_opponent_level_so_far = 5.
         self.last_reward_dict = {}
         self.last_walked_coordinates = []
-
         self.full_frame_writer = None
 
         self.inited = 0
@@ -338,7 +341,8 @@ class PkmnRedEnv(Env):
 
         return {
             "screen" :   self.render(),
-            "stats"  :   self.get_observed_stats()
+            "stats"  :   self.get_observed_stats(),
+            "flags"  :   self.get_event_flags()
         }
 
     def run_action_on_emulator(self, action):
@@ -381,6 +385,7 @@ class PkmnRedEnv(Env):
             self.pyboy.load_state(f)
 
         self.game_stats = DefaultOrderedDict(list)
+        self.triggered_event_flags = np.array([0] * (0xD886 - 0xD747) * 8, dtype=np.uint8)
         self.last_reward_dict = {}
         self.init_knn()
 
@@ -461,9 +466,10 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.BADGE_SUM].append(sum(badges))
         self.game_stats[PkmnRedEnv.SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
-        events = self.read_events()
-        self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(sum(events))
-        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(events)
+        event_flag_indices = self.read_extensive_events()
+        self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
+        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(event_flag_indices)
+        self.triggered_event_flags[event_flag_indices] = 1
         self.game_stats[PkmnRedEnv.PARTY_FILLS].append(self.read_party_fills())
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
@@ -508,6 +514,9 @@ class PkmnRedEnv(Env):
         assert idx == self.additional_features_shape[0], (idx, self.additional_features_shape[0])
 
         return self.observed_stats
+
+    def get_event_flags(self):
+        return self.triggered_event_flags
 
     def step(self, action):
 
@@ -834,6 +843,21 @@ class PkmnRedEnv(Env):
 
     def read_events(self) -> List:
         return [self.read_m(i).bit_count() for i in range(0xD747, 0xD886)]
+
+    def read_extensive_events(self) -> List:
+        flags_indices = []
+
+        for i in range(0xD747, 0xD886):
+            value = self.read_m(i)
+
+            index = 0
+            while value:
+                if value & 1:
+                    flags_indices.append((i - 0xD747) * 8 + index)
+                value >>= 1
+                index += 1
+
+        return flags_indices
 
     def read_pos(self) -> List:
         return [self.read_m(0xD362), self.read_m(0xD361)]
