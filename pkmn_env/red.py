@@ -248,7 +248,7 @@ class PkmnRedEnv(Env):
             #     name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
             #     scale=0.2
             # ),
-            # VariableGetter(
+            #VariableGetter(
             #     name=PkmnRedEnv.NOVELTY_COUNT,
             #     scale=0.01
             # ),
@@ -268,11 +268,11 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.75,
+            PkmnRedEnv.BLACKOUT                 :   -0.3,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   1.,
+            PkmnRedEnv.MAPS_VISITED             :   0., # 3.
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
             PkmnRedEnv.COORDINATES              :   -2.5e-5,
             # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
@@ -282,7 +282,7 @@ class PkmnRedEnv(Env):
             # Additional
 
             # Not really novelty but ok, we have to work on that
-            "novelty"                           :   0.03,  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   10.,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -326,6 +326,8 @@ class PkmnRedEnv(Env):
         self.last_reward_dict = {}
         self.last_walked_coordinates = []
         self.full_frame_writer = None
+
+        self.init_knn()
 
         self.inited = 0
 
@@ -386,7 +388,9 @@ class PkmnRedEnv(Env):
         self.game_stats = DefaultOrderedDict(list)
         self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
         self.last_reward_dict = {}
-        self.init_knn()
+
+        #  We init only once now
+        # self.init_knn()
 
         self.distinct_frames_observed = 0
         self.step_count = 0
@@ -553,7 +557,8 @@ class PkmnRedEnv(Env):
             if (
                     self.game_stats[PkmnRedEnv.BADGE_SUM][-1] != self.game_stats[PkmnRedEnv.BADGE_SUM][-2]
             ):
-                self.init_knn()
+                pass
+                #self.init_knn()
 
         if self.knn_index.get_current_count() == 0:
             # if index is empty add current frame
@@ -573,9 +578,9 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return int(self.distinct_frames_observed > 350)
+                return int(self.distinct_frames_observed > 300)
 
-        return 0.
+        return 0
 
     def on_episode_end(self):
         if self.save_final_state:
@@ -868,6 +873,5 @@ class PkmnRedEnv(Env):
 
     def read_opponent_level(self) -> int:
         return self.read_m(0xCFE8)
-
 
 

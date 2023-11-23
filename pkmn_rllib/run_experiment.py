@@ -23,7 +23,7 @@ env_config = {
                 'print_rewards': False, 'save_video': True, 'fast_video': True,
                 'session_path': sess_path,
                 'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 70_000_000.,
-                'knn_elements': 1500,
+                'knn_elements': 20_000,
                 'additional_steps_per_episode': 1
             }
 
@@ -52,7 +52,7 @@ config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=5e-4,
     alpha=5.,
-    target_network_update_freq=1536,
+    target_network_update_freq=100, #1536,
     replay_proportion=0.,
     entropy_coeff=1e-3,
     learner_queue_size=512,
@@ -64,9 +64,9 @@ config = VmpoConfig().training(
     grad_clip=1.,
     opt_type="rmsprop",
     train_batch_size=8096,
-    num_sgd_iter=12,
-    minibatch_buffer_size=128,
-    gamma=0.997,
+    #num_sgd_iter=1,
+    #minibatch_buffer_size=128,
+    gamma=0.999,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
@@ -132,6 +132,5 @@ exp = tune.run(
         local_dir="rllib_runs",
         #restore="/home/goji/Documents/PokemonRedRL/rllib_runs/v1_2/Vmpo_PokemonRed_64508_00000_0_2023-11-15_10-57-31/checkpoint_002100"
     )
-
 
 
