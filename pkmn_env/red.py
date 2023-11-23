@@ -274,7 +274,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
-            PkmnRedEnv.COORDINATES              :   2.5e-5,
+            PkmnRedEnv.COORDINATES              :   -2.5e-5,
             # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
             # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
             PkmnRedEnv.PARTY_HEALTH             :   1.,
