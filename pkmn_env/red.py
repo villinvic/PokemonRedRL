@@ -268,13 +268,13 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -1,
+            PkmnRedEnv.BLACKOUT                 :   -0.75,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
             PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   0.75,
+            PkmnRedEnv.MAPS_VISITED             :   1.,
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
-            PkmnRedEnv.COORDINATES              :   -5e-4,
+            PkmnRedEnv.COORDINATES              :   2.5e-5,
             # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
             # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
             PkmnRedEnv.PARTY_HEALTH             :   1.,
@@ -733,7 +733,7 @@ class PkmnRedEnv(Env):
             self.game_stats["reward_"+reward_name].append(scaled_reward)
             total_reward += scaled_reward
 
-        if total_reward == 0:
+        if total_reward == 0 and not walked:
             total_reward = 2e-5
 
         return total_reward
