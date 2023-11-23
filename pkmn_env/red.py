@@ -391,8 +391,8 @@ class PkmnRedEnv(Env):
 
         #  We init only once now
         # self.init_knn()
+        # self.distinct_frames_observed = 0
 
-        self.distinct_frames_observed = 0
         self.step_count = 0
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
