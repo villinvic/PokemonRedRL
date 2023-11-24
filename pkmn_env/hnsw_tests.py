@@ -11,11 +11,11 @@ num_queries = 32
 
 # Generating sample data
 data = []
-
-_, _, files = next(os.walk("/home/goji/Documents/PokemonRedRL/sessions/session_4a4b0522/novelty_frames"))
+dir = "/home/goji/Documents/PokemonRedRL/sessions/session_4a4b0522/novelty_frames"
+_, _, files = next(os.walk(dir))
 for i, file in enumerate(files):
     if "observed" in file:
-        img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(dir + "/" + file, cv2.IMREAD_GRAYSCALE)
         data.append(img.flatten()[np.newaxis])
     print(i, len(files))
 
