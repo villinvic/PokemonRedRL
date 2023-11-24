@@ -76,6 +76,9 @@ t = time()
 labels_hnsw, distances_hnsw = hnsw_index.knn_query(query_data, k)
 labels_bf, distances_bf = bf_index.knn_query(query_data, k)
 
+for dist in distances_bf:
+    print(dist)
+
 # Measure recall
 correct = 0
 

@@ -340,8 +340,9 @@ class PkmnRedEnv(Env):
         clipped_shape = (self.screen_shape[0]-23, self.screen_shape[1])
         self.knn_index = hnswlib.Index(space='l2', dim=np.prod(clipped_shape))
         self.knn_index.init_index(
-            max_elements=self.num_elements, ef_construction=100, M=16
+            max_elements=self.num_elements, ef_construction=16, M=32
         )
+        self.knn_index.set_ef(16)
 
     def _get_obs(self):
 
