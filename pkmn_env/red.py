@@ -337,7 +337,7 @@ class PkmnRedEnv(Env):
         self.inited = 0
 
     def init_knn(self):
-        clipped_shape = (self.screen_shape[0]-14, self.screen_shape[1]-17)
+        clipped_shape = (self.screen_shape[0], self.screen_shape[1]-20)
         self.knn_index = hnswlib.Index(space='l2', dim=np.prod(clipped_shape))
         self.knn_index.init_index(
             max_elements=self.num_elements, ef_construction=100, M=16
@@ -556,8 +556,9 @@ class PkmnRedEnv(Env):
         #     self.levels_satisfied = True
         #     self.base_explore = self.knn_index.get_current_count()
         #     self.init_knn()
+
         # We want to clip the bottom where text appears
-        clipped_frame = frame[7:-7, : -(24-7)]
+        clipped_frame = frame[ : -(24-4)]
         frame_vector = clipped_frame.flatten()
 
         if self.step_count >= 2:
@@ -587,7 +588,8 @@ class PkmnRedEnv(Env):
                 self.distinct_frames_observed += 1
 
                 if self.distinct_frames_observed > 150:
-                    self.save_screenshot("novelty_frames", f"{self.worker_index}_{self.distinct_frames_observed}")
+                    self.save_screenshot("novelty_frames", f"{self.distinct_frames_observed}_{self.worker_index}",
+                                         image=clipped_frame)
 
                 return int(self.distinct_frames_observed > 150)
 
@@ -755,7 +757,7 @@ class PkmnRedEnv(Env):
 
         return total_reward
 
-    def save_screenshot(self, folder, name):
+    def save_screenshot(self, folder, name, image=None):
         ss_dir = self.s_path / Path(folder)
         ss_dir.mkdir(exist_ok=True)
 
@@ -764,9 +766,10 @@ class PkmnRedEnv(Env):
             ss_dir / Path(f'{name}_original.jpeg'),
             curr_screen
         )
+        observed = image if image is not None else self.preprocess_screen(curr_screen)
         plt.imsave(
             ss_dir / Path(f'{name}_observed.jpeg'),
-            self.preprocess_screen(curr_screen)[:, :, 0],
+            observed[:, :, 0],
             cmap="gray"
         )
 
