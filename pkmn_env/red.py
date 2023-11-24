@@ -113,6 +113,7 @@ class PkmnRedEnv(Env):
     NOVELTY_COUNT = "novelty_count"
     DELTA_LEVEL = "party_delta_level"
     ENTRANCE_DELTA_POS = "entrance_delta_pos"
+    SENT_OUT = "SENT_OUT"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -243,6 +244,10 @@ class PkmnRedEnv(Env):
                 dim=6,
                 name=PkmnRedEnv.PARTY_FILLS,
             ),
+            VariableGetter(
+                dim=6,
+                name=PkmnRedEnv.SENT_OUT
+            )
             # VariableGetter(
             #     dim=5,
             #     name=PkmnRedEnv.SURROUNDING_TILES_VISITATION,
@@ -474,6 +479,7 @@ class PkmnRedEnv(Env):
         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(event_flag_indices)
         # self.triggered_event_flags[event_flag_indices] = 1
         self.game_stats[PkmnRedEnv.PARTY_FILLS].append(self.read_party_fills())
+        self.game_stats[PkmnRedEnv.SENT_OUT].append(self.read_sent_out())
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
             int(sum(party_health) == 0)
@@ -724,6 +730,7 @@ class PkmnRedEnv(Env):
             if total_healing > 0:
                 self.save_screenshot("debug", "healing")
 
+        self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
         self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
 
         # if walked:
