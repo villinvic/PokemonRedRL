@@ -882,6 +882,6 @@ class PkmnRedEnv(Env):
         return self.read_m(0xCFE8)
 
     def read_sent_out(self) -> List:
-        return [i == self.read_m(0xCC2F) for i in range(6)]
+        return [int(i == self.read_m(0xCC2F)) for i in range(6)]
 
 
