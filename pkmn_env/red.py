@@ -192,10 +192,10 @@ class PkmnRedEnv(Env):
                 dim=8,
                 name=PkmnRedEnv.BADGES
             ),
-            VariableGetter(
-                name=PkmnRedEnv.MONEY,
-                scale=5e-7
-            ),
+            # VariableGetter(
+            #     name=PkmnRedEnv.MONEY,
+            #     scale=5e-7
+            # ),
             VariableGetter(
                 name=PkmnRedEnv.SEEN_POKEMONS,
                 scale=1e-2
@@ -586,10 +586,10 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                if self.distinct_frames_observed > 200:
+                if self.distinct_frames_observed > 150:
                     self.save_screenshot("novelty_frames", f"{self.worker_index}_{self.distinct_frames_observed}")
 
-                return int(self.distinct_frames_observed > 200)
+                return int(self.distinct_frames_observed > 150)
 
         return 0
 
