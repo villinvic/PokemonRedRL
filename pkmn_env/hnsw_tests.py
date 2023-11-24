@@ -1,13 +1,24 @@
+import argparse
 from datetime import time
 
 import hnswlib
 import numpy as np
 import os
 import cv2
-dim = 32
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--ef', type=int, default=200)
+parser.add_argument('--ef-construction', type=int, default=200)
+parser.add_argument('--m', type=int, default=16)
+parser.add_argument('--n-queries', type=int, default=32)
+
+
+args, unknown_args = parser.parse_known_args()  # Parses only the known args to fix an issue with argv[1] being used as a save path
+
 num_elements = 100000
 k = 1
-num_queries = 32
+num_queries = args["n-queries"]
+
 
 # Generating sample data
 data = []
@@ -36,12 +47,12 @@ bf_index = hnswlib.BFIndex(space='l2', dim=len(data[0]))
 # M - is tightly connected with internal dimensionality of the data. Strongly affects the memory consumption (~M)
 # Higher M leads to higher accuracy/run_time at fixed ef/efConstruction
 
-hnsw_index.init_index(max_elements=num_elements, ef_construction=200, M=16)
+hnsw_index.init_index(max_elements=num_elements, ef_construction=args["ef-construction"], M=args["m"])
 bf_index.init_index(max_elements=num_elements)
 
 # Controlling the recall for hnsw by setting ef:
 # higher ef leads to better accuracy, but slower search
-hnsw_index.set_ef(200)
+hnsw_index.set_ef(args["ef"])
 
 # Set number of threads used during batch search/construction in hnsw
 # By default using all available cores
@@ -71,5 +82,5 @@ for i in range(num_queries):
                 correct += 1
                 break
 
-print("recall is :", float(correct)/(k*nun_queries))
+print("recall is :", float(correct)/(k*num_queries))
 print("time required:", time() - t)
