@@ -16,7 +16,7 @@ parser.add_argument('--n_queries', type=int, default=64)
 args, unknown_args = parser.parse_known_args()  # Parses only the known args to fix an issue with argv[1] being used as a save path
 print(args)
 num_elements = 100000
-k = 1
+k = 3
 num_queries = args.n_queries
 
 
