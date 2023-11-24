@@ -1,5 +1,5 @@
 import argparse
-from datetime import time
+from time import time
 
 import hnswlib
 import numpy as np
