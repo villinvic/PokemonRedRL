@@ -53,12 +53,12 @@ bf_index = hnswlib.BFIndex(space='l2', dim=len(data[0]))
 # M - is tightly connected with internal dimensionality of the data. Strongly affects the memory consumption (~M)
 # Higher M leads to higher accuracy/run_time at fixed ef/efConstruction
 
-hnsw_index.init_index(max_elements=num_elements, ef_construction=args.ef_construction, M=args.m)
+hnsw_index.init_index(max_elements=num_elements, ef_construction=2, M=16)
 bf_index.init_index(max_elements=num_elements)
 
 # Controlling the recall for hnsw by setting ef:
 # higher ef leads to better accuracy, but slower search
-hnsw_index.set_ef(args.ef)
+hnsw_index.set_ef(2)
 
 # Set number of threads used during batch search/construction in hnsw
 # By default using all available cores
