@@ -278,7 +278,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0., # 3.
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
             PkmnRedEnv.COORDINATES              :   0,
             # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
             # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
@@ -287,7 +287,7 @@ class PkmnRedEnv(Env):
             # Additional
 
             # Not really novelty but ok, we have to work on that
-            "novelty"                           :   2.,  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   1.,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -584,7 +584,10 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                return int(self.distinct_frames_observed > 350)
+                if self.distinct_frames_observed > 300:
+                    self.save_screenshot("novelty_frames", f"'{self.distinct_frames_observed}")
+
+                return int(self.distinct_frames_observed > 300)
 
         return 0
 
