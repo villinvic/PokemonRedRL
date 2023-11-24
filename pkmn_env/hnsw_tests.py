@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--ef', type=int, default=200)
 parser.add_argument('--ef_construction', type=int, default=200)
 parser.add_argument('--m', type=int, default=16)
-parser.add_argument('--n_queries', type=int, default=32)
+parser.add_argument('--n_queries', type=int, default=64)
 
 
 args, unknown_args = parser.parse_known_args()  # Parses only the known args to fix an issue with argv[1] being used as a save path
