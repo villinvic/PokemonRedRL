@@ -572,19 +572,19 @@ class PkmnRedEnv(Env):
                 frame_vector, np.array([self.knn_index.get_current_count()])
             )
             self.distinct_frames_observed += 0
-        else:
+        elif self.game_stats[PkmnRedEnv.COORDINATES][-1][-1] != 40:
 
             labels, distances = self.knn_index.knn_query(frame_vector, k=1)
             distance = distances[0][0]
 
-            if distance > self.similar_frame_dist and self.game_stats[PkmnRedEnv.COORDINATES][-1][-1] != 40:
+            if distance > self.similar_frame_dist:
 
                 self.knn_index.add_items(
                     frame_vector, np.array([self.distinct_frames_observed % self.num_elements])
                 )
                 self.distinct_frames_observed += 1
 
-                return int(self.distinct_frames_observed > 310)
+                return int(self.distinct_frames_observed > 350)
 
         return 0
 
@@ -746,7 +746,7 @@ class PkmnRedEnv(Env):
             total_reward += scaled_reward
 
         if total_reward == 0 and not walked:
-            total_reward = 3e-5
+            total_reward = -3e-5
 
         return total_reward
 
