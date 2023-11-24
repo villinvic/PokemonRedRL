@@ -556,7 +556,9 @@ class PkmnRedEnv(Env):
         #     self.levels_satisfied = True
         #     self.base_explore = self.knn_index.get_current_count()
         #     self.init_knn()
-        frame_vector = frame.flatten()
+        # We want to clip the bottom where text appears
+        clipped_frame = frame[7:-7, : -(24-7)]
+        frame_vector = clipped_frame.flatten()
 
         if self.step_count >= 2:
             # reset on badge get
@@ -584,10 +586,10 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                if self.distinct_frames_observed > 300:
-                    self.save_screenshot("novelty_frames", f"'{self.distinct_frames_observed}")
+                if self.distinct_frames_observed > 200:
+                    self.save_screenshot("novelty_frames", f"{self.worker_index}_{self.distinct_frames_observed}")
 
-                return int(self.distinct_frames_observed > 300)
+                return int(self.distinct_frames_observed > 200)
 
         return 0
 
