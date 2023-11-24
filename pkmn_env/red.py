@@ -337,8 +337,8 @@ class PkmnRedEnv(Env):
         self.inited = 0
 
     def init_knn(self):
-
-        self.knn_index = hnswlib.Index(space='l2', dim=np.prod(self.screen_shape))
+        clipped_shape = (self.screen_shape[0]-14, self.screen_shape[1]-17)
+        self.knn_index = hnswlib.Index(space='l2', dim=np.prod(clipped_shape))
         self.knn_index.init_index(
             max_elements=self.num_elements, ef_construction=100, M=16
         )
