@@ -337,7 +337,7 @@ class PkmnRedEnv(Env):
         self.inited = 0
 
     def init_knn(self):
-        clipped_shape = (self.screen_shape[0]-22, self.screen_shape[1])
+        clipped_shape = (self.screen_shape[0]-23, self.screen_shape[1])
         self.knn_index = hnswlib.Index(space='l2', dim=np.prod(clipped_shape))
         self.knn_index.init_index(
             max_elements=self.num_elements, ef_construction=100, M=16
@@ -558,7 +558,7 @@ class PkmnRedEnv(Env):
         #     self.init_knn()
 
         # We want to clip the bottom where text appears
-        clipped_frame = frame[:-22,]
+        clipped_frame = frame[:-23,]
         frame_vector = clipped_frame.flatten()
 
         if self.step_count >= 2:
