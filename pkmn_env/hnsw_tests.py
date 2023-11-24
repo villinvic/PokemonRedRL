@@ -30,8 +30,12 @@ for i, file in enumerate(files):
         data.append(img.flatten()[np.newaxis])
     print(i, len(files))
 
+np.random.shuffle(data)
+total_data = len(data)
+
 data = np.concatenate(data, axis=0)
 
+index_data, query_data = data[:-num_queries], data[-num_queries:]
 # Declaring index
 hnsw_index = hnswlib.Index(space='l2', dim=len(data[0]))  # possible options are l2, cosine or ip
 bf_index = hnswlib.BFIndex(space='l2', dim=len(data[0]))
@@ -59,22 +63,20 @@ hnsw_index.set_ef(args.ef)
 hnsw_index.set_num_threads(1)
 
 print("Adding batch of %d elements" % (len(data)))
-hnsw_index.add_items(data)
-bf_index.add_items(data)
+hnsw_index.add_items(index_data)
+bf_index.add_items(index_data)
 
 print("Indices built")
 
-# Generating query data
-query_data = data[np.random.choice(len(data), num_queries, replace=False)]
-
-
 # Query the elements and measure recall:
+t = time()
+
 labels_hnsw, distances_hnsw = hnsw_index.knn_query(query_data, k)
 labels_bf, distances_bf = bf_index.knn_query(query_data, k)
 
 # Measure recall
 correct = 0
-t = time()
+
 for i in range(num_queries):
     for label in labels_hnsw[i]:
         for correct_label in labels_bf[i]:
@@ -82,5 +84,7 @@ for i in range(num_queries):
                 correct += 1
                 break
 
+dt = time() - t
 print("recall is :", float(correct)/(k*num_queries))
-print("time required:", time() - t)
+print("time required:", dt)
+print("time required per sample:", dt/num_queries)
