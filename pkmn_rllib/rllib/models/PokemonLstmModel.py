@@ -18,7 +18,7 @@ class PokemonLstmModel(TFModelV2):
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
         self.lstm_size = model_config.get("lstm_size")
-        self.flag_embedding_size = model_config.get("flag_embedding_size")
+        #self.flag_embedding_size = model_config.get("flag_embedding_size")
 
         super(PokemonLstmModel, self).__init__(
             obs_space, action_space, self.num_outputs, model_config, name
@@ -35,8 +35,8 @@ class PokemonLstmModel(TFModelV2):
                                                  dtype=tf.float32)
         stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="stats_input",
                                                  dtype=tf.float32)
-        flags_input = tf.keras.layers.Input(shape=obs_space["flags"].shape, name="flags_input",
-                                                 dtype=tf.float32)
+        # flags_input = tf.keras.layers.Input(shape=obs_space["flags"].shape, name="flags_input",
+        #                                          dtype=tf.float32)
 
         previous_action_input = tf.keras.layers.Input(shape=(1,), name="prev_actions", dtype=tf.int32)
         action_one_hot = tf.one_hot(previous_action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
@@ -62,14 +62,16 @@ class PokemonLstmModel(TFModelV2):
 
         post_cnn = tf.keras.layers.Flatten()(last_layer)
 
-        flags_embedding = tf.keras.layers.Dense(
-            self.flag_embedding_size,
-            name="flags_dense_embedding",
-            activation="tanh",
-        )(flags_input)
+        # flags_embedding = tf.keras.layers.Dense(
+        #     self.flag_embedding_size,
+        #     name="flags_dense_embedding",
+        #     activation="tanh",
+        # )(flags_input)
 
         concat_features = tf.keras.layers.Concatenate(axis=-1, name="screen_and_stats_pre_embedding")(
-            [post_cnn, stats_input, flags_embedding]
+            [post_cnn, stats_input,
+            # flags_embedding
+             ]
         )
 
         fc1 = tf.keras.layers.Dense(
@@ -128,7 +130,9 @@ class PokemonLstmModel(TFModelV2):
         )(lstm_out)
 
         self.base_model = tf.keras.Model(
-            [screen_input, stats_input, flags_input, previous_reward_input, previous_action_input,
+            [screen_input, stats_input,
+             #flags_input,
+             previous_reward_input, previous_action_input,
              seq_in, state_in_h, state_in_c],
 
             [action_logits, value_out, state_h, state_c]
@@ -138,12 +142,14 @@ class PokemonLstmModel(TFModelV2):
 
         screen_input = tf.cast(input_dict[SampleBatch.OBS]["screen"], tf.float32) / 255.
         stat_inputs = input_dict[SampleBatch.OBS]["stats"]
-        flags_inputs = input_dict[SampleBatch.OBS]["flags"]
+        #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
 
         context, self._value_out, h, c = self.base_model(
-            [screen_input, stat_inputs, flags_inputs, prev_reward, prev_action,
+            [screen_input, stat_inputs,
+             #flags_inputs,
+             prev_reward, prev_action,
              seq_lens] + state
         )
 

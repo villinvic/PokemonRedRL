@@ -104,6 +104,9 @@ def find_ones_indices(console) -> List[int]:
 
     return ones_indices
 
+def read_sent_out(console) -> List:
+    return [int(i == read_m(console, 0xCC2F)) for i in range(6)]
+
 
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
@@ -173,7 +176,8 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            np.argwhere(np.array(read_extensive_events(console))==1),
-            find_ones_indices(console)
+            read_map(console),
+            read_pos(console),
+            read_sent_out(console)
         )
         walked = step(console, int(input("input:")))

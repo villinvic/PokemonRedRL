@@ -228,8 +228,8 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=PkmnRedEnv.DELTA_LEVEL,
-                scale=0.2,
-                post_process_fn=lambda x: np.clip(x, -5., 5.)
+                scale=0.1,
+                post_process_fn=lambda x: np.clip(x, -2., 2.)
             ),
             VariableGetter(
                 name=PkmnRedEnv.TOTAL_EVENTS_TRIGGERED,
@@ -274,7 +274,7 @@ class PkmnRedEnv(Env):
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0., # 3.
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   3.,
-            PkmnRedEnv.COORDINATES              :   -2.5e-5,
+            PkmnRedEnv.COORDINATES              :   0,
             # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
             # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
             PkmnRedEnv.PARTY_HEALTH             :   1.,
@@ -282,7 +282,7 @@ class PkmnRedEnv(Env):
             # Additional
 
             # Not really novelty but ok, we have to work on that
-            "novelty"                           :   10.,  # 1e-3  #/ (self.similar_frame_dist)
+            "novelty"                           :   2.,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -292,12 +292,12 @@ class PkmnRedEnv(Env):
         )
         self.observed_stats = np.zeros(self.additional_features_shape, dtype=np.float32)
 
-        self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
+        #self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
 
         self.observation_space = spaces.Dict({
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
-            "flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
+            #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
         })
 
         self.pyboy = PyBoy(
@@ -343,7 +343,7 @@ class PkmnRedEnv(Env):
         return {
             "screen" :   self.render(),
             "stats"  :   self.get_observed_stats(),
-            "flags"  :   self.get_event_flags()
+            #"flags"  :   self.get_event_flags()
         }
 
     def run_action_on_emulator(self, action):
@@ -386,7 +386,7 @@ class PkmnRedEnv(Env):
             self.pyboy.load_state(f)
 
         self.game_stats = DefaultOrderedDict(list)
-        self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
+        #self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
         self.last_reward_dict = {}
 
         #  We init only once now
@@ -472,7 +472,7 @@ class PkmnRedEnv(Env):
         event_flag_indices = self.read_extensive_events()
         self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
         self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(event_flag_indices)
-        self.triggered_event_flags[event_flag_indices] = 1
+        # self.triggered_event_flags[event_flag_indices] = 1
         self.game_stats[PkmnRedEnv.PARTY_FILLS].append(self.read_party_fills())
         party_health = self.read_party_health()
         self.game_stats[PkmnRedEnv.BLACKOUT].append(
@@ -571,14 +571,14 @@ class PkmnRedEnv(Env):
             labels, distances = self.knn_index.knn_query(frame_vector, k=1)
             distance = distances[0][0]
 
-            if distance > self.similar_frame_dist:
+            if distance > self.similar_frame_dist and self.game_stats[PkmnRedEnv.COORDINATES][-1][-1] != 40:
 
                 self.knn_index.add_items(
                     frame_vector, np.array([self.distinct_frames_observed % self.num_elements])
                 )
                 self.distinct_frames_observed += 1
 
-                return int(self.distinct_frames_observed > 300)
+                return int(self.distinct_frames_observed > 310)
 
         return 0
 
@@ -739,7 +739,7 @@ class PkmnRedEnv(Env):
             total_reward += scaled_reward
 
         if total_reward == 0 and not walked:
-            total_reward = 2e-5
+            total_reward = 3e-5
 
         return total_reward
 
@@ -873,5 +873,8 @@ class PkmnRedEnv(Env):
 
     def read_opponent_level(self) -> int:
         return self.read_m(0xCFE8)
+
+    def read_sent_out(self) -> List:
+        return [i == self.read_m(0xCC2F) for i in range(6)]
 
 
