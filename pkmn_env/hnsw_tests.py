@@ -29,7 +29,7 @@ _, _, files = next(os.walk(dir))
 for i, file in enumerate(files):
     if "observed" in file:
         img = cv2.imread(dir + "/" + file, cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img, (img.shape[1]//2, img.shape[0]//2), interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, (img.shape[1]//4, img.shape[0]//4), interpolation=cv2.INTER_AREA)
         data.append(img.flatten()[np.newaxis])
     print(i, len(files))
 
