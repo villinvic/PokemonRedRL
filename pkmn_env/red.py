@@ -558,7 +558,7 @@ class PkmnRedEnv(Env):
         #     self.init_knn()
 
         # We want to clip the bottom where text appears
-        clipped_frame = frame[ : -(24-4)]
+        clipped_frame = frame[:,  : -(24-4)]
         frame_vector = clipped_frame.flatten()
 
         if self.step_count >= 2:
