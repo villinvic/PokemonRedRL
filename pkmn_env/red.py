@@ -587,11 +587,11 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                if self.distinct_frames_observed > 250:
+                if self.distinct_frames_observed > 350:
                     self.save_screenshot("novelty_frames", f"{self.distinct_frames_observed}_{self.worker_index}",
                                          image=clipped_frame)
 
-                return int(self.distinct_frames_observed > 250)
+                return int(self.distinct_frames_observed > 350)
 
         return 0
 
