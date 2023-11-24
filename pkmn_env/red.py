@@ -587,11 +587,17 @@ class PkmnRedEnv(Env):
                 )
                 self.distinct_frames_observed += 1
 
-                if self.distinct_frames_observed > 350:
-                    self.save_screenshot("novelty_frames", f"{self.distinct_frames_observed}_{self.worker_index}",
-                                         image=clipped_frame)
+                nearest = self.knn_index.get_items(labels[0])
 
-                return int(self.distinct_frames_observed > 350)
+                nearest = np.reshape(nearest, clipped_frame.shape)
+
+                delta = np.abs(nearest - clipped_frame)
+
+                if self.distinct_frames_observed > 500:
+                    self.save_screenshot("novelty_frames", f"{self.distinct_frames_observed}_{self.worker_index}",
+                                         image=delta)
+
+                return int(self.distinct_frames_observed > 500)
 
         return 0
 
