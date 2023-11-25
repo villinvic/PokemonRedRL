@@ -565,7 +565,7 @@ class PkmnRedEnv(Env):
             frame, (frame.shape[1]//4, frame.shape[0]//4), interpolation=cv2.INTER_NEAREST
         )[:-5, :, np.newaxis]
 
-        frame_vector = frame.flatten()[np.newaxis]
+        frame_vector = np.float32(frame.flatten()[np.newaxis])
 
 
         if self.step_count >= 2:
