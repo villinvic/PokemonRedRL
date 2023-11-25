@@ -565,7 +565,7 @@ class PkmnRedEnv(Env):
             frame, (frame.shape[1]//4, frame.shape[0]//4), interpolation=cv2.INTER_NEAREST
         )[:-5, :, np.newaxis]
 
-        frame_vector = frame.flatten()
+        frame_vector = frame.flatten()[np.newaxis]
 
 
         if self.step_count >= 2:
@@ -600,11 +600,11 @@ class PkmnRedEnv(Env):
 
                 delta = np.abs(nearest - frame)
 
-                if self.distinct_frames_observed > 50:
+                if self.distinct_frames_observed > 300:
                     self.save_screenshot("novelty_frames", f"{self.distinct_frames_observed}_{self.worker_index}",
                                          image=delta)
 
-                return int(self.distinct_frames_observed > 50)
+                return int(self.distinct_frames_observed > 300)
 
         return 0
 
