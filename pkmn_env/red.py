@@ -343,6 +343,7 @@ class PkmnRedEnv(Env):
             max_elements=self.num_elements, ef_construction=200, M=16
         )
         self.knn_index.set_ef(200)
+        self.knn_index.set_num_threads(1)
 
     def _get_obs(self):
 
