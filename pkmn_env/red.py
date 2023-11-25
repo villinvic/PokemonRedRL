@@ -337,12 +337,12 @@ class PkmnRedEnv(Env):
         self.inited = 0
 
     def init_knn(self):
-        clipped_shape = (self.screen_shape[0]-23, self.screen_shape[1])
+        clipped_shape = (self.screen_shape[0]//4-5, self.screen_shape[1]//4)
         self.knn_index = hnswlib.Index(space='l2', dim=np.prod(clipped_shape))
         self.knn_index.init_index(
-            max_elements=self.num_elements, ef_construction=16, M=32
+            max_elements=self.num_elements, ef_construction=200, M=16
         )
-        self.knn_index.set_ef(16)
+        self.knn_index.set_ef(200)
 
     def _get_obs(self):
 
@@ -561,8 +561,9 @@ class PkmnRedEnv(Env):
         # We want to clip the bottom where text appears
         #clipped_frame = frame[:-22]
         frame = cv2.resize(
-            frame, (frame.shape[0]//4, frame[1]//4), interpolation=cv2.INTER_NEAREST
-        )
+            frame, (frame.shape[1]//4, frame[0]//4), interpolation=cv2.INTER_NEAREST
+        )[:-5]
+
         frame_vector = frame.flatten()
 
 
@@ -594,15 +595,15 @@ class PkmnRedEnv(Env):
 
                 nearest = self.knn_index.get_items(labels[0])
 
-                nearest = np.reshape(nearest, clipped_frame.shape)
+                nearest = np.reshape(nearest, frame.shape)
 
-                delta = np.abs(nearest - clipped_frame)
+                delta = np.abs(nearest - frame)
 
-                if self.distinct_frames_observed > 500:
+                if self.distinct_frames_observed > 50:
                     self.save_screenshot("novelty_frames", f"{self.distinct_frames_observed}_{self.worker_index}",
                                          image=delta)
 
-                return int(self.distinct_frames_observed > 500)
+                return int(self.distinct_frames_observed > 50)
 
         return 0
 
