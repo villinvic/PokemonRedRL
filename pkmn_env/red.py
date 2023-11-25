@@ -562,7 +562,7 @@ class PkmnRedEnv(Env):
         # We want to clip the bottom where text appears
         #clipped_frame = frame[:-22]
         frame = cv2.resize(
-            frame, (frame.shape[1]//4, frame[0]//4), interpolation=cv2.INTER_NEAREST
+            frame, (frame.shape[1]//4, frame.shape[0]//4), interpolation=cv2.INTER_NEAREST
         )[:-5]
 
         frame_vector = frame.flatten()
