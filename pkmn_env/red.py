@@ -273,16 +273,27 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   -0.3,
+            PkmnRedEnv.BLACKOUT                 :   0,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   0.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0., # 3.
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
+            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   0.,
             PkmnRedEnv.COORDINATES              :   0,
             # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
             # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
-            PkmnRedEnv.PARTY_HEALTH             :   1.,
+            PkmnRedEnv.PARTY_HEALTH             :   0.,
+
+            # PkmnRedEnv.BLACKOUT                 :   -0.3,
+            # PkmnRedEnv.SEEN_POKEMONS            :   0.,
+            # PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
+            # PkmnRedEnv.BADGE_SUM                :   100.,
+            # PkmnRedEnv.MAPS_VISITED             :   0., # 3.
+            # PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
+            # PkmnRedEnv.COORDINATES              :   0,
+            # # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
+            # # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
+            # PkmnRedEnv.PARTY_HEALTH             :   1.,
 
             # Additional
 

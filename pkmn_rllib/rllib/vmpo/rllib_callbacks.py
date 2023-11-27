@@ -35,7 +35,6 @@ class PokemonCallbacks(
         self.path = Path("sessions/novelty_frames")
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
-        self.inited = False
         self.novelty_table = defaultdict(float)
         self.beta = 0.33
         self.multipler = 2-0.999**2
@@ -121,10 +120,7 @@ class PokemonCallbacks(
             for idx, coordinate in enumerate(coordinates):
                 coords = self.coord_bins(coordinate)
 
-                if not self.inited:
-                    self.novelty_table[coords] += 1000.
-                else:
-                    self.novelty_table[coords] += 1.
+                self.novelty_table[coords] += 1.
 
                 count = self.novelty_table[coords]
                 if novelty_count_min > count:
@@ -132,24 +128,21 @@ class PokemonCallbacks(
                 if novelty_count_max < count:
                     novelty_count_max = count
 
-                if self.inited or map_grids_visited > 150:
-                    self.inited = True
+                if count > 10_000:
+                    score = 0
+                else:
+                    score = 1 / np.sqrt(self.novelty_table[coords])
 
-                    if count > 1000:
-                        score = 0
-                    else:
-                        score = 1 / np.sqrt(self.novelty_table[coords])
-
-                    score *= self.beta * ( self.multipler ** map_grids_visited )
-                    train_batch[SampleBatch.REWARDS][idx] += score
-                    total_novelty += score
+                score *= self.beta * ( self.multipler ** map_grids_visited )
+                train_batch[SampleBatch.REWARDS][idx] += score
+                total_novelty += score
 
 
 
             result["novelty/batch_novelty"] = total_novelty
             result["novelty/novelty_count_max"] = novelty_count_max
             result["novelty/novelty_count_min"] = novelty_count_min
-            result["novelty/map_grids_visited"] = len(self.novelty_table)
+            result["novelty/map_grids_visited"] = map_grids_visited
 
 
             #result["novelty/distinct_frames"] = self.num_distinct_frames
