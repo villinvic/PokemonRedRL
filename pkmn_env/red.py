@@ -412,7 +412,7 @@ class PkmnRedEnv(Env):
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
-            base_dir. ir(exist_ok=True)
+            base_dir.mkdir(exist_ok=True)
             full_name = Path(f'video_{self.reset_count}').with_suffix('.mp4')
             self.full_frame_writer = media.VideoWriter(base_dir / full_name, (144, 160), fps=60)
             self.full_frame_writer.__enter__()
