@@ -2,12 +2,15 @@ from collections import defaultdict
 from typing import Dict, Tuple, Union, Optional
 
 import cv2
-import hnswlib
+import annoy
 from ray.rllib import Policy, SampleBatch, BaseEnv
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 from ray.rllib.evaluation import Episode
 from ray.rllib.evaluation.episode_v2 import EpisodeV2
 from ray.rllib.utils.typing import AgentID, PolicyID
+from pathlib import Path
+import matplotlib.pyplot as plt
+
 
 import numpy as np
 
@@ -28,7 +31,10 @@ class PokemonCallbacks(
         self.width = None
         self.height = None
         self.height_cut = None
-        self.similar_frame_dist = 1_000_000.
+        self.similar_frame_dist = 4000.
+        self.path = Path("sessions/novelty_frames")
+        self.path.mkdir(parents=True, exist_ok=True)
+        self.num_distinct_frames = 0
 
 
 
@@ -52,77 +58,74 @@ class PokemonCallbacks(
             )
 
             episode.custom_metrics.update(
-                distinct_frames_observed=sub_env.distinct_frames_observed
-            )
-
-            episode.custom_metrics.update(
                 **{metric: sum(sub_env.game_stats[metric]) for metric in sub_env.game_stats if "reward" in metric}
             )
 
-    # def on_postprocess_trajectory(
-    #     self,
-    #     *,
-    #     worker: "RolloutWorker",
-    #     episode: Episode,
-    #     agent_id: AgentID,
-    #     policy_id: PolicyID,
-    #     policies: Dict[PolicyID, Policy],
-    #     postprocessed_batch: SampleBatch,
-    #     original_batches: Dict[AgentID, Tuple[Policy, SampleBatch]],
-    #     **kwargs,
-    # ) -> None:
-    #
-    #         screen_data_batch = postprocessed_batch[SampleBatch.OBS]["screen"]
-    #         if self.knn_index is None:
-    #             self.width = screen_data_batch[1].shape[0]//4
-    #
-    #             self.height = screen_data_batch[0].shape[1]//4
-    #             self.height_cut = - 5
-    #             self.knn_index = hnswlib.Index(space='l2', dim=self.width*self.height)
-    #             self.knn_index.init_index(
-    #                 max_elements=20_000, ef_construction=200, M=16
-    #             )
-    #             self.knn_index.set_ef(200)
-    #             self.knn_index.set_num_threads(1)
-    #
-    #
-    #         idx_delta = 10
-    #         last_added_idx = -idx_delta
-    #         total
-    #         for idx, screen in enumerate(screen_data_batch):
-    #
-    #             if idx - last_added_idx >= idx_delta:
-    #                 screen = cv2.resize(
-    #                     screen, (self.height, self.width), interpolation=cv2.INTER_NEAREST
-    #                 )[:-self.height_cut]
-    #
-    #                 screen_flat = screen.flatten()[np.newaxis]
-    #
-    #                 if self.knn_index.get_current_count() == 0:
-    #                     # if index is empty add current frame
-    #                     self.knn_index.add_items(
-    #                         screen_flat, np.array([self.knn_index.get_current_count()])
-    #                     )
-    #                 else:
-    #
-    #                     labels, distances = self.knn_index.knn_query(screen_flat, k=1)
-    #                     distance = distances[0][0]
-    #
-    #                     if distance > self.similar_frame_dist:
-    #
-    #                         self.knn_index.add_items(
-    #                             screen_flat, np.array([self.knn_index.get_current_count()])
-    #                         )
-    #                         last_added_idx = idx
-    #
-    #                         postprocessed_batch[SampleBatch.REWARDS][idx] += 1.
-    #
-    #
-    #
-    #
-    #
-    #
-    #
+    def on_learn_on_batch(
+        self, *, policy: Policy, train_batch: SampleBatch, result: dict, **kwargs
+    ) -> None:
+
+            screen_data_batch = train_batch[SampleBatch.OBS]["screen"]
+            total_novelty = 0
+            if self.knn_index is None:
+                self.width = screen_data_batch[0].shape[0]#//4
+                self.height = screen_data_batch[0].shape[1]#//4
+                self.height_cut = - 22
+                self.knn_index = annoy.AnnoyIndex(self.width*self.height, "euclidean")
+                self.knn_index.build(n_trees=64, n_jobs=1)
+
+
+            idx_delta = 4
+            last_added_idx = -idx_delta
+
+            for idx, screen in enumerate(screen_data_batch):
+
+                if idx - last_added_idx >= idx_delta:
+                    # screen = cv2.resize(
+                    #     screen, (self.height, self.width), interpolation=cv2.INTER_NEAREST
+                    # )[:-self.height_cut]
+                    screen = screen[:-self.height_cut]
+
+                    screen_flat = screen.flatten()
+
+                    if self.num_distinct_frames == 0:
+                        # if index is empty add current frame
+                        self.knn_index.add_item(self.num_distinct_frames, screen_flat)
+                        self.num_distinct_frames += 1
+                    else:
+
+                        labels, distances = self.knn_index.get_nns_by_vector(
+                            screen_flat, n=1, search_k=128, include_distances=True
+                        )
+                        distance = distances[0]
+
+                        if distance > self.similar_frame_dist:
+
+                            self.knn_index.add_item(self.num_distinct_frames, screen_flat)
+                            last_added_idx = idx
+                            self.num_distinct_frames += 1
+
+                            if self.num_distinct_frames > 50:
+                                screenshot_path = self.path / Path(f"{self.num_distinct_frames}.jpeg")
+                                plt.imsave(
+                                    screenshot_path,
+                                    screen
+                                )
+                                train_batch[SampleBatch.REWARDS][idx] += 30.
+                                total_novelty += 1
+
+
+
+            result["custom_metrics"]["batch_novelty"] = total_novelty
+            result["custom_metrics"]["distinct_frames"] = self.num_distinct_frames
+
+
+
+
+
+
+
+
 
 
 

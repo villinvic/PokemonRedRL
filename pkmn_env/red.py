@@ -287,7 +287,7 @@ class PkmnRedEnv(Env):
             # Additional
 
             # Not really novelty but ok, we have to work on that
-            "novelty"                           :   1.,  # 1e-3  #/ (self.similar_frame_dist)
+            #"novelty"                           :   1.,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -332,7 +332,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.init_knn()
+        #self.init_knn()
 
         self.inited = 0
 
@@ -412,7 +412,7 @@ class PkmnRedEnv(Env):
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
-            base_dir.mkdir(exist_ok=True)
+            base_dir. ir(exist_ok=True)
             full_name = Path(f'video_{self.reset_count}').with_suffix('.mp4')
             self.full_frame_writer = media.VideoWriter(base_dir / full_name, (144, 160), fps=60)
             self.full_frame_writer.__enter__()
@@ -512,7 +512,7 @@ class PkmnRedEnv(Env):
         #     self.visited_coordinates[(x, y+1, map_id)],
         #     self.visited_coordinates[(x, y-1, map_id)],
         # ])
-        self.game_stats[PkmnRedEnv.NOVELTY_COUNT].append(self.distinct_frames_observed)
+        # self.game_stats[PkmnRedEnv.NOVELTY_COUNT].append(self.distinct_frames_observed)
 
         idx = 0
         for getter in self.observed_stats_config:
@@ -565,7 +565,7 @@ class PkmnRedEnv(Env):
             frame, (frame.shape[1]//4, frame.shape[0]//4), interpolation=cv2.INTER_NEAREST
         )[:-5, :, np.newaxis]
 
-        frame_vector = np.float32(frame.flatten()[np.newaxis])
+        frame_vector = np.float32(frame.flatten())
 
 
         if self.step_count >= 2:
@@ -610,7 +610,7 @@ class PkmnRedEnv(Env):
 
     def on_episode_end(self):
         if self.save_final_state:
-            self.save_screenshot("final_states", f'frame_r{self.episode_reward:.4f}_{self.distinct_frames_observed}.jpeg')
+            self.save_screenshot("final_states", f'frame_r{self.episode_reward:.4f}.jpeg')
 
         if self.save_video:
             self.full_frame_writer.close()
@@ -631,7 +631,7 @@ class PkmnRedEnv(Env):
         :return:
         """
 
-        rewards = {"novelty": self.update_frame_knn_index(obs["screen"])}
+        rewards = {} #"novelty": self.update_frame_knn_index(obs["screen"])}
 
         if self.step_count >= 4:
             curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
