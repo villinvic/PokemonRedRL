@@ -532,7 +532,7 @@ class PkmnRedEnv(Env):
         return self.triggered_event_flags
 
     def get_coordinates(self):
-        return self.game_stats[PkmnRedEnv.COORDINATES][-1]
+        return np.array(self.game_stats[PkmnRedEnv.COORDINATES][-1], dtype=np.uint8)
 
     def step(self, action):
 
