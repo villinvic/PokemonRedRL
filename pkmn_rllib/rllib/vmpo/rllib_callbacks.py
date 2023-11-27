@@ -31,7 +31,7 @@ class PokemonCallbacks(
         self.width = None
         self.height = None
         self.height_cut = None
-        self.similar_frame_dist = 4500.
+        self.similar_frame_dist = 2000.
         self.path = Path("sessions/novelty_frames")
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
@@ -68,23 +68,21 @@ class PokemonCallbacks(
             screen_data_batch = train_batch[SampleBatch.OBS]["screen"]
             total_novelty = 0
             if self.knn_index is None:
-                self.width = screen_data_batch[0].shape[1]#//4
-                self.height = screen_data_batch[0].shape[0]#//4
                 self.height_cut = 22
+                self.width = screen_data_batch[0].shape[1]//2
+                self.height = (screen_data_batch[0].shape[0]-self.height_cut)//2
                 self.knn_index = annoy.AnnoyIndex(self.width*(self.height-self.height_cut), "euclidean")
-                self.knn_index.build(n_trees=64, n_jobs=1)
+                self.knn_index.build(n_trees=100, n_jobs=1)
 
 
-            idx_delta = 4
+            idx_delta = 8
             last_added_idx = -idx_delta
 
             for idx, screen in enumerate(screen_data_batch):
 
                 if idx - last_added_idx >= idx_delta:
-                    # screen = cv2.resize(
-                    #     screen, (self.height, self.width), interpolation=cv2.INTER_NEAREST
-                    # )[:-self.height_cut]
-                    screen = screen[:-self.height_cut]
+                    screen = cv2.resize(
+                        screen[:-self.height_cut], (self.width, self.height), interpolation=cv2.INTER_AREA)
 
                     screen_flat = screen.flatten()
 
@@ -95,7 +93,7 @@ class PokemonCallbacks(
                     else:
 
                         labels, distances = self.knn_index.get_nns_by_vector(
-                            screen_flat, n=1, search_k=128, include_distances=True
+                            screen_flat, n=1, search_k=200, include_distances=True
                         )
                         distance = distances[0]
 
@@ -108,19 +106,12 @@ class PokemonCallbacks(
 
                             if self.num_distinct_frames > 2000:
                                 screenshot_path = self.path / Path(f"{self.num_distinct_frames}_{int(d)}.jpeg")
-                                print(screenshot_path)
                                 cv2.imwrite(screenshot_path.as_posix(), screen[:,:,0])
                                 train_batch[SampleBatch.REWARDS][idx] += 30.
                                 total_novelty += 1
 
-
-
             result["novelty/batch_novelty"] = total_novelty
             result["novelty/distinct_frames"] = self.num_distinct_frames
-
-
-
-
 
 
 
