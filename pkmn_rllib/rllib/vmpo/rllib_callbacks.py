@@ -68,6 +68,7 @@ class PokemonCallbacks(
             screen_data_batch = train_batch[SampleBatch.OBS]["screen"]
             total_novelty = 0
             if self.knn_index is None:
+                print(screen_data_batch[0].shape)
                 self.width = screen_data_batch[0].shape[1]#//4
                 self.height = screen_data_batch[0].shape[0]#//4
                 self.height_cut = - 22

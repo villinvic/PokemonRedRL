@@ -671,6 +671,7 @@ class VmpoLearnerThread(LearnerThread):
             if self.local_worker.config.policy_states_are_swappable:
                 self.local_worker.lock()
 
+
             multi_agent_results = self.local_worker.learn_on_batch(batch)
 
             self.local_worker.foreach_policy_to_train(
