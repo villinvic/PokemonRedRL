@@ -31,7 +31,7 @@ class PokemonCallbacks(
         self.width = None
         self.height = None
         self.height_cut = None
-        self.similar_frame_dist = 1800.
+        self.similar_frame_dist = 1700.
         self.path = Path("sessions/novelty_frames")
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
