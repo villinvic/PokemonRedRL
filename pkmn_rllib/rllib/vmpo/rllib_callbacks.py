@@ -125,8 +125,12 @@ class PokemonCallbacks(
 
 
     def coord_bins(self, coords):
+
+        print(coords)
         bx = coords[0] - coords % 3
         by = coords[1] - coords % 3
+
+        print((bx, by, coords[-1]))
 
         return (bx, by, coords[-1])
 
