@@ -38,7 +38,7 @@ class PokemonCallbacks(
         self.inited = False
         self.novelty_table = defaultdict(float)
         self.beta = 0.33
-        self.multipler = 2-0.995**2
+        self.multipler = 2-0.999**2
 
     def on_episode_end(
         self,
@@ -120,14 +120,19 @@ class PokemonCallbacks(
             map_grids_visited = len(self.novelty_table)
             for idx, coordinate in enumerate(coordinates):
                 coords = self.coord_bins(coordinate)
-                self.novelty_table[coords] += 1.
+
+                if not self.inited:
+                    self.novelty_table[coords] += 1000.
+                else:
+                    self.novelty_table[coords] += 1.
+
                 count = self.novelty_table[coords]
                 if novelty_count_min > count:
                     novelty_count_min = count
                 if novelty_count_max < count:
                     novelty_count_max = count
 
-                if self.inited or map_grids_visited > 30:
+                if self.inited or map_grids_visited > 150:
                     self.inited = True
 
                     if count > 1000:
