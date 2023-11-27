@@ -781,8 +781,8 @@ class PkmnRedEnv(Env):
             self.game_stats["reward_"+reward_name].append(scaled_reward)
             total_reward += scaled_reward
 
-        if total_reward == 0 and not walked:
-            total_reward = -3e-5
+        # if total_reward == 0 and not walked:
+        #     total_reward = -3e-5
 
         return total_reward
 
