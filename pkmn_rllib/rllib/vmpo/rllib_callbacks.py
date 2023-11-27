@@ -114,14 +114,21 @@ class PokemonCallbacks(
 
             total_novelty = 0
             for idx, coordinate in enumerate(coordinates):
-                coords = tuple(coordinate)
+                coords = self.coord_bins(coordinate)
                 self.novelty_table[coords] += 1.
-                score = 1e-3 / np.sqrt(self.novelty_table[coords])
+                score = 3e-2 / np.sqrt(self.novelty_table[coords])
                 train_batch[SampleBatch.REWARDS][idx] += score
                 total_novelty += score
 
             result["novelty/batch_novelty"] = total_novelty
             #result["novelty/distinct_frames"] = self.num_distinct_frames
+
+
+    def coord_bins(self, coords):
+        bx = coords[0] - coords % 3
+        by = coords[1] - coords % 3
+
+        return (bx, by, coords[-1])
 
 
 
