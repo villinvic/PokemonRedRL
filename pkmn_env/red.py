@@ -303,6 +303,7 @@ class PkmnRedEnv(Env):
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
             #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
+            "coordinates": spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.uint8)
         })
 
         self.pyboy = PyBoy(
@@ -350,6 +351,7 @@ class PkmnRedEnv(Env):
         return {
             "screen" :   self.render(),
             "stats"  :   self.get_observed_stats(),
+            "coordinates": self.get_coordinates(),
             #"flags"  :   self.get_event_flags()
         }
 
@@ -528,6 +530,9 @@ class PkmnRedEnv(Env):
 
     def get_event_flags(self):
         return self.triggered_event_flags
+
+    def get_coordinates(self):
+        return self.game_stats[PkmnRedEnv.COORDINATES][-1]
 
     def step(self, action):
 

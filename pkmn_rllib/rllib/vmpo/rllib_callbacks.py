@@ -36,7 +36,7 @@ class PokemonCallbacks(
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
 
-
+        self.novelty_table = defaultdict(float)
 
     def on_episode_end(
         self,
@@ -65,53 +65,63 @@ class PokemonCallbacks(
         self, *, policy: Policy, train_batch: SampleBatch, result: dict, **kwargs
     ) -> None:
 
-            screen_data_batch = train_batch[SampleBatch.OBS]["screen"]
+            # screen_data_batch = train_batch[SampleBatch.OBS]["screen"]
+            # total_novelty = 0
+            # if self.knn_index is None:
+            #     self.height_cut = 22
+            #     self.width = screen_data_batch[0].shape[1]//2
+            #     self.height = (screen_data_batch[0].shape[0]-self.height_cut)//2
+            #     self.knn_index = annoy.AnnoyIndex(self.width*self.height, "euclidean")
+            #     self.knn_index.build(n_trees=200, n_jobs=1)
+            #
+            #
+            # idx_delta = 8
+            # last_added_idx = -idx_delta
+            #
+            # for idx, screen in enumerate(screen_data_batch):
+            #
+            #     if idx - last_added_idx >= idx_delta:
+            #         screen = cv2.resize(
+            #             screen[:-self.height_cut], (self.width, self.height), interpolation=cv2.INTER_AREA)
+            #
+            #         screen_flat = np.uint8(screen.flatten())
+            #
+            #         if self.num_distinct_frames == 0:
+            #             # if index is empty add current frame
+            #             self.knn_index.add_item(self.num_distinct_frames, screen_flat)
+            #             self.num_distinct_frames += 1
+            #         else:
+            #
+            #             labels, distances = self.knn_index.get_nns_by_vector(
+            #                 screen_flat, n=1, search_k=200, include_distances=True
+            #             )
+            #             distance = distances[0]
+            #
+            #             if distance > self.similar_frame_dist:
+            #                 d = distance - self.similar_frame_dist
+            #                 self.knn_index.add_item(self.num_distinct_frames, screen_flat)
+            #                 last_added_idx = idx
+            #                 self.num_distinct_frames += 1
+            #                 print(self.num_distinct_frames, d)
+            #
+            #                 if self.num_distinct_frames > 200:
+            #                     screenshot_path = self.path / Path(f"{self.num_distinct_frames}_{int(d)}.jpeg")
+            #                     cv2.imwrite(screenshot_path.as_posix(), screen[:, :])
+            #                     train_batch[SampleBatch.REWARDS][idx] += 30.
+            #                     total_novelty += 1
+
+            coordinates = train_batch[SampleBatch.OBS]["coordinates"]
+
             total_novelty = 0
-            if self.knn_index is None:
-                self.height_cut = 22
-                self.width = screen_data_batch[0].shape[1]//2
-                self.height = (screen_data_batch[0].shape[0]-self.height_cut)//2
-                self.knn_index = annoy.AnnoyIndex(self.width*self.height, "euclidean")
-                self.knn_index.build(n_trees=200, n_jobs=1)
-
-
-            idx_delta = 8
-            last_added_idx = -idx_delta
-
-            for idx, screen in enumerate(screen_data_batch):
-
-                if idx - last_added_idx >= idx_delta:
-                    screen = cv2.resize(
-                        screen[:-self.height_cut], (self.width, self.height), interpolation=cv2.INTER_AREA)
-
-                    screen_flat = np.uint8(screen.flatten())
-
-                    if self.num_distinct_frames == 0:
-                        # if index is empty add current frame
-                        self.knn_index.add_item(self.num_distinct_frames, screen_flat)
-                        self.num_distinct_frames += 1
-                    else:
-
-                        labels, distances = self.knn_index.get_nns_by_vector(
-                            screen_flat, n=1, search_k=200, include_distances=True
-                        )
-                        distance = distances[0]
-
-                        if distance > self.similar_frame_dist:
-                            d = distance - self.similar_frame_dist
-                            self.knn_index.add_item(self.num_distinct_frames, screen_flat)
-                            last_added_idx = idx
-                            self.num_distinct_frames += 1
-                            print(self.num_distinct_frames, d)
-
-                            if self.num_distinct_frames > 200:
-                                screenshot_path = self.path / Path(f"{self.num_distinct_frames}_{int(d)}.jpeg")
-                                cv2.imwrite(screenshot_path.as_posix(), screen[:, :])
-                                train_batch[SampleBatch.REWARDS][idx] += 30.
-                                total_novelty += 1
+            for idx, coordinate in enumerate(coordinates):
+                coords = tuple(coordinate)
+                self.novelty_table[coords] += 1.
+                score = 1e-3 / np.sqrt(self.novelty_table[coords])
+                train_batch[SampleBatch.REWARDS][idx] += score
+                total_novelty += score
 
             result["novelty/batch_novelty"] = total_novelty
-            result["novelty/distinct_frames"] = self.num_distinct_frames
+            #result["novelty/distinct_frames"] = self.num_distinct_frames
 
 
 
