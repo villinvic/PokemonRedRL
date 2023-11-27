@@ -116,8 +116,8 @@ class PokemonCallbacks(
 
 
 
-            result["custom_metrics"]["batch_novelty"] = total_novelty
-            result["custom_metrics"]["distinct_frames"] = self.num_distinct_frames
+            result["novelty/batch_novelty"] = total_novelty
+            result["novelty/distinct_frames"] = self.num_distinct_frames
 
 
 
