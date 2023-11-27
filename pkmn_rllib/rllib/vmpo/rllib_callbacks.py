@@ -71,7 +71,7 @@ class PokemonCallbacks(
                 self.height_cut = 22
                 self.width = screen_data_batch[0].shape[1]//2
                 self.height = (screen_data_batch[0].shape[0]-self.height_cut)//2
-                self.knn_index = annoy.AnnoyIndex(self.width*(self.height-self.height_cut), "euclidean")
+                self.knn_index = annoy.AnnoyIndex(self.width*self.height, "euclidean")
                 self.knn_index.build(n_trees=100, n_jobs=1)
 
 
