@@ -35,8 +35,10 @@ class PokemonCallbacks(
         self.path = Path("sessions/novelty_frames")
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
-
+        self.inited = False
         self.novelty_table = defaultdict(float)
+        self.beta = 0.33
+        self.multipler = 2-0.995**2
 
     def on_episode_end(
         self,
@@ -115,27 +117,35 @@ class PokemonCallbacks(
             total_novelty = 0
             novelty_count_min = np.inf
             novelty_count_max = -np.inf
+            map_grids_visited = len(self.novelty_table)
             for idx, coordinate in enumerate(coordinates):
                 coords = self.coord_bins(coordinate)
                 self.novelty_table[coords] += 1.
                 count = self.novelty_table[coords]
-
                 if novelty_count_min > count:
                     novelty_count_min = count
                 if novelty_count_max < count:
                     novelty_count_max = count
 
-                if count > 200:
-                    score = 0
-                else:
-                    score = 1. / self.novelty_table[coords]
+                if self.inited or map_grids_visited > 30:
+                    self.inited = True
 
-                train_batch[SampleBatch.REWARDS][idx] += score
-                total_novelty += score
+                    if count > 1000:
+                        score = 0
+                    else:
+                        score = 1 / np.sqrt(self.novelty_table[coords])
+
+                    score *= self.beta * ( self.multipler ** map_grids_visited )
+                    train_batch[SampleBatch.REWARDS][idx] += score
+                    total_novelty += score
+
+
 
             result["novelty/batch_novelty"] = total_novelty
             result["novelty/novelty_count_max"] = novelty_count_max
             result["novelty/novelty_count_min"] = novelty_count_min
+            result["novelty/map_grids_visited"] = len(self.novelty_table)
+
 
             #result["novelty/distinct_frames"] = self.num_distinct_frames
 
