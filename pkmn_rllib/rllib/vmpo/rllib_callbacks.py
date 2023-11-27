@@ -109,7 +109,7 @@ class PokemonCallbacks(
                                 screenshot_path = self.path / Path(f"{self.num_distinct_frames}.jpeg")
                                 plt.imsave(
                                     screenshot_path,
-                                    screen,
+                                    screen[:, :, 0],
                                     cmap="gray"
                                 )
                                 train_batch[SampleBatch.REWARDS][idx] += 30.
