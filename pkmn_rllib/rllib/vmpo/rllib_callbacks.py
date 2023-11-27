@@ -105,11 +105,12 @@ class PokemonCallbacks(
                             last_added_idx = idx
                             self.num_distinct_frames += 1
 
-                            if self.num_distinct_frames > 50:
+                            if self.num_distinct_frames > 100:
                                 screenshot_path = self.path / Path(f"{self.num_distinct_frames}.jpeg")
                                 plt.imsave(
                                     screenshot_path,
-                                    screen
+                                    screen,
+                                    cmap="gray"
                                 )
                                 train_batch[SampleBatch.REWARDS][idx] += 30.
                                 total_novelty += 1
