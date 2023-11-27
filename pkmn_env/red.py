@@ -303,7 +303,7 @@ class PkmnRedEnv(Env):
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
             #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
-            "coordinates": spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.uint8)
+            "coordinates": spaces.Box(low=0, high=255, shape=(3,), dtype=np.uint8)
         })
 
         self.pyboy = PyBoy(
