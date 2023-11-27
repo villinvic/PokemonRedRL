@@ -104,7 +104,7 @@ class PokemonCallbacks(
                             self.knn_index.add_item(self.num_distinct_frames, screen_flat)
                             last_added_idx = idx
                             self.num_distinct_frames += 1
-                            print(d)
+                            print(self.num_distinct_frames, d)
 
                             if self.num_distinct_frames > 1000:
                                 screenshot_path = self.path / Path(f"{self.num_distinct_frames}_{int(d)}.jpeg")
