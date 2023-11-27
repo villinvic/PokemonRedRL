@@ -31,7 +31,7 @@ class PokemonCallbacks(
         self.width = None
         self.height = None
         self.height_cut = None
-        self.similar_frame_dist = 2000.
+        self.similar_frame_dist = 1500.
         self.path = Path("sessions/novelty_frames")
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
@@ -72,7 +72,7 @@ class PokemonCallbacks(
                 self.width = screen_data_batch[0].shape[1]//2
                 self.height = (screen_data_batch[0].shape[0]-self.height_cut)//2
                 self.knn_index = annoy.AnnoyIndex(self.width*self.height, "euclidean")
-                self.knn_index.build(n_trees=100, n_jobs=1)
+                self.knn_index.build(n_trees=200, n_jobs=1)
 
 
             idx_delta = 8
@@ -84,7 +84,7 @@ class PokemonCallbacks(
                     screen = cv2.resize(
                         screen[:-self.height_cut], (self.width, self.height), interpolation=cv2.INTER_AREA)
 
-                    screen_flat = screen.flatten()
+                    screen_flat = np.uint8(screen.flatten())
 
                     if self.num_distinct_frames == 0:
                         # if index is empty add current frame
