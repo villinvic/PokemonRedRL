@@ -87,7 +87,6 @@ class PokemonCallbacks(
                     screen = screen[:-self.height_cut]
 
                     screen_flat = screen.flatten()
-                    print(screen.dtype)
 
                     if self.num_distinct_frames == 0:
                         # if index is empty add current frame
@@ -108,7 +107,7 @@ class PokemonCallbacks(
 
                             if self.num_distinct_frames > 1000:
                                 screenshot_path = self.path / Path(f"{self.num_distinct_frames}_{int(d)}.jpeg")
-                                cv2.imwrite(screenshot_path, screen[:,:,0])
+                                cv2.imwrite(screenshot_path.as_posix(), screen[:,:,0])
                                 train_batch[SampleBatch.REWARDS][idx] += 30.
                                 total_novelty += 1
 
