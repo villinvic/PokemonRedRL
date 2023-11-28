@@ -36,8 +36,8 @@ class PokemonCallbacks(
         self.path.mkdir(parents=True, exist_ok=True)
         self.num_distinct_frames = 0
         self.novelty_table = defaultdict(float)
-        self.beta = 0.33
-        self.multipler = 2-0.999**2
+        self.beta = 0.15
+        self.multipler = 2-0.997**2
 
     def on_episode_end(
         self,
@@ -117,9 +117,11 @@ class PokemonCallbacks(
             novelty_count_min = np.inf
             novelty_count_max = -np.inf
             map_grids_visited = len(self.novelty_table)
+            prev_coords = (-1, -1, -1)
             for idx, coordinate in enumerate(coordinates):
                 coords = self.coord_bins(coordinate)
 
+                #if prev_coords != coords:
                 self.novelty_table[coords] += 1.
 
                 count = self.novelty_table[coords]
@@ -128,7 +130,7 @@ class PokemonCallbacks(
                 if novelty_count_max < count:
                     novelty_count_max = count
 
-                if count > 10_000:
+                if count > 1_000:
                     score = 0
                 else:
                     score = 1 / np.sqrt(self.novelty_table[coords])
@@ -136,6 +138,8 @@ class PokemonCallbacks(
                 score *= self.beta * ( self.multipler ** map_grids_visited )
                 train_batch[SampleBatch.REWARDS][idx] += score
                 total_novelty += score
+
+                prev_coords = coords
 
 
 
