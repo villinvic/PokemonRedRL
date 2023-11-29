@@ -275,7 +275,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             PkmnRedEnv.BLACKOUT                 :   -0.1,
             PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
+            PkmnRedEnv.TOTAL_EXPERIENCE         :   30.,  # 0.5
             PkmnRedEnv.BADGE_SUM                :   100.,
             PkmnRedEnv.MAPS_VISITED             :   0., # 3.
             PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   0.,
@@ -314,7 +314,7 @@ class PkmnRedEnv(Env):
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
             #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
-            "coordinates": spaces.Box(low=0, high=255, shape=(3,), dtype=np.uint8)
+            #"coordinates": spaces.Box(low=0, high=255, shape=(3,), dtype=np.uint8)
         })
 
         self.pyboy = PyBoy(
@@ -362,7 +362,7 @@ class PkmnRedEnv(Env):
         return {
             "screen" :   self.render(),
             "stats"  :   self.get_observed_stats(),
-            "coordinates": self.get_coordinates(),
+            #"coordinates": self.get_coordinates(),
             #"flags"  :   self.get_event_flags()
         }
 
