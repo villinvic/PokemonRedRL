@@ -57,7 +57,7 @@ config = VmpoConfig().training(
     entropy_coeff=1e-3,
     learner_queue_size=512,
     lr=8e-4,
-    statistics_lr=5e-1,
+    statistics_lr=3e-1,
     momentum=0.,
     epsilon=1e-5,
     decay=0.99,
@@ -73,7 +73,6 @@ config = VmpoConfig().training(
             [32, [8, 8], 4, "valid"],
             [64, [4, 4], 2, "valid"],
             [64, [3, 3], 1, "valid"],
-
         ],
         "fcnet_size": 512,
         "lstm_size": 512,
