@@ -199,7 +199,7 @@ class PokemonLstmModel(TFModelV2):
         self.map_loss_mean = tf.reduce_mean(map_loss)
         self.map_loss_max = tf.reduce_max(map_loss)
 
-        return policy_loss + self.map_loss_mean * 0.1
+        return policy_loss + self.map_loss_mean * 0.01
 
     def metrics(self):
 
