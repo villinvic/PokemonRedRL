@@ -160,6 +160,7 @@ class PokemonLstmModel(TFModelV2):
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
+        self.next_map_ids = input_dict[SampleBatch.NEXT_OBS]["coordinates"]
 
         context, self._value_out, h, c = self.base_model(
             [screen_input, stat_inputs,
@@ -184,11 +185,9 @@ class PokemonLstmModel(TFModelV2):
         self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
     ) -> Union[List[TensorType], TensorType]:
 
-        next_map_ids = loss_inputs[SampleBatch.NEXT_OBS]["coordinates"]
-        #rewards = loss_inputs[SampleBatch.REWARDS]
-        #r_loss = self.lstm_out
 
-        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=next_map_ids, logits=self.map_logits)
+
+        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.next_map_ids, logits=self.map_logits)
         self.mean_map_loss = tf.reduce_mean(map_loss)
         self.max_map_loss = tf.reduce_max(map_loss)
 
