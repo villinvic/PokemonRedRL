@@ -20,8 +20,6 @@ class PokemonLstmModel(TFModelV2):
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
         self.lstm_size = model_config.get("lstm_size")
-        self.max_map_loss = tf.Variable(0., dtype=tf.float32)
-        self.mean_map_loss = tf.Variable(0., dtype=tf.float32)
         #self.flag_embedding_size = model_config.get("flag_embedding_size")
 
         super(PokemonLstmModel, self).__init__(
@@ -184,11 +182,16 @@ class PokemonLstmModel(TFModelV2):
     ) -> Union[List[TensorType], TensorType]:
 
         map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.map_ids, logits=self.map_logits)
-        mean_map_loss = tf.reduce_mean(map_loss)
-        self.max_map_loss.assign(tf.reduce_max(map_loss))
-        self.mean_map_loss.assign(mean_map_loss)
+        self.map_loss_mean = tf.reduce_mean(map_loss)
+        self.map_loss_max = tf.reduce_max(map_loss)
 
-        return policy_loss + mean_map_loss
+        return policy_loss + self.map_loss_mean
+
+    def metrics(self):
+        return {
+            "map_loss_max"   : self.map_loss_max,
+            "map_loss_mean": self.map_loss_mean,
+        }
 
 
 
