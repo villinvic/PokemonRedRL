@@ -20,6 +20,8 @@ class PokemonLstmModel(TFModelV2):
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
         self.lstm_size = model_config.get("lstm_size")
+        self.max_map_loss = 0.
+        self.mean_map_loss = 0.
         #self.flag_embedding_size = model_config.get("flag_embedding_size")
 
         super(PokemonLstmModel, self).__init__(
