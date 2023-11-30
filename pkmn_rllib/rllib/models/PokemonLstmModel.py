@@ -158,12 +158,14 @@ class PokemonLstmModel(TFModelV2):
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
 
-        context, self._value_out, self.map_logits, h, c = self.base_model(
+        context, self._value_out, map_logits, h, c = self.base_model(
             [screen_input, stat_inputs,
              #flags_inputs,
              prev_reward, prev_action,
              seq_lens] + state
         )
+
+        self.map_logits = tf.reshape(map_logits, [-1, self.N_MAPS])
 
         return tf.reshape(context, [-1, self.num_outputs]), [h, c]
 
@@ -181,7 +183,7 @@ class PokemonLstmModel(TFModelV2):
         self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
     ) -> Union[List[TensorType], TensorType]:
 
-        map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.map_ids, logits=self.map_logits)
+        map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.map_ids), logits=self.map_logits)
         self.map_loss_mean = tf.reduce_mean(map_loss)
         self.map_loss_max = tf.reduce_max(map_loss)
 
