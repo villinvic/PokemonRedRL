@@ -7,7 +7,7 @@ import tensorflow as tf
 from ray.rllib.policy.view_requirement import ViewRequirement
 from ray.rllib.policy.rnn_sequencing import add_time_dimension
 from ray.rllib.utils.typing import TensorType
-
+from ray.rllib.models.modelv2 import restore_original_dimensions
 
 class PokemonLstmModel(TFModelV2):
 
@@ -160,7 +160,8 @@ class PokemonLstmModel(TFModelV2):
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
-        self.next_map_ids = input_dict[SampleBatch.NEXT_OBS]["coordinates"]
+        self.next_map_ids = restore_original_dimensions(input_dict[SampleBatch.NEXT_OBS], self.obs_space)["coordinates"]
+        # self.next_map_ids = input_dict[SampleBatch.NEXT_OBS]["coordinates"]
 
         context, self._value_out, h, c = self.base_model(
             [screen_input, stat_inputs,
