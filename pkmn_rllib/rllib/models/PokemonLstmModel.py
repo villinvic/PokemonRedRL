@@ -35,7 +35,7 @@ class PokemonLstmModel(TFModelV2):
             SampleBatch.REWARDS, shift=-1
         )
         self.view_requirements[SampleBatch.NEXT_OBS] = ViewRequirement(
-            SampleBatch.OBS, shift=+1
+            SampleBatch.OBS, space=self.obs_space, shift=+1
         )
 
         screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="screen_input",
@@ -160,8 +160,8 @@ class PokemonLstmModel(TFModelV2):
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
-        self.next_map_ids = restore_original_dimensions(input_dict[SampleBatch.NEXT_OBS], self.obs_space)["coordinates"]
-        # self.next_map_ids = input_dict[SampleBatch.NEXT_OBS]["coordinates"]
+        #self.next_map_ids = restore_original_dimensions(input_dict[SampleBatch.NEXT_OBS], self.obs_space)["coordinates"]
+        self.next_map_ids = input_dict[SampleBatch.NEXT_OBS]["coordinates"]
 
         context, self._value_out, h, c = self.base_model(
             [screen_input, stat_inputs,
