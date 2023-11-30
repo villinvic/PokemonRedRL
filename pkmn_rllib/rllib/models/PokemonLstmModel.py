@@ -32,6 +32,9 @@ class PokemonLstmModel(TFModelV2):
         self.view_requirements[SampleBatch.PREV_REWARDS] = ViewRequirement(
             SampleBatch.REWARDS, shift=-1
         )
+        self.view_requirements[SampleBatch.NEXT_OBS] = ViewRequirement(
+            SampleBatch.OBS, shift=1, space=self.obs_space, used_for_training=True
+        )
 
         screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="screen_input",
                                                  dtype=tf.float32)
@@ -41,9 +44,12 @@ class PokemonLstmModel(TFModelV2):
         #                                          dtype=tf.float32)
 
         previous_action_input = tf.keras.layers.Input(shape=(1,), name="prev_actions", dtype=tf.int32)
-        action_one_hot = tf.one_hot(previous_action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
+        prev_action_one_hot = tf.one_hot(previous_action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
 
         previous_reward_input = tf.keras.layers.Input(shape=(1,), name="prev_rewards", dtype=tf.float32)
+
+        action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
+        action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
 
         filters = self.model_config["conv_filters"]
 
@@ -100,7 +106,7 @@ class PokemonLstmModel(TFModelV2):
         seq_in = tf.keras.layers.Input(shape=(), name="seq_in", dtype=tf.int32)
 
         lstm_input = tf.keras.layers.Concatenate(axis=-1, name="lstm_input")(
-            [fc2, tf.clip_by_value(previous_reward_input, -1., 1.), action_one_hot])
+            [fc2, tf.clip_by_value(previous_reward_input, -1., 1.), prev_action_one_hot])
 
         timed_input = add_time_dimension(
             padded_inputs=lstm_input, seq_lens=seq_in, framework="tf"
@@ -133,17 +139,21 @@ class PokemonLstmModel(TFModelV2):
 
         # Prediction
 
+        prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
+            [lstm_out, action_one_hot]
+        )
+
         map_logits = tf.keras.layers.Dense(
             self.N_MAPS,
             name="map_logits",
             activation=None,
-        )(lstm_out)
+        )(prediction_input)
 
 
         self.base_model = tf.keras.Model(
             [screen_input, stats_input,
              #flags_input,
-             previous_reward_input, previous_action_input,
+             previous_reward_input, previous_action_input, action_input,
              seq_in, state_in_h, state_in_c],
 
             [action_logits, value_out, map_logits, state_h, state_c]
@@ -154,14 +164,16 @@ class PokemonLstmModel(TFModelV2):
         screen_input = tf.cast(input_dict[SampleBatch.OBS]["screen"], tf.float32) / 255.
         stat_inputs = input_dict[SampleBatch.OBS]["stats"]
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
-        self.map_ids = tf.cast(input_dict[SampleBatch.OBS]["coordinates"], tf.int32)
+        self.map_ids = tf.cast(input_dict[SampleBatch.NEXT_OBS]["coordinates"], tf.int32)
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
+        action = input_dict[SampleBatch.ACTIONS]
+
 
         context, self._value_out, map_logits, h, c = self.base_model(
             [screen_input, stat_inputs,
              #flags_inputs,
-             prev_reward, prev_action,
+             prev_reward, prev_action, action,
              seq_lens] + state
         )
 
@@ -187,7 +199,7 @@ class PokemonLstmModel(TFModelV2):
         self.map_loss_mean = tf.reduce_mean(map_loss)
         self.map_loss_max = tf.reduce_max(map_loss)
 
-        return policy_loss + self.map_loss_mean
+        return policy_loss + self.map_loss_mean * 0.1
 
     def metrics(self):
 
