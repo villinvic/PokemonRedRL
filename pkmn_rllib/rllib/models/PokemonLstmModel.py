@@ -133,6 +133,15 @@ class PokemonLstmModel(TFModelV2):
             bias_initializer=tf.zeros_initializer(),
         )(lstm_out)
 
+        # Prediction
+
+        self.map_logits = tf.keras.layers.Dense(
+            self.N_MAPS,
+            name="map_logits",
+            activation=None,
+        )(lstm_out)
+
+
         self.base_model = tf.keras.Model(
             [screen_input, stats_input,
              #flags_input,
@@ -142,19 +151,12 @@ class PokemonLstmModel(TFModelV2):
             [action_logits, value_out, state_h, state_c]
         )
 
-        # Prediction
-
-        self.map_logits = tf.keras.layers.Dense(
-            self.N_MAPS,
-            name="map_logits",
-            activation=None,
-        )(lstm_out)
-
     def forward(self, input_dict, state, seq_lens):
 
         screen_input = tf.cast(input_dict[SampleBatch.OBS]["screen"], tf.float32) / 255.
         stat_inputs = input_dict[SampleBatch.OBS]["stats"]
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
+        self.map_ids = input_dict[SampleBatch.OBS]["coordinates"]
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
 
@@ -181,8 +183,7 @@ class PokemonLstmModel(TFModelV2):
         self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
     ) -> Union[List[TensorType], TensorType]:
 
-        map_ids = loss_inputs[SampleBatch.OBS]["coordinates"]
-        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=map_ids, logits=self.map_logits)
+        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.map_ids, logits=self.map_logits)
         self.mean_map_loss = tf.reduce_mean(map_loss)
         self.max_map_loss = tf.reduce_max(map_loss)
 
