@@ -133,13 +133,13 @@ class PokemonLstmModel(TFModelV2):
             bias_initializer=tf.zeros_initializer(),
         )(lstm_out)
 
-        # # Prediction
-        #
-        # self.map_logits = tf.keras.layers.Dense(
-        #     self.N_MAPS,
-        #     name="map_logits",
-        #     activation=None,
-        # )(lstm_out)
+        # Prediction
+
+        map_logits = tf.keras.layers.Dense(
+            self.N_MAPS,
+            name="map_logits",
+            activation=None,
+        )(lstm_out)
 
 
         self.base_model = tf.keras.Model(
@@ -148,7 +148,7 @@ class PokemonLstmModel(TFModelV2):
              previous_reward_input, previous_action_input,
              seq_in, state_in_h, state_in_c],
 
-            [action_logits, value_out, state_h, state_c]
+            [action_logits, value_out, map_logits, state_h, state_c]
         )
 
     def forward(self, input_dict, state, seq_lens):
@@ -160,7 +160,7 @@ class PokemonLstmModel(TFModelV2):
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
 
-        context, self._value_out, h, c = self.base_model(
+        context, self._value_out, self.map_logits, h, c = self.base_model(
             [screen_input, stat_inputs,
              #flags_inputs,
              prev_reward, prev_action,
@@ -179,15 +179,15 @@ class PokemonLstmModel(TFModelV2):
             np.zeros(self.lstm_size, np.float32)
         ]
 
-    # def custom_loss(
-    #     self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
-    # ) -> Union[List[TensorType], TensorType]:
-    #
-    #     map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.map_ids, logits=self.map_logits)
-    #     self.mean_map_loss = tf.reduce_mean(map_loss)
-    #     self.max_map_loss = tf.reduce_max(map_loss)
-    #
-    #     return policy_loss + self.mean_map_loss
+    def custom_loss(
+        self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
+    ) -> Union[List[TensorType], TensorType]:
+
+        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.map_ids, logits=self.map_logits)
+        self.mean_map_loss = tf.reduce_mean(map_loss)
+        self.max_map_loss = tf.reduce_max(map_loss)
+
+        return policy_loss + self.mean_map_loss
 
 
 
