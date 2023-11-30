@@ -34,9 +34,6 @@ class PokemonLstmModel(TFModelV2):
         self.view_requirements[SampleBatch.PREV_REWARDS] = ViewRequirement(
             SampleBatch.REWARDS, shift=-1
         )
-        self.view_requirements[SampleBatch.NEXT_OBS] = ViewRequirement(
-            SampleBatch.OBS, space=self.obs_space, shift=+1
-        )
 
         screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="screen_input",
                                                  dtype=tf.float32)
@@ -160,8 +157,6 @@ class PokemonLstmModel(TFModelV2):
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
-        #self.next_map_ids = restore_original_dimensions(input_dict[SampleBatch.NEXT_OBS], self.obs_space)["coordinates"]
-        self.next_map_ids = input_dict[SampleBatch.NEXT_OBS]["coordinates"]
 
         context, self._value_out, h, c = self.base_model(
             [screen_input, stat_inputs,
@@ -186,9 +181,8 @@ class PokemonLstmModel(TFModelV2):
         self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
     ) -> Union[List[TensorType], TensorType]:
 
-
-
-        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.next_map_ids, logits=self.map_logits)
+        map_ids = loss_inputs[SampleBatch.OBS]["coordinates"]
+        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=map_ids, logits=self.map_logits)
         self.mean_map_loss = tf.reduce_mean(map_loss)
         self.max_map_loss = tf.reduce_max(map_loss)
 
