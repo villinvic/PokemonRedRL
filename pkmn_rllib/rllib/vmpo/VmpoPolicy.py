@@ -410,6 +410,8 @@ class VmpoPolicy(
             "baseline_popart_std"  : self.model.popart_std,
             "baseline_popart_mean" : self.model.popart_mean,
             "normalization_scale"  : self.normalization_scale,
+            "mean_map_loss"        : self.model.mean_map_loss,
+            "max_map_loss"         : self.model.max_map_loss,
             # "auxiliary_value_loss": self.auxiliary_value_loss,
 
         }

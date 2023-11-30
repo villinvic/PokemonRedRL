@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Union
 
 import numpy as np
 from ray.rllib import SampleBatch
@@ -6,10 +6,12 @@ from ray.rllib.models.tf import TFModelV2
 import tensorflow as tf
 from ray.rllib.policy.view_requirement import ViewRequirement
 from ray.rllib.policy.rnn_sequencing import add_time_dimension
-
+from ray.rllib.utils.typing import TensorType
 
 
 class PokemonLstmModel(TFModelV2):
+
+    N_MAPS = 248
 
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
 
@@ -29,6 +31,9 @@ class PokemonLstmModel(TFModelV2):
         )
         self.view_requirements[SampleBatch.PREV_REWARDS] = ViewRequirement(
             SampleBatch.REWARDS, shift=-1
+        )
+        self.view_requirements[SampleBatch.NEXT_OBS] = ViewRequirement(
+            SampleBatch.OBS, shift=+1
         )
 
         screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="screen_input",
@@ -138,6 +143,14 @@ class PokemonLstmModel(TFModelV2):
             [action_logits, value_out, state_h, state_c]
         )
 
+        # Prediction
+
+        self.map_logits = tf.keras.layers.Dense(
+            self.N_MAPS,
+            name="map_logits",
+            activation=None,
+        )(lstm_out)
+
     def forward(self, input_dict, state, seq_lens):
 
         screen_input = tf.cast(input_dict[SampleBatch.OBS]["screen"], tf.float32) / 255.
@@ -164,3 +177,22 @@ class PokemonLstmModel(TFModelV2):
             np.zeros(self.lstm_size, np.float32),
             np.zeros(self.lstm_size, np.float32)
         ]
+
+    def custom_loss(
+        self, policy_loss: TensorType, loss_inputs: Dict[str, TensorType]
+    ) -> Union[List[TensorType], TensorType]:
+
+        next_map_ids = loss_inputs[SampleBatch.NEXT_OBS]["coordinates"]
+        #rewards = loss_inputs[SampleBatch.REWARDS]
+        #r_loss = self.lstm_out
+
+        map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=next_map_ids, logits=self.map_logits)
+        self.mean_map_loss = tf.reduce_mean(map_loss)
+        self.max_map_loss = tf.reduce_max(map_loss)
+
+        return policy_loss + self.mean_map_loss
+
+
+
+
+
