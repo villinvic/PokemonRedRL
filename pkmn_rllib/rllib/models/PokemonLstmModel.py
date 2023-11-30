@@ -33,7 +33,7 @@ class PokemonLstmModel(TFModelV2):
             SampleBatch.REWARDS, shift=-1
         )
         self.view_requirements[SampleBatch.NEXT_OBS] = ViewRequirement(
-            SampleBatch.OBS, shift=1, space=self.obs_space, used_for_training=True
+            SampleBatch.OBS, shift=1, space=self.obs_space, used_for_training=True, used_for_compute_actions=False
         )
 
         screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="screen_input",
