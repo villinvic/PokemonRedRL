@@ -184,10 +184,11 @@ class PokemonLstmModel(TFModelV2):
     ) -> Union[List[TensorType], TensorType]:
 
         map_loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.map_ids, logits=self.map_logits)
-        self.mean_map_loss = tf.reduce_mean(map_loss)
-        self.max_map_loss = tf.reduce_max(map_loss)
+        mean_map_loss = tf.reduce_mean(map_loss)
+        self.max_map_loss.assign(tf.reduce_max(map_loss))
+        self.mean_map_loss.assign(mean_map_loss)
 
-        return policy_loss + self.mean_map_loss
+        return policy_loss + mean_map_loss
 
 
 
