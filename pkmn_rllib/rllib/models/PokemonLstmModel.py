@@ -140,7 +140,7 @@ class PokemonLstmModel(TFModelV2):
         # Prediction
 
         prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
-            [lstm_out, action_one_hot]
+            [lstm_out, add_time_dimension(padded_inputs=action_one_hot, seq_lens=seq_in, framework="tf")]
         )
 
         map_logits = tf.keras.layers.Dense(
