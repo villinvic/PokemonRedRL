@@ -188,11 +188,11 @@ class PokemonLstmModel(TFModelV2):
         return policy_loss + self.map_loss_mean
 
     def metrics(self):
+
         return {
             "map_loss_max"   : self.map_loss_max,
             "map_loss_mean": self.map_loss_mean,
         }
-
 
 
 
