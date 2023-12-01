@@ -6,9 +6,9 @@ from pathlib import Path
 import numpy as np
 from pyboy.pyboy import PyBoy
 
-from pkmn_env.red import PkmnRedEnv
 from pkmn_env.save_state_info import PokemonStateInfo
 from python_utils.collections import DefaultOrderedDict
+from pkmn_env.enums import *
 
 
 # Module based on go-explore algorithm

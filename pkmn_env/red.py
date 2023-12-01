@@ -27,6 +27,8 @@ from pkmn_env.go_explore import GoExplorePokemon
 from pkmn_env.save_state_info import PokemonStateInfo
 from python_utils.collections import DefaultOrderedDict
 
+from pkmn_env.enums import *
+
 
 # TODO:
 #       - scale up novelty for each map we visit
@@ -89,30 +91,6 @@ class PkmnRedEnv(Env):
 
 
     # Observation names
-    MAP_ID = "map_id"
-    MAPS_VISITED = "maps_visited"
-    BLACKOUT = "blackout"
-    BADGES = "badges"
-    BADGE_SUM = "badge_sum"
-    MONEY = "money"
-    COORDINATES = "coordinates"
-    PARTY_EXPERIENCE = "party_experience"
-    TOTAL_EXPERIENCE = "total_experience"
-    TOTAL_BLACKOUT = "total_blackouts"
-    PARTY_LEVELS = "party_levels"
-    TOTAL_LEVELS = "total_levels"
-    PARTY_HEALTH = "party_health"
-    PARTY_FILLS = "party_fills"
-    SEEN_POKEMONS = "seen_pokemons"
-    CAUGHT_POKEMONS = "caught_pokemons"
-    EVENTS_TRIGGERED = "events_triggered"
-    TOTAL_EVENTS_TRIGGERED = "total_events_triggered"
-    ORIENTATION = "orientation"
-    SURROUNDING_TILES_VISITATION = "surrounding_tiles_visitation"
-    NOVELTY_COUNT = "novelty_count"
-    DELTA_LEVEL = "party_delta_level"
-    ENTRANCE_DELTA_POS = "entrance_delta_pos"
-    SENT_OUT = "SENT_OUT"
 
     LOGGABLE_VALUES = (
         MAPS_VISITED,
@@ -189,23 +167,23 @@ class PkmnRedEnv(Env):
         self.observed_stats_config = [
             VariableGetter(
                 dim=8,
-                name=PkmnRedEnv.BADGES
+                name=BADGES
             ),
             # VariableGetter(
             #     name=PkmnRedEnv.MONEY,
             #     scale=5e-7
             # ),
             VariableGetter(
-                name=PkmnRedEnv.SEEN_POKEMONS,
+                name=SEEN_POKEMONS,
                 scale=1e-2
             ),
             VariableGetter(
-                name=PkmnRedEnv.CAUGHT_POKEMONS,
+                name=CAUGHT_POKEMONS,
                 scale=0.1
             ),
             VariableGetter(
                 dim=6,
-                name=PkmnRedEnv.PARTY_HEALTH
+                name=PARTY_HEALTH
             ),
 
             # Needs 1_200_000 exp max to reach level 100
@@ -223,29 +201,29 @@ class PkmnRedEnv(Env):
             # ),
             VariableGetter(
                 dim=6,
-                name=PkmnRedEnv.PARTY_LEVELS,
+                name=PARTY_LEVELS,
                 scale=0.02,
             ),
             VariableGetter(
-                name=PkmnRedEnv.DELTA_LEVEL,
+                name=DELTA_LEVEL,
                 scale=0.1,
                 post_process_fn=lambda x: np.clip(x, -2., 2.)
             ),
             VariableGetter(
-                name=PkmnRedEnv.TOTAL_EVENTS_TRIGGERED,
+                name=TOTAL_EVENTS_TRIGGERED,
                 scale=0.02 #319
             ),
             VariableGetter(
-                name=PkmnRedEnv.MAPS_VISITED,
+                name=MAPS_VISITED,
                 scale=0.05
             ),
             VariableGetter(
                 dim=6,
-                name=PkmnRedEnv.PARTY_FILLS,
+                name=PARTY_FILLS,
             ),
             VariableGetter(
                 dim=6,
-                name=PkmnRedEnv.SENT_OUT
+                name=SENT_OUT
             )
             # VariableGetter(
             #     dim=5,
@@ -272,27 +250,27 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            PkmnRedEnv.BLACKOUT                 :   - 0.15,
-            PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            PkmnRedEnv.TOTAL_EXPERIENCE         :   30.,  # 0.5
-            PkmnRedEnv.BADGE_SUM                :   100.,
-            PkmnRedEnv.MAPS_VISITED             :   0., # 3.
-            PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   0.,
-            PkmnRedEnv.COORDINATES              :   0,
-            # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
-            # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
-            PkmnRedEnv.PARTY_HEALTH             :   1.,
+            BLACKOUT                 :   - 0.15,
+            SEEN_POKEMONS            :   0.,
+            TOTAL_EXPERIENCE         :   30.,  # 0.5
+            BADGE_SUM                :   100.,
+            MAPS_VISITED             :   0., # 3.
+            TOTAL_EVENTS_TRIGGERED   :   0.,
+            COORDINATES              :   0,
+            # COORDINATES + "_NEG"     :   0.003 * 0.9,
+            # COORDINATES + "_POS"     :   0.003,
+            PARTY_HEALTH             :   1.,
 
-            # PkmnRedEnv.BLACKOUT                 :   -0.3,
-            # PkmnRedEnv.SEEN_POKEMONS            :   0.,
-            # PkmnRedEnv.TOTAL_EXPERIENCE         :   10.,  # 0.5
-            # PkmnRedEnv.BADGE_SUM                :   100.,
-            # PkmnRedEnv.MAPS_VISITED             :   0., # 3.
-            # PkmnRedEnv.TOTAL_EVENTS_TRIGGERED   :   1.,
-            # PkmnRedEnv.COORDINATES              :   0,
-            # # PkmnRedEnv.COORDINATES + "_NEG"     :   0.003 * 0.9,
-            # # PkmnRedEnv.COORDINATES + "_POS"     :   0.003,
-            # PkmnRedEnv.PARTY_HEALTH             :   1.,
+            # BLACKOUT                 :   -0.3,
+            # SEEN_POKEMONS            :   0.,
+            # TOTAL_EXPERIENCE         :   10.,  # 0.5
+            # BADGE_SUM                :   100.,
+            # MAPS_VISITED             :   0., # 3.
+            # TOTAL_EVENTS_TRIGGERED   :   1.,
+            # COORDINATES              :   0,
+            # # COORDINATES + "_NEG"     :   0.003 * 0.9,
+            # # COORDINATES + "_POS"     :   0.003,
+            # PARTY_HEALTH             :   1.,
 
             # Additional
 
@@ -352,7 +330,7 @@ class PkmnRedEnv(Env):
         self.go_explore = GoExplorePokemon(
             environment=self,
             path=self.s_path / "go_explore",
-            relevant_state_features=(PkmnRedEnv.BADGE_SUM, PkmnRedEnv.MAP_ID),
+            relevant_state_features=(BADGE_SUM, MAP_ID),
             sample_base_state_chance=0.2,
             recompute_score_freq=1,
             rendering=False # tests
@@ -487,65 +465,65 @@ class PkmnRedEnv(Env):
         :return: data
         """
 
-        self.game_stats[PkmnRedEnv.MONEY].append(self.read_money())
+        self.game_stats[MONEY].append(self.read_money())
         party_levels = self.read_party_levels()
         self.highest_opponent_level_so_far = np.maximum(self.highest_opponent_level_so_far, self.read_opponent_level())
-        self.game_stats[PkmnRedEnv.PARTY_LEVELS].append(party_levels)
+        self.game_stats[PARTY_LEVELS].append(party_levels)
 
-        self.game_stats[PkmnRedEnv.DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
-        self.game_stats[PkmnRedEnv.TOTAL_LEVELS].append(sum(party_levels))
+        self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
+        self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
-        self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE].append(party_experience)
-        self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE].append(sum(party_experience))
+        self.game_stats[PARTY_EXPERIENCE].append(party_experience)
+        self.game_stats[TOTAL_EXPERIENCE].append(sum(party_experience))
         badges = self.read_badges()
-        self.game_stats[PkmnRedEnv.BADGES].append(badges)
-        self.game_stats[PkmnRedEnv.BADGE_SUM].append(sum(badges))
-        self.game_stats[PkmnRedEnv.SEEN_POKEMONS].append(self.read_seen())
-        self.game_stats[PkmnRedEnv.CAUGHT_POKEMONS].append(self.read_caught())
+        self.game_stats[BADGES].append(badges)
+        self.game_stats[BADGE_SUM].append(sum(badges))
+        self.game_stats[SEEN_POKEMONS].append(self.read_seen())
+        self.game_stats[CAUGHT_POKEMONS].append(self.read_caught())
         event_flag_indices = self.read_extensive_events()
-        self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
-        self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED].append(event_flag_indices)
+        self.game_stats[TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
+        self.game_stats[EVENTS_TRIGGERED].append(event_flag_indices)
         # self.triggered_event_flags[event_flag_indices] = 1
-        self.game_stats[PkmnRedEnv.PARTY_FILLS].append(self.read_party_fills())
-        self.game_stats[PkmnRedEnv.SENT_OUT].append(self.read_sent_out())
+        self.game_stats[PARTY_FILLS].append(self.read_party_fills())
+        self.game_stats[SENT_OUT].append(self.read_sent_out())
         party_health = self.read_party_health()
-        self.game_stats[PkmnRedEnv.BLACKOUT].append(
+        self.game_stats[BLACKOUT].append(
             int(sum(party_health) == 0)
             and
-            (len(self.game_stats[PkmnRedEnv.PARTY_HEALTH]) == 0 or sum(self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1]) > 0)
+            (len(self.game_stats[PARTY_HEALTH]) == 0 or sum(self.game_stats[PARTY_HEALTH][-1]) > 0)
         )
-        self.game_stats[PkmnRedEnv.PARTY_HEALTH].append(party_health)
+        self.game_stats[PARTY_HEALTH].append(party_health)
 
         map_id = self.read_map_id()
-        self.game_stats[PkmnRedEnv.MAP_ID].append(map_id)
+        self.game_stats[MAP_ID].append(map_id)
 
         if (map_id not in self.visited_maps
             or
-            self.game_stats[PkmnRedEnv.BADGE_SUM][-1] != self.game_stats[PkmnRedEnv.BADGE_SUM][-2]):
+            self.game_stats[BADGE_SUM][-1] != self.game_stats[BADGE_SUM][-2]):
 
             self.go_explore.add_starting_point(self.game_stats)
         self.go_explore.update_stats(self.game_stats)
 
         tmp = self.visited_maps | {map_id}
-        self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(tmp))
+        self.game_stats[MAPS_VISITED].append(len(tmp))
 
         pos = self.read_pos()
 
-        self.game_stats[PkmnRedEnv.COORDINATES].append(pos + [map_id])
+        self.game_stats[COORDINATES].append(pos + [map_id])
 
         # x, y = pos
         # x2, y2, _ = self.entrance_coords
-        # self.game_stats[PkmnRedEnv.ENTRANCE_DELTA_POS].append([
+        # self.game_stats[ENTRANCE_DELTA_POS].append([
         #     x2 - x, y2 - y
         # ])
-        # self.game_stats[PkmnRedEnv.SURROUNDING_TILES_VISITATION].append([
+        # self.game_stats[SURROUNDING_TILES_VISITATION].append([
         #     self.visited_coordinates[(x, y, map_id)],
         #     self.visited_coordinates[(x+1, y, map_id)],
         #     self.visited_coordinates[(x-1, y, map_id)],
         #     self.visited_coordinates[(x, y+1, map_id)],
         #     self.visited_coordinates[(x, y-1, map_id)],
         # ])
-        # self.game_stats[PkmnRedEnv.NOVELTY_COUNT].append(self.distinct_frames_observed)
+        # self.game_stats[NOVELTY_COUNT].append(self.distinct_frames_observed)
 
 
 
@@ -565,7 +543,7 @@ class PkmnRedEnv(Env):
         return self.triggered_event_flags
 
     def get_coordinates(self):
-        return np.array(self.game_stats[PkmnRedEnv.COORDINATES][-1][-1:], dtype=np.uint8)
+        return np.array(self.game_stats[COORDINATES][-1][-1:], dtype=np.uint8)
 
     def step(self, action):
 
@@ -577,7 +555,7 @@ class PkmnRedEnv(Env):
         self.episode_reward += reward
 
         self.maximum_experience_in_party_so_far = np.maximum(
-            self.game_stats[PkmnRedEnv.TOTAL_EXPERIENCE][-1],
+            self.game_stats[TOTAL_EXPERIENCE][-1],
             self.maximum_experience_in_party_so_far
         )
 
@@ -609,7 +587,7 @@ class PkmnRedEnv(Env):
         if self.step_count >= 2:
             # reset on badge get
             if (
-                    self.game_stats[PkmnRedEnv.BADGE_SUM][-1] != self.game_stats[PkmnRedEnv.BADGE_SUM][-2]
+                    self.game_stats[BADGE_SUM][-1] != self.game_stats[BADGE_SUM][-2]
             ):
                 pass
                 #self.init_knn()
@@ -620,7 +598,7 @@ class PkmnRedEnv(Env):
                 frame_vector, np.array([self.knn_index.get_current_count()])
             )
             self.distinct_frames_observed += 0
-        elif self.game_stats[PkmnRedEnv.COORDINATES][-1][-1] != 40:
+        elif self.game_stats[COORDINATES][-1][-1] != 40:
 
             labels, distances = self.knn_index.knn_query(frame_vector, k=1)
             distance = distances[0][0]
@@ -653,7 +631,7 @@ class PkmnRedEnv(Env):
         if self.save_video:
             self.full_frame_writer.close()
 
-        self.game_stats[PkmnRedEnv.TOTAL_BLACKOUT].append(sum(self.game_stats[PkmnRedEnv.BLACKOUT]))
+        self.game_stats[TOTAL_BLACKOUT].append(sum(self.game_stats[BLACKOUT]))
         self.reset_count += 1
         self.max_steps *= self.additional_steps_per_episode
 
@@ -672,10 +650,10 @@ class PkmnRedEnv(Env):
         rewards = {} #"novelty": self.update_frame_knn_index(obs["screen"])}
 
         if self.step_count >= 4:
-            curr_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-1])
-            # past_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-2])
-            # past_2_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-3])
-            # past_3_coords = tuple(self.game_stats[PkmnRedEnv.COORDINATES][-4])
+            curr_coords = tuple(self.game_stats[COORDINATES][-1])
+            # past_coords = tuple(self.game_stats[COORDINATES][-2])
+            # past_2_coords = tuple(self.game_stats[COORDINATES][-3])
+            # past_3_coords = tuple(self.game_stats[COORDINATES][-4])
             if walked:
                 self.last_walked_coordinates.append(curr_coords)
             #
@@ -700,7 +678,7 @@ class PkmnRedEnv(Env):
             #     dx2 = abs(past_coords[0] - self.entrance_coords[0])
             #     dy2 = abs(past_coords[1] - self.entrance_coords[1])
             #
-            #     assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[PkmnRedEnv.COORDINATES][-6:]
+            #     assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[COORDINATES][-6:]
             #
             #     r_nav = dx - dx2 + dy - dy2
             #
@@ -715,66 +693,66 @@ class PkmnRedEnv(Env):
             # we gain more experience as game moves on:
             total_delta_exp = 0
             total_healing = 0
-            level_fraction = np.minimum(1., self.highest_opponent_level_so_far/max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1]))
+            level_fraction = np.minimum(1., self.highest_opponent_level_so_far/max(self.game_stats[PARTY_LEVELS][-1]))
             for i in range(6):
                 # Can be hacked with pc, let's see :)
 
                 total_delta_exp += level_fraction * np.maximum(
-                    (self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-1][i]
-                    - self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PkmnRedEnv.PARTY_EXPERIENCE][-2][i] != 0.)
+                    (self.game_stats[PARTY_EXPERIENCE][-1][i]
+                    - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
                     , 0.
-                ) / np.maximum(max(self.game_stats[PkmnRedEnv.PARTY_LEVELS][-1])**3,
+                ) / np.maximum(max(self.game_stats[PARTY_LEVELS][-1])**3,
                 6.)
 
-            if not any(self.game_stats[PkmnRedEnv.BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
+            if not any(self.game_stats[BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
                 for i in range(6):
                     # We need to make sure one of the pokemons wasnt KO and healed
                     total_healing += int(
-                        self.game_stats[PkmnRedEnv.PARTY_HEALTH][-1][i]-self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i]
+                        self.game_stats[PARTY_HEALTH][-1][i]-self.game_stats[PARTY_HEALTH][-2][i]
                         > 0.05
                         and
-                        self.game_stats[PkmnRedEnv.PARTY_HEALTH][-2][i] > 0
+                        self.game_stats[PARTY_HEALTH][-2][i] > 0
                     )
 
             rewards.update(**{
-                PkmnRedEnv.BLACKOUT: self.game_stats[PkmnRedEnv.BLACKOUT][-1],
-                PkmnRedEnv.BADGE_SUM: (
-                    np.maximum(self.game_stats[PkmnRedEnv.BADGE_SUM][-1] - self.game_stats[PkmnRedEnv.BADGE_SUM][-2], 0.)
+                BLACKOUT: self.game_stats[BLACKOUT][-1],
+                BADGE_SUM: (
+                    np.maximum(self.game_stats[BADGE_SUM][-1] - self.game_stats[BADGE_SUM][-2], 0.)
                 ),
-                PkmnRedEnv.TOTAL_EXPERIENCE: total_delta_exp,
-                PkmnRedEnv.SEEN_POKEMONS : (
-                    np.maximum(self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-1] - self.game_stats[PkmnRedEnv.SEEN_POKEMONS][-2],
+                TOTAL_EXPERIENCE: total_delta_exp,
+                SEEN_POKEMONS : (
+                    np.maximum(self.game_stats[SEEN_POKEMONS][-1] - self.game_stats[SEEN_POKEMONS][-2],
                                0.)
                 ),
-                PkmnRedEnv.TOTAL_EVENTS_TRIGGERED: (
-                        self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED][-1]
-                        - self.game_stats[PkmnRedEnv.TOTAL_EVENTS_TRIGGERED][-2]
-                      #                       * (self.game_stats[PkmnRedEnv.EVENTS_TRIGGERED][-1] - 11
+                TOTAL_EVENTS_TRIGGERED: (
+                        self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
+                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2]
+                      #                       * (self.game_stats[EVENTS_TRIGGERED][-1] - 11
                 ),
 
-                PkmnRedEnv.MAPS_VISITED: (
-                #     2 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                MAPS_VISITED: (
+                #     2 == self.game_stats[MAP_ID][-1]
                 #     and
                 #     2 not in self.visited_maps
                 # )
                 #                          + 25 *int(
-                #     1 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                #     1 == self.game_stats[MAP_ID][-1]
                 #     and
                 #     1 not in self.visited_maps
                 # ) + 1 *int(
-                #     12 == self.game_stats[PkmnRedEnv.MAP_ID][-1]
+                #     12 == self.game_stats[MAP_ID][-1]
                 #     and
                 #     12 not in self.visited_maps
                 # )
-                (self.game_stats[PkmnRedEnv.MAPS_VISITED][-1] - self.game_stats[PkmnRedEnv.MAPS_VISITED][-2])
-                #* self.game_stats[PkmnRedEnv.MAPS_VISITED][-1]
+                (self.game_stats[MAPS_VISITED][-1] - self.game_stats[MAPS_VISITED][-2])
+                #* self.game_stats[MAPS_VISITED][-1]
                 ),
 
                 # reward optimized walks
-                # PkmnRedEnv.COORDINATES + "_NEG": np.minimum(r_nav, 0.),
-                # PkmnRedEnv.COORDINATES + "_POS": np.maximum(r_nav, 0.),
+                # COORDINATES + "_NEG": np.minimum(r_nav, 0.),
+                # COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
-                PkmnRedEnv.COORDINATES: int(
+                COORDINATES: int(
                     (curr_coords
                     in
                     self.last_walked_coordinates[-6:-1])
@@ -782,14 +760,14 @@ class PkmnRedEnv(Env):
                     walked
                 ),
 
-                PkmnRedEnv.PARTY_HEALTH: int(total_healing > 0)
+                PARTY_HEALTH: int(total_healing > 0)
             })
 
             if total_healing > 0:
                 self.save_screenshot("debug", "healing")
 
-        self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
-        self.visited_maps.add(self.game_stats[PkmnRedEnv.MAP_ID][-1])
+        self.visited_maps.add(self.game_stats[MAP_ID][-1])
+        self.visited_maps.add(self.game_stats[MAP_ID][-1])
 
         # if walked:
         #     self.visited_coordinates[curr_coords] = np.minimum(
