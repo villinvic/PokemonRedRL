@@ -130,6 +130,7 @@ class GoExplorePokemon:
 
     def reset_console(self, state: PokemonStateInfo):
         # restart game, skipping credits
+        print("OOOOOOOOOOOOOOO", state)
         with open(state.get_save_path(), "rb") as f:
             self.console.load_state(f)
 
