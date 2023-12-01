@@ -55,7 +55,7 @@ class GoExplorePokemon:
         # We can add more params to the state
         # for now, we stick to badges and map_id
 
-        features = (game_stats[feature][-1] for feature in self.relevant_state_features)
+        features = tuple(game_stats[feature][-1] for feature in self.relevant_state_features)
         hash_name = hash(features)
         file_base = f"{hash_name}"
         state_name = file_base + ".state"
@@ -88,7 +88,7 @@ class GoExplorePokemon:
     def update_stats(self, game_stats):
 
         # has to be hashable
-        state_indexer = hash((game_stats[feature][-1] for feature in self.relevant_state_features))
+        state_indexer = hash(tuple(game_stats[feature][-1] for feature in self.relevant_state_features))
         # update count
         self.state_stats[state_indexer][GoExplorePokemon.TIMES_SEEN] += 1
 

@@ -497,7 +497,7 @@ class PkmnRedEnv(Env):
         map_id = self.read_map_id()
         self.game_stats[MAP_ID].append(map_id)
 
-        if (map_id not in self.visited_maps
+        if self.step_count > 2 and (map_id not in self.visited_maps
             or
             self.game_stats[BADGE_SUM][-1] != self.game_stats[BADGE_SUM][-2]):
 
