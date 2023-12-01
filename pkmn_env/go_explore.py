@@ -109,7 +109,7 @@ class GoExplorePokemon:
 
     def sample_starting_point(self, scores):
         if np.random.random() < self.sample_base_state_chance:
-            return "0"
+            return self.base_state_info
 
         exp_scores = np.exp(scores)
         probs = exp_scores / exp_scores.sum()
