@@ -23,6 +23,8 @@ import pandas as pd
 from gymnasium import Env, spaces
 from pyboy.utils import WindowEvent
 
+from pkmn_env.go_explore import GoExplorePokemon
+from pkmn_env.save_state_info import PokemonStateInfo
 from python_utils.collections import DefaultOrderedDict
 
 
@@ -81,9 +83,6 @@ class VariableGetter:
 
 
         return index + self.dim
-
-
-
 
 
 class PkmnRedEnv(Env):
@@ -339,10 +338,25 @@ class PkmnRedEnv(Env):
         self.visited_maps = {37, 38, 39}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
         self.entrance_coords = (5, 3, 40)
-        self.highest_opponent_level_so_far = 5.
+        self.highest_opponent_level_so_far = 5
         self.last_reward_dict = {}
         self.last_walked_coordinates = []
         self.full_frame_writer = None
+
+        self.base_state_info = PokemonStateInfo(
+            save_path=self.init_state,
+            highest_opponent_level_so_far=self.highest_opponent_level_so_far,
+            visited_maps=self.visited_maps
+        )
+
+        self.go_explore = GoExplorePokemon(
+            environment=self,
+            path=self.s_path / "go_explore",
+            relevant_state_features=(PkmnRedEnv.BADGE_SUM, PkmnRedEnv.MAP_ID),
+            sample_base_state_chance=0.2,
+            recompute_score_freq=1,
+            rendering=False # tests
+        )
 
         #self.init_knn()
 
@@ -401,10 +415,6 @@ class PkmnRedEnv(Env):
 
         del self.game_stats
 
-        # restart game, skipping credits
-        with open(self.init_state, "rb") as f:
-            self.pyboy.load_state(f)
-
         self.game_stats = DefaultOrderedDict(list)
         #self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
         self.last_reward_dict = {}
@@ -418,10 +428,13 @@ class PkmnRedEnv(Env):
         self.episode_reward = 0
         self.visited_maps = {37, 38, 39}
         self.entrance_coords = (5, 30, 40)
-        self.highest_opponent_level_so_far = 5.
+        self.highest_opponent_level_so_far = 5
         self.visited_coordinates = defaultdict(lambda: 0)
         self.last_walked_coordinates = []
 
+        # we restart the game at a random, relevant state
+        self.go_explore.read_session_states()
+        self.go_explore()
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
@@ -506,6 +519,13 @@ class PkmnRedEnv(Env):
         map_id = self.read_map_id()
         self.game_stats[PkmnRedEnv.MAP_ID].append(map_id)
 
+        if (map_id not in self.visited_maps
+            or
+            self.game_stats[PkmnRedEnv.BADGE_SUM][-1] != self.game_stats[PkmnRedEnv.BADGE_SUM][-2]):
+
+            self.go_explore.add_starting_point(self.game_stats)
+        self.go_explore.update_stats(self.game_stats)
+
         tmp = self.visited_maps | {map_id}
         self.game_stats[PkmnRedEnv.MAPS_VISITED].append(len(tmp))
 
@@ -526,6 +546,8 @@ class PkmnRedEnv(Env):
         #     self.visited_coordinates[(x, y-1, map_id)],
         # ])
         # self.game_stats[PkmnRedEnv.NOVELTY_COUNT].append(self.distinct_frames_observed)
+
+
 
         idx = 0
         for getter in self.observed_stats_config:
