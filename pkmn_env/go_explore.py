@@ -31,13 +31,13 @@ class GoExplorePokemon:
         self.path.mkdir(parents=True, exist_ok=True)
         self.base_state_info = environment.base_state_info
         self.states = DefaultOrderedDict(PokemonStateInfo)
-        self.states["0"] = self.base_state_info
+
         self.reset_count = 0
 
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN_SINCE_NEW_WEIGHT: 0.,
             GoExplorePokemon.TIMES_CHOSEN: 1.,
-            GoExplorePokemon.TIMES_SEEN: 1e-4,
+            GoExplorePokemon.TIMES_SEEN: 20.,
         }
 
         self.state_stats = defaultdict(lambda : {
@@ -117,6 +117,8 @@ class GoExplorePokemon:
         print(probs)
 
         starting_point_name = np.random.choice(list(self.states.keys()), p=probs)
+
+        self.state_stats[starting_point_name][GoExplorePokemon.TIMES_CHOSEN] += 1
 
         return self.states[starting_point_name]
 
