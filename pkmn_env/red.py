@@ -112,7 +112,7 @@ class PkmnRedEnv(Env):
         self.worker_index = 1 if not hasattr(config, "worker_index") else config.worker_index
 
         self.debug = config['debug']
-        self.s_path = config['session_path']
+        self.s_path = Path(config['session_path'])
         self.headless = config['headless']
         self.num_elements = config['knn_elements']
         self.init_state = config['init_state']
