@@ -31,7 +31,7 @@ class GoExplorePokemon:
         self.path.mkdir(parents=True, exist_ok=True)
         self.base_state_info = environment.base_state_info
         self.states = DefaultOrderedDict(PokemonStateInfo)
-        self.states[""] = self.base_state_info
+        self.states["0"] = self.base_state_info
         self.reset_count = 0
 
         self.stat_weights = {
@@ -109,7 +109,7 @@ class GoExplorePokemon:
 
     def sample_starting_point(self, scores):
         if np.random.random() < self.sample_base_state_chance:
-            return ""
+            return "0"
 
         exp_scores = np.exp(scores)
         probs = exp_scores / exp_scores.sum()
