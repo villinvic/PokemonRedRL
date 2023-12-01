@@ -19,7 +19,8 @@ def create_named_pipe():
 def send_dummy_data():
     episode_id = 1
     total_exp = 0
-
+    pokemons = [33, 0, 0, 0, 0, 0]
+    num_pokemons = 1
     context = zmq.Context()
     socket = context.socket(zmq.PUSH)
     socket.bind(pipe_path)
@@ -31,12 +32,17 @@ def send_dummy_data():
         # Generate dummy score
         score = total_exp // episode_id  # Just a placeholder calculation, replace it with your actual scoring logic
 
+        if episode_id % 3 == 0 and num_pokemons < 6:
+
+            pokemons[num_pokemons] = np.random.choice(151) + 1
+            num_pokemons += 1
+
         # Format the data
         data = {
             "episode_id": episode_id,
             "score": score,
             "total_exp": total_exp,
-            "pokemon_ids": list(np.random.choice(152, 6))
+            "pokemon_ids": pokemons
         }
 
         to_send.append(data)

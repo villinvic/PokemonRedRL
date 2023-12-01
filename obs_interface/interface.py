@@ -3,20 +3,44 @@ import os
 import time
 
 import zmq
-from PyQt5.QtGui import QMovie
+from PyQt5.QtGui import QMovie, QPainter
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QGridLayout
-from PyQt5.QtCore import QThread, Qt, pyqtSignal
+from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtProperty, QPropertyAnimation, QSequentialAnimationGroup, \
+    QEasingCurve
+
 
 # TODO : animations
 # badges
 # pokemon info
 # history and stats
 
+class FadingLabel(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._opacity = 1.0
+
+    def getOpacity(self):
+        return self._opacity
+
+    def setOpacity(self, value):
+        self._opacity = value
+        self.repaint()
+
+    opacity = pyqtProperty(float, getOpacity, setOpacity)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setOpacity(self.opacity)
+        super().paintEvent(event)
+
+
 class PokemonAIInterface(QWidget):
     def __init__(self):
         super().__init__()
 
         self.init_ui()
+
+        self.pokemon_ids = [0] * 6
 
     def init_ui(self):
         # Set up the layout
@@ -36,7 +60,7 @@ class PokemonAIInterface(QWidget):
         self.pokemon_labels = []
 
         for i in range(6):
-            pokemon_label = QLabel(self)
+            pokemon_label = FadingLabel(self)
             layout.addWidget(pokemon_label, i // 3 + 1, i % 3)
             self.pokemon_labels.append(pokemon_label)
 
@@ -45,7 +69,7 @@ class PokemonAIInterface(QWidget):
 
         # Set window properties
         self.setWindowTitle('Pokemon AI Interface')
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(100, 100, 500, 300)
 
     def update_data(self, data):
         # Update episode information labels
@@ -55,20 +79,53 @@ class PokemonAIInterface(QWidget):
 
         # Load and display Pokémon gifs
         for i, pokemon_id in enumerate(data["pokemon_ids"]):
-            self.load_and_display_gif(pokemon_id, self.pokemon_labels[i])
 
-    def load_and_display_gif(self, pokemon_id, label: QLabel):
-        if pokemon_id not in (0, 1,2,3,7,5,6,8,9, 255):
-            try:
-                # For GIFs
-                movie = QMovie(f"obs_interface/assets/sprites/ani_bw_{pokemon_id:03d}.gif")
-                label.setMovie(movie)
-                movie.start()
+            if pokemon_id == 0 and self.pokemon_ids[i] != 0:
+                # pokemon removed from party : TODO
+                self.pokemon_labels[i].clear()
+            elif pokemon_id != 0 and self.pokemon_ids[i] == 0:
+                # pokemon added to party
+                self.animate_pokemon_entrance(pokemon_id, self.pokemon_labels[i])
+            elif pokemon_id != self.pokemon_ids[i]:
+                # changed pokemon at idx i : TODO
+                self.load_and_display_gif(pokemon_id, self.pokemon_labels[i])
 
-            except Exception as e:
-                print(f"Error loading gif: {e}")
-        else:
-            label.clear()
+            self.pokemon_ids[i] = pokemon_id
+
+
+    def animate_pokemon_entrance(self, new_pokemon_id, label):
+        # Load entrance GIF and play the animation
+        entrance_gif_path = 'obs_interface/assets/animations/animation7.gif'
+        entrance_movie = QMovie(entrance_gif_path)
+        label.setMovie(entrance_movie)
+        entrance_movie.start()
+
+        # Create a fade-out animation for the entrance GIF
+        fade_out_animation = QPropertyAnimation(label, b"opacity")
+        fade_out_animation.setEasingCurve(QEasingCurve.InOutCubic)
+        fade_out_animation.setStartValue(1.0)
+        fade_out_animation.setEndValue(.0)
+        fade_out_animation.setDuration(2000)
+
+        # Set up animation sequence
+        animation_group = QSequentialAnimationGroup(self)
+        animation_group.addAnimation(fade_out_animation)
+
+        # Connect the signal to load and display the actual Pokémon GIF
+        animation_group.finished.connect(lambda: self.load_and_display_gif(new_pokemon_id, label))
+        animation_group.start()
+
+
+    def load_and_display_gif(self, pokemon_id, label):
+        try:
+            # Load the new Pokémon gif
+            gif_path = f"obs_interface/assets/sprites/ani_bw_{pokemon_id:03d}.gif"
+            movie = QMovie(gif_path)
+            label.setMovie(movie)
+            movie.start()
+
+        except Exception as e:
+            print(f"Error loading gif: {e}")
 
 
 # Define a thread to read data from the named pipe
