@@ -321,9 +321,6 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-
-        print("rpokergpok", self.init_state)
-
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
             highest_opponent_level_so_far=self.highest_opponent_level_so_far,
