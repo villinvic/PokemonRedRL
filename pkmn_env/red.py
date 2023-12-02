@@ -693,16 +693,18 @@ class PkmnRedEnv(Env):
             # we gain more experience as game moves on:
             total_delta_exp = 0
             total_healing = 0
-            level_fraction = np.minimum(1., self.highest_opponent_level_so_far/max(self.game_stats[PARTY_LEVELS][-1]))
-            for i in range(6):
-                # Can be hacked with pc, let's see :)
 
-                total_delta_exp += level_fraction * np.maximum(
-                    (self.game_stats[PARTY_EXPERIENCE][-1][i]
-                    - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
-                    , 0.
-                ) / np.maximum(max(self.game_stats[PARTY_LEVELS][-1])**3,
-                6.)
+            if curr_coords not in self.pokemon_centers:
+                level_fraction = np.minimum(1., self.highest_opponent_level_so_far/max(self.game_stats[PARTY_LEVELS][-1]))
+                for i in range(6):
+                    # Can be hacked with pc, let's see :)
+
+                    total_delta_exp += level_fraction * np.maximum(
+                        (self.game_stats[PARTY_EXPERIENCE][-1][i]
+                        - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
+                        , 0.
+                    ) / np.maximum(max(self.game_stats[PARTY_LEVELS][-1])**3,
+                    6.)
 
             if not any(self.game_stats[BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
                 for i in range(6):
