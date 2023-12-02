@@ -20,6 +20,7 @@ def send_dummy_data():
     episode_id = 1
     total_exp = 0
     pokemons = [33, 0, 0, 0, 0, 0]
+    pokemon_levels = [6, 0, 0, 0, 0, 0]
     num_pokemons = 1
     context = zmq.Context()
     socket = context.socket(zmq.PUSH)
@@ -37,12 +38,21 @@ def send_dummy_data():
             pokemons[num_pokemons] = np.random.choice(151) + 1
             num_pokemons += 1
 
+        for i in range(6):
+            if pokemons[i] != 0:
+                pokemon_levels[i] = np.minimum(pokemon_levels[i] + int(np.random.random() < 0.55), 100)
+
+
         # Format the data
         data = {
             "episode_id": episode_id,
             "score": score,
             "total_exp": total_exp,
-            "pokemon_ids": pokemons
+            "pokemon_ids": pokemons,
+            "pokemon_levels": pokemon_levels
+            # exp
+            # badges
+            # see environment actually
         }
 
         to_send.append(data)

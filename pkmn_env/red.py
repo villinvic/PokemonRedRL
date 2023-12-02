@@ -330,7 +330,7 @@ class PkmnRedEnv(Env):
         self.go_explore = GoExplorePokemon(
             environment=self,
             path=self.s_path / "go_explore",
-            relevant_state_features=(BADGE_SUM, MAP_ID),
+            relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
             sample_base_state_chance=0.2,
             recompute_score_freq=1,
             rendering=False # tests

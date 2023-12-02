@@ -37,7 +37,7 @@ class GoExplorePokemon:
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN_SINCE_NEW_WEIGHT: 0.,
             GoExplorePokemon.TIMES_CHOSEN: 1.,
-            GoExplorePokemon.TIMES_SEEN: 20.,
+            GoExplorePokemon.TIMES_SEEN: 40.,
         }
 
         self.state_stats = defaultdict(lambda : {
@@ -140,6 +140,7 @@ class GoExplorePokemon:
             # -> no pkl saved for base state
             state.send_to_env(self.environment)
         else:
+            # We need to read from the checkpoint in this case, the infos might be updated
             with open(state.get_info_path(), "rb") as f:
                 PokemonStateInfo.dict_to_env(self.environment, pickle.load(f))
 
