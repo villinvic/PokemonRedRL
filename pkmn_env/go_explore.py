@@ -98,16 +98,17 @@ class GoExplorePokemon:
 
             state_stats = self.state_stats[int(state_hash)]
 
-            score = 0
+            score = 1e-3
 
             for stat_name, value in state_stats.items():
                 score += self.stat_weights[stat_name] * np.sqrt(1 / (value + 1e-3))
 
-            scores.append(score + 1e-3)
+            scores.append(score)
 
         return scores
 
     def sample_starting_point(self, scores):
+
         if np.random.random() < self.sample_base_state_chance or not self.states:
             return self.base_state_info
 
