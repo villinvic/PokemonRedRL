@@ -96,8 +96,6 @@ class GoExplorePokemon:
         scores = []
         for state_hash, info in self.states.items():
 
-            print(state_hash, info)
-
             state_stats = self.state_stats[int(state_hash)]
 
             score = 1e-5
