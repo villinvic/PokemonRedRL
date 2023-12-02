@@ -96,14 +96,18 @@ class GoExplorePokemon:
         scores = []
         for state_hash, info in self.states.items():
 
+            print(state_hash, info)
+
             state_stats = self.state_stats[int(state_hash)]
 
-            score = 1e-3
+            score = 1e-5
 
             for stat_name, value in state_stats.items():
                 score += self.stat_weights[stat_name] * np.sqrt(1 / (value + 1e-3))
 
             scores.append(score)
+
+        print(scores)
 
         return scores
 
