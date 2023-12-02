@@ -63,7 +63,7 @@ class GoExplorePokemon:
 
         _, _, files = next(os.walk(self.path))
 
-        if np.random.random() < 1e-2 or state_name not in files:
+        if np.random.random() < 2e-2 or state_name not in files:
 
             save_state_path = self.path / state_name
             info_path = self.path / state_info_name
