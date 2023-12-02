@@ -103,7 +103,7 @@ class GoExplorePokemon:
             for stat_name, value in state_stats.items():
                 score += self.stat_weights[stat_name] * np.sqrt(1 / (value + 1e-3))
 
-            scores.append(score + 3e-5)
+            scores.append(score + 1e-3)
 
         return scores
 
