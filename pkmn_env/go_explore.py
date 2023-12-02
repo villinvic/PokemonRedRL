@@ -105,9 +105,6 @@ class GoExplorePokemon:
 
             scores.append(score)
 
-            if len(scores) > 0:
-                print(scores)
-
         return scores
 
     def sample_starting_point(self, scores):
