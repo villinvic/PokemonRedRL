@@ -107,13 +107,11 @@ class GoExplorePokemon:
 
             scores.append(score)
 
-        print(scores)
-
         return scores
 
     def sample_starting_point(self, scores):
 
-        if np.random.random() < self.sample_base_state_chance or not self.states:
+        if np.random.random() < self.sample_base_state_chance or not len(self.states) == 0:
             return self.base_state_info
 
         exp_scores = np.exp(scores)
