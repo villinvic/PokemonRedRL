@@ -256,9 +256,9 @@ class PkmnRedEnv(Env):
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0., # 3.
             TOTAL_EVENTS_TRIGGERED   :   1.,
-            #COORDINATES              :   0,
-            COORDINATES + "_NEG"     :   0.003 * 0.9,
-            COORDINATES + "_POS"     :   0.003,
+            COORDINATES              :   - 2e-4,
+            # COORDINATES + "_NEG"     :   0.003 * 0.9,
+            # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
             # BLACKOUT                 :   -0.3,
