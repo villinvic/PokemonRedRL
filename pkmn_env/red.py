@@ -555,7 +555,7 @@ class PkmnRedEnv(Env):
 
     def get_moved(self):
         walked = False if self.step_count < 2 else self.game_stats[COORDINATES][-1] != self.game_stats[COORDINATES][-2]
-        return np.array(walked, dtype=np.uint8)
+        return np.array([walked], dtype=np.uint8)
 
     def step(self, action):
 
