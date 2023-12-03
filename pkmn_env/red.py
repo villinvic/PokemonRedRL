@@ -250,15 +250,15 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.15,
+            BLACKOUT                 :   - 0.05,
             SEEN_POKEMONS            :   0.,
             TOTAL_EXPERIENCE         :   30.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0., # 3.
-            TOTAL_EVENTS_TRIGGERED   :   0.,
-            COORDINATES              :   0,
-            # COORDINATES + "_NEG"     :   0.003 * 0.9,
-            # COORDINATES + "_POS"     :   0.003,
+            TOTAL_EVENTS_TRIGGERED   :   1.,
+            #COORDINATES              :   0,
+            COORDINATES + "_NEG"     :   0.003 * 0.9,
+            COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
             # BLACKOUT                 :   -0.3,
@@ -291,7 +291,9 @@ class PkmnRedEnv(Env):
             "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
             #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
-            "coordinates": spaces.Box(low=0, high=255, shape=(1,), dtype=np.uint8)
+            "coordinates": spaces.Box(low=0, high=255, shape=(1,), dtype=np.uint8),
+            "moved": spaces.Box(low=0, high=1, shape=(1,), dtype=np.uint8)
+
         })
 
         self.pyboy = PyBoy(
@@ -355,6 +357,7 @@ class PkmnRedEnv(Env):
             "screen" :   self.render(),
             "stats"  :   self.get_observed_stats(),
             "coordinates": self.get_coordinates(),
+            "moved"      : self.get_moved(),
             #"flags"  :   self.get_event_flags()
         }
 
@@ -467,8 +470,13 @@ class PkmnRedEnv(Env):
 
         self.game_stats[MONEY].append(self.read_money())
         party_levels = self.read_party_levels()
-        self.highest_opponent_level_so_far = np.maximum(self.highest_opponent_level_so_far, self.read_opponent_level())
+
+        opp_level = self.read_opponent_level()
+        if opp_level not in (0, 255):
+            self.highest_opponent_level_so_far = opp_level
+
         self.game_stats[PARTY_LEVELS].append(party_levels)
+
 
         self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
@@ -544,6 +552,10 @@ class PkmnRedEnv(Env):
 
     def get_coordinates(self):
         return np.array(self.game_stats[COORDINATES][-1][-1:], dtype=np.uint8)
+
+    def get_moved(self):
+        walked = False if self.step_count < 2 else self.game_stats[COORDINATES][-1] != self.game_stats[COORDINATES][-2]
+        return np.array(walked, dtype=np.uint8)
 
     def step(self, action):
 

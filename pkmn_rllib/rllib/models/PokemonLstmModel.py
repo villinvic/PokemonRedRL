@@ -149,6 +149,18 @@ class PokemonLstmModel(TFModelV2):
             activation=None,
         )(prediction_input)
 
+        moved_logits = tf.keras.layers.Dense(
+            1,
+            name="moved_logits",
+            activation=None,
+        )(prediction_input)
+
+        reward_prediction_logits = tf.keras.layers.Dense(
+            3,
+            name="reward_logits",
+            activation=None,
+        )(prediction_input)
+
 
         self.base_model = tf.keras.Model(
             [screen_input, stats_input,
@@ -156,7 +168,7 @@ class PokemonLstmModel(TFModelV2):
              previous_reward_input, previous_action_input, action_input,
              seq_in, state_in_h, state_in_c],
 
-            [action_logits, value_out, map_logits, state_h, state_c]
+            [action_logits, value_out, map_logits, moved_logits, reward_prediction_logits, state_h, state_c]
         )
 
     def forward(self, input_dict, state, seq_lens):
@@ -165,12 +177,14 @@ class PokemonLstmModel(TFModelV2):
         stat_inputs = input_dict[SampleBatch.OBS]["stats"]
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         self.map_ids = tf.cast(input_dict[SampleBatch.NEXT_OBS]["coordinates"], tf.int32)
+        self.walked = tf.cast(input_dict[SampleBatch.NEXT_OBS]["walked"], tf.int32)
+        self.rewards = tf.squeeze(input_dict[SampleBatch.REWARDS])
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
         action = input_dict[SampleBatch.ACTIONS]
 
 
-        context, self._value_out, map_logits, h, c = self.base_model(
+        context, self._value_out, map_logits, moved_logits, reward_logits, h, c = self.base_model(
             [screen_input, stat_inputs,
              #flags_inputs,
              prev_reward, prev_action, action,
@@ -178,6 +192,9 @@ class PokemonLstmModel(TFModelV2):
         )
 
         self.map_logits = tf.reshape(map_logits, [-1, self.N_MAPS])
+        self.moved_logits = tf.reshape(moved_logits, [-1])
+        self.reward_logits = tf.reshape(reward_logits, [-1, 3])
+
 
         return tf.reshape(context, [-1, self.num_outputs]), [h, c]
 
@@ -196,16 +213,47 @@ class PokemonLstmModel(TFModelV2):
     ) -> Union[List[TensorType], TensorType]:
 
         map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.map_ids), logits=self.map_logits)
+        moved_loss = tf.losses.binary_crossentropy(labels=tf.squeeze(self.walked), logits=self.moved_logits, from_logits=True)
+
+        reward_classes = tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0))
+        num_non_zero_rewards = tf.reduce_sum(tf.cast(reward_classes > 0, tf.int32))
+
+        zero_indices = tf.where(tf.equal(reward_classes, 0))
+
+        shuffled_zero_indices = tf.random.shuffle(zero_indices)[:num_non_zero_rewards]
+
+        non_zero_indices = tf.where(reward_classes > 0)
+
+        all_indices = tf.concat([shuffled_zero_indices, non_zero_indices], axis=0)
+
+        labels = tf.gather_nd(reward_classes, all_indices)
+        values = tf.gather_nd(self.reward_logits, all_indices)
+
+        reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=values)
+
+        self.moved_loss_mean = tf.reduce_mean(moved_loss)
+        self.moved_loss_max = tf.reduce_max(moved_loss)
+
         self.map_loss_mean = tf.reduce_mean(map_loss)
         self.map_loss_max = tf.reduce_max(map_loss)
 
-        return policy_loss + self.map_loss_mean * 0.01
+        self.reward_loss_mean = tf.reduce_mean(reward_loss)
+        self.reward_loss_max = tf.reduce_max(reward_loss)
+
+        prediction_loss = (self.map_loss_mean + self.moved_loss_mean + self.reward_loss_mean)
+        return policy_loss + prediction_loss * 0.02
 
     def metrics(self):
 
         return {
             "map_loss_max"   : self.map_loss_max,
             "map_loss_mean": self.map_loss_mean,
+
+            "moved_loss_max" : self.moved_loss_max,
+            "moved_loss_mean": self.moved_loss_mean,
+
+            "reward_loss_max" : self.reward_loss_max,
+            "reward_loss_mean": self.reward_loss_mean,
         }
 
 
