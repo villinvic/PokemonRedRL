@@ -177,7 +177,7 @@ class PokemonLstmModel(TFModelV2):
         stat_inputs = input_dict[SampleBatch.OBS]["stats"]
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         self.map_ids = tf.cast(input_dict[SampleBatch.NEXT_OBS]["coordinates"], tf.int32)
-        self.walked = tf.cast(input_dict[SampleBatch.NEXT_OBS]["walked"], tf.int32)
+        self.moved = tf.cast(input_dict[SampleBatch.NEXT_OBS]["moved"], tf.int32)
         self.rewards = tf.squeeze(input_dict[SampleBatch.REWARDS])
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
@@ -213,7 +213,7 @@ class PokemonLstmModel(TFModelV2):
     ) -> Union[List[TensorType], TensorType]:
 
         map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.map_ids), logits=self.map_logits)
-        moved_loss = tf.losses.binary_crossentropy(labels=tf.squeeze(self.walked), logits=self.moved_logits, from_logits=True)
+        moved_loss = tf.losses.binary_crossentropy(labels=tf.squeeze(self.moved), logits=self.moved_logits, from_logits=True)
 
         reward_classes = tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0))
         num_non_zero_rewards = tf.reduce_sum(tf.cast(reward_classes > 0, tf.int32))
