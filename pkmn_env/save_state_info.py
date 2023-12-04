@@ -12,7 +12,7 @@ class PokemonStateInfo:
 
     ):
         self.save_path = save_path
-        self.highest_opponent_level_so_far = latest_opp_level
+        self.latest_opp_level = latest_opp_level
         self.visited_maps = visited_maps
 
     def to_dict(self):
