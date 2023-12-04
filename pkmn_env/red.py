@@ -169,10 +169,10 @@ class PkmnRedEnv(Env):
                 dim=8,
                 name=BADGES
             ),
-            # VariableGetter(
-            #     name=PkmnRedEnv.MONEY,
-            #     scale=5e-7
-            # ),
+            VariableGetter(
+                name=MONEY,
+                scale=1e-5
+            ),
             VariableGetter(
                 name=SEEN_POKEMONS,
                 scale=1e-2
@@ -256,6 +256,7 @@ class PkmnRedEnv(Env):
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0., # 3.
             TOTAL_EVENTS_TRIGGERED   :   1.,
+            MONEY                    :   1.,
             COORDINATES              :   - 2e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
@@ -774,7 +775,9 @@ class PkmnRedEnv(Env):
                     walked
                 ),
 
-                PARTY_HEALTH: int(total_healing > 0)
+                PARTY_HEALTH: int(total_healing > 0),
+
+                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 500)
             })
 
             if total_healing > 0:
@@ -830,9 +833,9 @@ class PkmnRedEnv(Env):
         return 10 * ((num >> 4) & 0x0f) + (num & 0x0f)
 
     def read_money(self):
-        return (100 * 100 * self.read_bcd(self.read_m(0xD347)) +
-                100 * self.read_bcd(self.read_m(0xD348)) +
-                self.read_bcd(self.read_m(0xD349)))
+        return (100 * 100 * self.read_bcd(0xD347) +
+                100 * self.read_bcd(0xD348) +
+                self.read_bcd(0xD349))
 
     def read_map_id(self):
         return self.read_m(0xD35E)

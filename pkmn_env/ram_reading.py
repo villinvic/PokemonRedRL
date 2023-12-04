@@ -107,6 +107,14 @@ def find_ones_indices(console) -> List[int]:
 def read_sent_out(console) -> List:
     return [int(i == read_m(console, 0xCC2F)) for i in range(6)]
 
+def read_bcd(console, addr):
+    num = read_m(console, addr)
+    return 10 * ((num >> 4) & 0x0f) + (num & 0x0f)
+def read_money(console):
+    return (100 * 100 * read_bcd(console, 0xD347) +
+            100 * read_bcd(console, 0xD348) +
+            read_bcd(console, 0xD349))
+
 
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
@@ -176,8 +184,6 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_map(console),
-            read_pos(console),
-            read_sent_out(console)
+            read_money(console)
         )
         walked = step(console, int(input("input:")))
