@@ -171,7 +171,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=MONEY,
-                scale=1e-5
+                scale=1e-4
             ),
             VariableGetter(
                 name=SEEN_POKEMONS,
