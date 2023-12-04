@@ -86,11 +86,17 @@ class PokemonLstmModel(TFModelV2):
             [post_cnn, action_one_hot]
         )
 
+        fc1_prediction = tf.keras.layers.Dense(
+            128,
+            name="fc1_prediction",
+            activation="relu",
+        )(pre_lstm_prediction_input)
+
         moved_logits = tf.keras.layers.Dense(
             1,
             name="moved_logits",
             activation=None,
-        )(pre_lstm_prediction_input)
+        )(fc1_prediction)
 
 
         fc1 = tf.keras.layers.Dense(
@@ -99,12 +105,11 @@ class PokemonLstmModel(TFModelV2):
             activation="relu",
         )(concat_features)
 
-
-        fc2 = tf.keras.layers.Dense(
-            self.fcnet_size,
-            name="fc2",
-            activation="relu",
-        )(fc1)
+        # fc2 = tf.keras.layers.Dense(
+        #     self.fcnet_size,
+        #     name="fc2",
+        #     activation="relu",
+        # )(fc1)
 
         # fc3 = tf.keras.layers.Dense(
         #     self.fcnet_size,
@@ -118,7 +123,7 @@ class PokemonLstmModel(TFModelV2):
 
         clipped_reward = tf.clip_by_value(previous_reward_input, -1., 1.)
         lstm_input = tf.keras.layers.Concatenate(axis=-1, name="lstm_input")(
-            [fc2, clipped_reward, prev_action_one_hot])
+            [fc1, clipped_reward, prev_action_one_hot])
 
         timed_input = add_time_dimension(
             padded_inputs=lstm_input, seq_lens=seq_in, framework="tf"
