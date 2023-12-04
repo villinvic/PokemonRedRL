@@ -136,7 +136,7 @@ class GoExplorePokemon:
         with open(state.get_save_path(), "rb") as f:
             self.console.load_state(f)
 
-        if state.highest_opponent_level_so_far is not None:
+        if state.latest_opp_level is not None:
             # Base state
             # -> no pkl saved for base state
             state.send_to_env(self.environment)
