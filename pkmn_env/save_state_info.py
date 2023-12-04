@@ -7,19 +7,19 @@ class PokemonStateInfo:
             self,
             *,
             save_path: Path = None,
-            highest_opponent_level_so_far: int = None,
+            latest_opp_level: int = None,
             visited_maps: set = None,
 
     ):
         self.save_path = save_path
-        self.highest_opponent_level_so_far = highest_opponent_level_so_far
+        self.highest_opponent_level_so_far = latest_opp_level
         self.visited_maps = visited_maps
 
     def to_dict(self):
 
         return {
             "save_path": self.save_path,
-            "highest_opponent_level_so_far": self.highest_opponent_level_so_far,
+            "latest_opp_level": self.latest_opp_level,
             "visited_maps": self.visited_maps
         }
 

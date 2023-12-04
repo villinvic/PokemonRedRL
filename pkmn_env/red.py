@@ -319,14 +319,14 @@ class PkmnRedEnv(Env):
         self.visited_maps = {37, 38, 39}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
         self.entrance_coords = (5, 3, 40)
-        self.highest_opponent_level_so_far = 5
+        self.latest_opp_level = 5
         self.last_reward_dict = {}
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
-            highest_opponent_level_so_far=self.highest_opponent_level_so_far,
+            latest_opp_level=self.latest_opp_level,
             visited_maps=self.visited_maps
         )
 
@@ -410,7 +410,7 @@ class PkmnRedEnv(Env):
         self.episode_reward = 0
         self.visited_maps = {37, 38, 39}
         self.entrance_coords = (5, 30, 40)
-        self.highest_opponent_level_so_far = 5
+        self.latest_opp_level = 5
         self.visited_coordinates = defaultdict(lambda: 0)
         self.last_walked_coordinates = []
 
@@ -474,12 +474,12 @@ class PkmnRedEnv(Env):
 
         opp_level = self.read_opponent_level()
         if opp_level not in (0, 255):
-            self.highest_opponent_level_so_far = opp_level
+            self.latest_opp_level = opp_level
 
         self.game_stats[PARTY_LEVELS].append(party_levels)
 
 
-        self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.highest_opponent_level_so_far)
+        self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.latest_opp_level)
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         self.game_stats[PARTY_EXPERIENCE].append(party_experience)
@@ -708,7 +708,7 @@ class PkmnRedEnv(Env):
             total_healing = 0
 
             if curr_coords not in self.pokemon_centers:
-                level_fraction = np.minimum(1., self.highest_opponent_level_so_far/max(self.game_stats[PARTY_LEVELS][-1]))
+                level_fraction = np.minimum(1., self.latest_opp_level/np.maximum(1., max(self.game_stats[PARTY_LEVELS][-1])))
                 for i in range(6):
                     # Can be hacked with pc, let's see :)
 

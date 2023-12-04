@@ -116,6 +116,9 @@ def read_money(console):
             read_bcd(console, 0xD349))
 
 
+def read_opponent_level(console) -> int:
+    return read_m(console, 0xCFE8)
+
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
             WindowEvent.PRESS_ARROW_LEFT,
@@ -184,6 +187,6 @@ if __name__ == '__main__':
         console.tick()
         #print(screen.screen_ndarray())
         print(
-            read_money(console)
+            read_opponent_level(console)
         )
         walked = step(console, int(input("input:")))

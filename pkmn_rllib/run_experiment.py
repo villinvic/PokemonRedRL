@@ -53,7 +53,7 @@ config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=2e-3,
     alpha=5.,
-    target_network_update_freq=500, #1536,
+    target_network_update_freq=600, #1536,
     replay_proportion=0.5,
     entropy_coeff=1e-4,
     learner_queue_size=64,
@@ -67,7 +67,7 @@ config = VmpoConfig().training(
     train_batch_size=8096//2,
     #num_sgd_iter=1,
     #minibatch_buffer_size=128,
-    gamma=0.996,
+    gamma=0.995,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
