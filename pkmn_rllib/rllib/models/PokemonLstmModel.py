@@ -168,7 +168,7 @@ class PokemonLstmModel(TFModelV2):
         # )
 
         reward_prediction_logits = tf.keras.layers.Dense(
-            2,
+            1,
             name="reward_logits",
             activation=None,
         )(fc_post_lstm)
