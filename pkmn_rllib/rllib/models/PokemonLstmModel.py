@@ -86,12 +86,6 @@ class PokemonLstmModel(TFModelV2):
             [post_cnn, action_one_hot]
         )
 
-        map_logits = tf.keras.layers.Dense(
-            self.N_MAPS,
-            name="map_logits",
-            activation=None,
-        )(pre_lstm_prediction_input)
-
         moved_logits = tf.keras.layers.Dense(
             1,
             name="moved_logits",
@@ -164,6 +158,12 @@ class PokemonLstmModel(TFModelV2):
         reward_prediction_logits = tf.keras.layers.Dense(
             3,
             name="reward_logits",
+            activation=None,
+        )(prediction_input)
+
+        map_logits = tf.keras.layers.Dense(
+            self.N_MAPS,
+            name="map_logits",
             activation=None,
         )(prediction_input)
 
@@ -247,7 +247,7 @@ class PokemonLstmModel(TFModelV2):
         self.reward_loss_max = tf.reduce_max(reward_loss)
 
         prediction_loss = (self.map_loss_mean * 0.01 + self.moved_loss_mean * 0.01 + self.reward_loss_mean + 0.01)
-        return policy_loss + prediction_loss
+        return policy_loss + prediction_loss * 0.33
 
     def metrics(self):
 

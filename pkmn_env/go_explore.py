@@ -22,7 +22,7 @@ class GoExplorePokemon:
     TIMES_CHOSEN = "times_chosen"
 
     def __init__(self, environment, path: Path, relevant_state_features,
-                 sample_base_state_chance=0.2, recompute_score_freq=1, rendering=False):
+                 sample_base_state_chance=1/3, recompute_score_freq=1, rendering=False):
 
         self.environment = environment
         self.console = environment.pyboy
