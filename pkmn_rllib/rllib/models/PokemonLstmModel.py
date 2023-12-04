@@ -82,28 +82,23 @@ class PokemonLstmModel(TFModelV2):
              ]
         )
 
-        pre_lstm_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="pre_lstm_prediction_input")(
-            [post_cnn, action_one_hot]
-        )
-
-        fc1_prediction = tf.keras.layers.Dense(
-            128,
-            name="fc1_prediction",
-            activation="relu",
-        )(pre_lstm_prediction_input)
-
-        moved_logits = tf.keras.layers.Dense(
-            1,
-            name="moved_logits",
-            activation=None,
-        )(fc1_prediction)
-
+        # pre_lstm_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="pre_lstm_prediction_input")(
+        #     [post_cnn, action_one_hot]
+        # )
 
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
             activation="relu",
         )(concat_features)
+
+        moved_per_actions = tf.keras.layers.Dense(
+            self.num_outputs,
+            name="moved_logits",
+            activation=None,
+        )(fc1)
+
+        moved_logits = moved_per_actions * action_one_hot
 
         # fc2 = tf.keras.layers.Dense(
         #     self.fcnet_size,
@@ -138,11 +133,23 @@ class PokemonLstmModel(TFModelV2):
             initial_state=[state_in_h, state_in_c],
         )
 
+        lstm_out = tf.reshape(lstm_out, [-1, self.lstm_size])
+
+        concat_post_lstm = tf.keras.layers.Concatenate(axis=-1, name="concat_post_lstm")(
+            [lstm_out, moved_per_actions])
+
+        fc_post_lstm = tf.keras.layers.Dense(
+            self.fcnet_size,
+            name="fc_post_lstm",
+            activation="relu",
+        )(concat_post_lstm)
+
+
         action_logits = tf.keras.layers.Dense(
             self.num_outputs,
             name="action_logits",
             activation=None,
-        )(lstm_out)
+        )(fc_post_lstm)
 
         # Value Function
 
@@ -152,25 +159,25 @@ class PokemonLstmModel(TFModelV2):
             activation=None,
             # kernel_initializer=tf.random_normal_initializer(0., 1.),
             bias_initializer=tf.zeros_initializer(),
-        )(lstm_out)
+        )(fc_post_lstm)
 
         # Prediction
 
-        prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
-            [lstm_out, add_time_dimension(padded_inputs=action_one_hot, seq_lens=seq_in, framework="tf")]
-        )
+        # prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
+        #     [lstm_out]
+        # )
 
         reward_prediction_logits = tf.keras.layers.Dense(
-            3,
+            2,
             name="reward_logits",
             activation=None,
-        )(prediction_input)
+        )(fc_post_lstm)
 
         map_logits = tf.keras.layers.Dense(
             self.N_MAPS,
             name="map_logits",
             activation=None,
-        )(prediction_input)
+        )(fc_post_lstm)
 
 
         self.base_model = tf.keras.Model(
@@ -187,7 +194,7 @@ class PokemonLstmModel(TFModelV2):
         screen_input = tf.cast(input_dict[SampleBatch.OBS]["screen"], tf.float32) / 255.
         stat_inputs = input_dict[SampleBatch.OBS]["stats"]
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
-        self.map_ids = tf.cast(input_dict[SampleBatch.NEXT_OBS]["coordinates"], tf.int32)
+        self.map_ids = tf.cast(input_dict[SampleBatch.OBS]["coordinates"], tf.int32)
         self.moved = tf.cast(input_dict[SampleBatch.NEXT_OBS]["moved"], tf.int32)
         self.rewards = tf.squeeze(input_dict[SampleBatch.REWARDS])
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
@@ -226,7 +233,7 @@ class PokemonLstmModel(TFModelV2):
         map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.map_ids), logits=self.map_logits)
         moved_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(self.moved), y_pred=self.moved_logits, from_logits=True)
 
-        reward_classes = tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0))
+        reward_classes = tf.where(self.rewards <= 0, 0, 1) #tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0))
         num_non_zero_rewards = tf.reduce_sum(tf.cast(reward_classes > 0, tf.int32))
 
         zero_indices = tf.where(tf.equal(reward_classes, 0))
@@ -251,7 +258,7 @@ class PokemonLstmModel(TFModelV2):
         self.reward_loss_mean = tf.reduce_mean(reward_loss)
         self.reward_loss_max = tf.reduce_max(reward_loss)
 
-        prediction_loss = (self.map_loss_mean * 0.01 + self.moved_loss_mean* 1. + self.reward_loss_mean + 0.01)
+        prediction_loss = (self.map_loss_mean * 1. + self.moved_loss_mean * 1. + self.reward_loss_mean + 1.)
         return policy_loss + prediction_loss * 0.33
 
     def metrics(self):
