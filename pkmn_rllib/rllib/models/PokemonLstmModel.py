@@ -98,6 +98,8 @@ class PokemonLstmModel(TFModelV2):
             activation=None,
         )(fc1)
 
+        print(moved_per_actions.shape, action_one_hot.shape)
+
         moved_logits = moved_per_actions * action_one_hot
 
         # fc2 = tf.keras.layers.Dense(
