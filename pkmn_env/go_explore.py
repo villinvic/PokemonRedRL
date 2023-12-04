@@ -68,7 +68,7 @@ class GoExplorePokemon:
             save_state_path = self.path / state_name
             info_path = self.path / state_info_name
             info = PokemonStateInfo(save_path=self.path / file_base,
-                                    highest_opponent_level_so_far=self.environment.highest_opponent_level_so_far,
+                                    latest_opp_level=self.environment.latest_opp_level,
                                     visited_maps=self.environment.visited_maps
                                     )
             with open(save_state_path, "wb") as f:
