@@ -82,6 +82,23 @@ class PokemonLstmModel(TFModelV2):
              ]
         )
 
+        pre_lstm_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
+            [post_cnn, action_one_hot]
+        )
+
+        map_logits = tf.keras.layers.Dense(
+            self.N_MAPS,
+            name="map_logits",
+            activation=None,
+        )(pre_lstm_prediction_input)
+
+        moved_logits = tf.keras.layers.Dense(
+            1,
+            name="moved_logits",
+            activation=None,
+        )(pre_lstm_prediction_input)
+
+
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
@@ -142,18 +159,6 @@ class PokemonLstmModel(TFModelV2):
         prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
             [lstm_out, add_time_dimension(padded_inputs=action_one_hot, seq_lens=seq_in, framework="tf")]
         )
-
-        map_logits = tf.keras.layers.Dense(
-            self.N_MAPS,
-            name="map_logits",
-            activation=None,
-        )(prediction_input)
-
-        moved_logits = tf.keras.layers.Dense(
-            1,
-            name="moved_logits",
-            activation=None,
-        )(prediction_input)
 
         reward_prediction_logits = tf.keras.layers.Dense(
             3,
@@ -240,8 +245,8 @@ class PokemonLstmModel(TFModelV2):
         self.reward_loss_mean = tf.reduce_mean(reward_loss)
         self.reward_loss_max = tf.reduce_max(reward_loss)
 
-        prediction_loss = (self.map_loss_mean + self.moved_loss_mean + self.reward_loss_mean)
-        return policy_loss + prediction_loss * 0.02
+        prediction_loss = (self.map_loss_mean * 0.01 + self.moved_loss_mean * 0.01 + self.reward_loss_mean + 0.01)
+        return policy_loss + prediction_loss
 
     def metrics(self):
 
