@@ -82,7 +82,7 @@ class PokemonLstmModel(TFModelV2):
              ]
         )
 
-        pre_lstm_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="prediction_input")(
+        pre_lstm_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="pre_lstm_prediction_input")(
             [post_cnn, action_one_hot]
         )
 
@@ -122,8 +122,9 @@ class PokemonLstmModel(TFModelV2):
         state_in_c = tf.keras.layers.Input(shape=(self.lstm_size,), name="c")
         seq_in = tf.keras.layers.Input(shape=(), name="seq_in", dtype=tf.int32)
 
+        clipped_reward = tf.clip_by_value(previous_reward_input, -1., 1.)
         lstm_input = tf.keras.layers.Concatenate(axis=-1, name="lstm_input")(
-            [fc2, tf.clip_by_value(previous_reward_input, -1., 1.), prev_action_one_hot])
+            [fc2, clipped_reward, prev_action_one_hot])
 
         timed_input = add_time_dimension(
             padded_inputs=lstm_input, seq_lens=seq_in, framework="tf"
