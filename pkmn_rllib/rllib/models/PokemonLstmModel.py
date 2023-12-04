@@ -211,7 +211,7 @@ class PokemonLstmModel(TFModelV2):
 
         self.map_logits = tf.reshape(map_logits, [-1, self.N_MAPS])
         self.moved_logits = tf.reshape(moved_logits, [-1])
-        self.reward_logits = tf.reshape(reward_logits, [-1, 3])
+        self.reward_logits = tf.reshape(reward_logits, [-1])
 
 
         return tf.reshape(context, [-1, self.num_outputs]), [h, c]
