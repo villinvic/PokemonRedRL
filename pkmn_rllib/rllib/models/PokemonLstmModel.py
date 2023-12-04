@@ -98,9 +98,7 @@ class PokemonLstmModel(TFModelV2):
             activation=None,
         )(fc1)
 
-        print(moved_per_actions.shape, action_one_hot.shape)
-
-        moved_logits = moved_per_actions * action_one_hot
+        moved_logits = tf.reduce_sum(moved_per_actions * action_one_hot, axis=-1)
 
         # fc2 = tf.keras.layers.Dense(
         #     self.fcnet_size,
@@ -249,7 +247,8 @@ class PokemonLstmModel(TFModelV2):
         labels = tf.gather_nd(reward_classes, all_indices)
         values = tf.gather_nd(self.reward_logits, all_indices)
 
-        reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=values)
+        reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
+        #tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=values)
 
         self.moved_loss_mean = tf.reduce_mean(moved_loss)
         self.moved_loss_max = tf.reduce_max(moved_loss)
