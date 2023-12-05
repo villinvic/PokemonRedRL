@@ -144,6 +144,12 @@ class PokemonLstmModel(TFModelV2):
             activation="relu",
         )(concat_post_lstm)
 
+        fc_post_lstm_prediction = tf.keras.layers.Dense(
+            self.fcnet_size,
+            name="fc_post_lstm_prediction",
+            activation="relu",
+        )(concat_post_lstm)
+
 
         action_logits = tf.keras.layers.Dense(
             self.num_outputs,
@@ -171,13 +177,13 @@ class PokemonLstmModel(TFModelV2):
             1,
             name="reward_logits",
             activation=None,
-        )(fc_post_lstm)
+        )(fc_post_lstm_prediction)
 
         map_logits = tf.keras.layers.Dense(
             self.N_MAPS,
             name="map_logits",
             activation=None,
-        )(concat_post_lstm)
+        )(fc_post_lstm_prediction)
 
 
         self.base_model = tf.keras.Model(
