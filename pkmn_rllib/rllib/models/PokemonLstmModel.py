@@ -177,7 +177,7 @@ class PokemonLstmModel(TFModelV2):
             self.N_MAPS,
             name="map_logits",
             activation=None,
-        )(fc_post_lstm)
+        )(concat_post_lstm)
 
 
         self.base_model = tf.keras.Model(
