@@ -366,6 +366,7 @@ class PkmnRedEnv(Env):
         # press button then release after some steps
         self.pyboy.send_input(self.valid_actions[action])
         walked = False
+        action = np.int32(action)
         for i in range(self.act_freq):
             # release action, so they are stateless
             if not walked:
