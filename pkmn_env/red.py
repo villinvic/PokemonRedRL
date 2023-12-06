@@ -185,7 +185,9 @@ class PkmnRedEnv(Env):
                 dim=6,
                 name=PARTY_HEALTH
             ),
-
+            VariableGetter(
+                name=IN_BATTLE
+            ),
             # Needs 1_200_000 exp max to reach level 100
             # We will need better information that that
             # VariableGetter(
@@ -204,11 +206,11 @@ class PkmnRedEnv(Env):
                 name=PARTY_LEVELS,
                 scale=0.02,
             ),
-            VariableGetter(
-                name=DELTA_LEVEL,
-                scale=0.1,
-                post_process_fn=lambda x: np.clip(x, -2., 2.)
-            ),
+            # VariableGetter(
+            #     name=DELTA_LEVEL,
+            #     scale=0.1,
+            #     post_process_fn=lambda x: np.clip(x, -2., 2.)
+            # ),
             VariableGetter(
                 name=TOTAL_EVENTS_TRIGGERED,
                 scale=0.02 #319
@@ -326,7 +328,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 256
+        self.goal_task_timeout_steps = 2048
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
@@ -371,7 +373,7 @@ class PkmnRedEnv(Env):
         if self.current_goal is None or (self.task_timesteps - self.goal_task_timeout_steps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            dx, dy = np.random.randint(1, 5, 2) * np.random.choice([-1, 1], 2)
+            dx, dy = np.random.randint(1, 4, 2) * np.random.choice([-1, 1], 2)
 
             self.current_goal = (x + dx, y + dy, map_id)
             self.task_timesteps = 0
@@ -485,7 +487,7 @@ class PkmnRedEnv(Env):
             origin_y = 4 * 8
 
             if -4 <= dx <= 5 and -4 < dy <= 4:
-                loc_x = (origin_x - dy * 8)
+                loc_x = (origin_x + dy * 8)
                 loc_y = (origin_y + dx * 8)
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
@@ -516,14 +518,15 @@ class PkmnRedEnv(Env):
         self.game_stats[MONEY].append(self.read_money())
         party_levels = self.read_party_levels()
 
-        opp_level = self.read_opponent_level()
-        in_battle = opp_level not in (0, 255)
-        if in_battle :
-            self.latest_opp_level = opp_level
-        self.game_stats[IN_BATTLE].append(in_battle)
+        #opp_level = self.read_opponent_level()
+        # in_battle = opp_level not in (0, 255)
+        # if in_battle :
+        #     self.latest_opp_level = opp_level
+
+        self.game_stats[IN_BATTLE].append(self.read_in_battle())
         self.game_stats[PARTY_LEVELS].append(party_levels)
 
-        self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.latest_opp_level)
+        #self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.latest_opp_level)
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         self.game_stats[PARTY_EXPERIENCE].append(party_experience)
@@ -757,11 +760,11 @@ class PkmnRedEnv(Env):
             total_healing = 0
 
             if curr_coords not in self.pokemon_centers:
-                level_fraction = np.minimum(1., self.latest_opp_level/np.maximum(1., max(self.game_stats[PARTY_LEVELS][-1])))
+
                 for i in range(6):
                     # Can be hacked with pc, let's see :)
 
-                    total_delta_exp += level_fraction * np.maximum(
+                    total_delta_exp += np.maximum(
                         (self.game_stats[PARTY_EXPERIENCE][-1][i]
                         - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
                         , 0.
@@ -988,5 +991,8 @@ class PkmnRedEnv(Env):
 
     def read_sent_out(self) -> List:
         return [int(i == self.read_m(0xCC2F)) for i in range(6)]
+
+    def read_in_battle(self):
+        return int(self.read_m(0xD057) != 0)
 
 
