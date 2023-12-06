@@ -484,14 +484,14 @@ class PkmnRedEnv(Env):
             origin_x = 4 * 8
             origin_y = 4 * 8
             if self.worker_index == 1:
-                print(dx, dy)
+                print(goal_map_id == curr_map_id, not self.game_stats[IN_BATTLE][-1], dx, dy)
             if -4 <= dx <= 4 and -4 < dy <= 5:
                 loc_x = origin_x + dx * 8
                 loc_y = origin_y + dy * 8
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
         if self.worker_index == 1:
-            print(goal_map_id == curr_map_id, not self.game_stats[IN_BATTLE][-1])
+
             self.save_screenshot("debug", "observed_live", grayscale_downsampled_screen)
 
         return np.uint8(grayscale_downsampled_screen)
