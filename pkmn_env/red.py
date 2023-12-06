@@ -333,6 +333,8 @@ class PkmnRedEnv(Env):
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
         self.target_symbol_mask[2 : -2, 2 : -2] = 1
+        self.target_symbol_mask_debug = np.zeros((16, 16, 3), dtype=np.uint8)
+        self.target_symbol_mask_debug[4 : -4, 4 : -4] = 1
 
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
@@ -621,7 +623,22 @@ class PkmnRedEnv(Env):
         return obs, reward, False, done, {}
 
     def add_video_frame(self):
-        self.full_frame_writer.add_image(self.screen.screen_ndarray())
+        screen = self.screen.screen_ndarray()
+        if self.step_count > 1:
+            x, y, goal_map_id = self.current_goal
+            curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+
+            if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
+                dx = (x - curr_x)
+                dy = (y - curr_y)
+                origin_x = 4 * 16
+                origin_y = 4 * 16
+
+                if -4 <= dx <= 4 and -4 < dy <= 5:
+                    loc_x = (origin_x + dy * 16)
+                    loc_y = (origin_y + dx * 16)
+                    screen[loc_x: loc_x + 16, loc_y: loc_y + 16] *= self.target_symbol_mask_debug
+        self.full_frame_writer.add_image(screen)
 
     def update_frame_knn_index(self, frame):
 
