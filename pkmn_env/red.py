@@ -264,7 +264,7 @@ class PkmnRedEnv(Env):
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
-            GOAL_TASK                :   1e-2,
+            GOAL_TASK                :   5e-2,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -328,7 +328,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 512
+        self.goal_task_timeout_steps = 256
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
@@ -481,10 +481,19 @@ class PkmnRedEnv(Env):
         # Render target
         x, y, goal_map_id = self.current_goal
         curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+        xm1, ym1, _ = self.game_stats[COORDINATES][-2]
+        _, _, prev_prev_map_id = self.game_stats[COORDINATES][-3]
 
-        if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
-            dx = (x - curr_x)
-            dy = (y - curr_y)
+
+        if (
+                self.step_count >= 2
+                and goal_map_id == curr_map_id == prev_prev_map_id
+                and not self.game_stats[IN_BATTLE][-1]
+        ):
+            dt_dx = x - xm1
+            dt_dy = y - ym1
+            dx = (x - curr_x) - dt_dx
+            dy = (y - curr_y) - dt_dy
             origin_x = 4 * 8
             origin_y = 4 * 8
 
@@ -625,12 +634,19 @@ class PkmnRedEnv(Env):
     def add_video_frame(self):
         screen = self.screen.screen_ndarray().copy()
         if self.step_count > 1:
+
             x, y, goal_map_id = self.current_goal
             curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
-
-            if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
-                dx = (x - curr_x)
-                dy = (y - curr_y)
+            xm1, ym1, _ = self.game_stats[COORDINATES][-2]
+            _, _, prev_prev_map_id = self.game_stats[COORDINATES][-3]
+            if (
+                    goal_map_id == curr_map_id == prev_prev_map_id
+                    and not self.game_stats[IN_BATTLE][-1]
+            ):
+                dt_dx = x - xm1
+                dt_dy = y - ym1
+                dx = (x - curr_x) - dt_dx
+                dy = (y - curr_y) - dt_dy
                 origin_x = 4 * 16
                 origin_y = 4 * 16
 
