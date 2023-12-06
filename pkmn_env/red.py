@@ -330,7 +330,7 @@ class PkmnRedEnv(Env):
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8), dtype=np.uint8)
-        self.target_symbol_mask[1 : -1, 1 : -1] = 1
+        self.target_symbol_mask[2 : -2, 2 : -2] = 1
 
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
@@ -371,7 +371,7 @@ class PkmnRedEnv(Env):
         if self.current_goal is None or (self.task_timesteps - self.goal_task_timeout_steps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            dx, dy = np.random.randint(5, 10, 2) * np.random.choice([-1, 1], 2)
+            dx, dy = np.random.randint(3, 10, 2) * np.random.choice([-1, 1], 2)
 
             self.current_goal = (x + dx, y + dy, map_id)
             self.task_timesteps = 0
@@ -477,17 +477,21 @@ class PkmnRedEnv(Env):
         # Render target
         x, y, goal_map_id = self.current_goal
         curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+
         if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
             dx = -(x - curr_x)
             dy = -(y - curr_y)
             origin_x = 4 * 8
             origin_y = 4 * 8
-            if -4 <= dx <= 4 and -4 < dy < 5:
+            if self.worker_index == 1:
+                print(dx, dy)
+            if -4 <= dx <= 4 and -4 < dy <= 5:
                 loc_x = origin_x + dx * 8
                 loc_y = origin_y + dy * 8
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
         if self.worker_index == 1:
+            print(goal_map_id == curr_map_id, not self.game_stats[IN_BATTLE][-1])
             self.save_screenshot("debug", "observed_live", grayscale_downsampled_screen)
 
         return np.uint8(grayscale_downsampled_screen)
