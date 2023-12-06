@@ -264,7 +264,7 @@ class PkmnRedEnv(Env):
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
-            GOAL_TASK                :   3e-2,
+            GOAL_TASK                :   2e-1,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -328,7 +328,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 128
+        self.goal_task_timeout_steps = 256
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
@@ -375,7 +375,7 @@ class PkmnRedEnv(Env):
         if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            dx, dy = np.random.randint(4, 8, 2) * np.random.choice([-1, 1], 2)
+            dx, dy = np.random.randint(3, 7, 2) * np.random.choice([-1, 1], 2)
 
             self.current_goal = (x + dx, y + dy, map_id)
             self.task_timesteps = 0
