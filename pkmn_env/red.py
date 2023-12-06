@@ -259,7 +259,7 @@ class PkmnRedEnv(Env):
             MAPS_VISITED             :   0., # 3.
             TOTAL_EVENTS_TRIGGERED   :   1.,
             MONEY                    :   1.,
-            COORDINATES              :   - 2e-4,
+            #COORDINATES              :   - 2e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
@@ -328,7 +328,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 256
+        self.goal_task_timeout_steps = 512
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
@@ -373,7 +373,7 @@ class PkmnRedEnv(Env):
         if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            dx, dy = np.random.randint(1, 4, 2) * np.random.choice([-1, 1], 2)
+            dx, dy = np.random.randint(4, 8, 2) * np.random.choice([-1, 1], 2)
 
             self.current_goal = (x + dx, y + dy, map_id)
             self.task_timesteps = 0
@@ -486,15 +486,10 @@ class PkmnRedEnv(Env):
             origin_x = 4 * 8
             origin_y = 4 * 8
 
-            if -4 <= dx <= 5 and -4 < dy <= 4:
+            if -4 <= dx <= 4 and -4 < dy <= 5:
                 loc_x = (origin_x + dy * 8)
                 loc_y = (origin_y + dx * 8)
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
-
-        if self.worker_index == 1:
-
-            t = self.step_count % 60
-            self.save_screenshot("debug", f"observed_live_{t}", grayscale_downsampled_screen)
 
         return np.uint8(grayscale_downsampled_screen)
 
@@ -819,13 +814,13 @@ class PkmnRedEnv(Env):
                 # COORDINATES + "_NEG": np.minimum(r_nav, 0.),
                 # COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
-                COORDINATES: int(
-                    (curr_coords
-                    in
-                    self.last_walked_coordinates[-6:-1])
-                    and
-                    walked
-                ),
+                # COORDINATES: int(
+                #     (curr_coords
+                #     in
+                #     self.last_walked_coordinates[-6:-1])
+                #     and
+                #     walked
+                # ),
 
                 PARTY_HEALTH: int(total_healing > 0),
 
