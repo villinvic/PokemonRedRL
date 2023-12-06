@@ -329,7 +329,7 @@ class PkmnRedEnv(Env):
         self.goal_task_timeout_steps = 256
         self.current_goal = None
         self.task_timesteps = 0
-        self.target_symbol_mask = np.zeros((8, 8), dtype=np.uint8)
+        self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
         self.target_symbol_mask[2 : -2, 2 : -2] = 1
 
         self.base_state_info = PokemonStateInfo(
