@@ -487,6 +487,9 @@ class PkmnRedEnv(Env):
                 loc_y = origin_y + dy * 8
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
+        if self.worker_index == 1:
+            self.save_screenshot("debug", "observed_live", grayscale_downsampled_screen)
+
         return np.uint8(grayscale_downsampled_screen)
 
     def render(self):
