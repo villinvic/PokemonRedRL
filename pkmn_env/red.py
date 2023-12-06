@@ -479,20 +479,20 @@ class PkmnRedEnv(Env):
         curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
 
         if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
-            dx = -(x - curr_x)
-            dy = -(y - curr_y)
+            dx = (x - curr_x)
+            dy = (y - curr_y)
             origin_x = 4 * 8
             origin_y = 4 * 8
-            if self.worker_index == 1:
-                print(goal_map_id == curr_map_id, not self.game_stats[IN_BATTLE][-1], dx, dy)
-            if -4 <= dx <= 4 and -4 < dy <= 5:
-                loc_x = origin_x + dx * 8
-                loc_y = origin_y + dy * 8
+
+            if -4 <= dx <= 5 and -4 < dy <= 4:
+                loc_x = (origin_x - dy * 8)
+                loc_y = (origin_y + dx * 8)
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
         if self.worker_index == 1:
 
-            self.save_screenshot("debug", "observed_live", grayscale_downsampled_screen)
+            t = self.step_count % 60
+            self.save_screenshot("debug", f"observed_live_{t}", grayscale_downsampled_screen)
 
         return np.uint8(grayscale_downsampled_screen)
 
