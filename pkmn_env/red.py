@@ -623,7 +623,7 @@ class PkmnRedEnv(Env):
         return obs, reward, False, done, {}
 
     def add_video_frame(self):
-        screen = self.screen.screen_ndarray()
+        screen = self.screen.screen_ndarray().copy()
         if self.step_count > 1:
             x, y, goal_map_id = self.current_goal
             curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
