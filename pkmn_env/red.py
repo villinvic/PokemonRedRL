@@ -479,28 +479,28 @@ class PkmnRedEnv(Env):
         )[:, :, np.newaxis]
 
         # Render target
-        x, y, goal_map_id = self.current_goal
-        curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
-        xm1, ym1, _ = self.game_stats[COORDINATES][-2]
-        _, _, prev_prev_map_id = self.game_stats[COORDINATES][-3]
+        if self.step_count > 2:
+            x, y, goal_map_id = self.current_goal
+            curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+            xm1, ym1, _ = self.game_stats[COORDINATES][-2]
+            _, _, prev_prev_map_id = self.game_stats[COORDINATES][-3]
 
+            if (
+                    self.step_count > 2
+                    and goal_map_id == curr_map_id == prev_prev_map_id
+                    and not self.game_stats[IN_BATTLE][-1]
+            ):
+                dt_dx = x - xm1
+                dt_dy = y - ym1
+                dx = (x - curr_x) - dt_dx
+                dy = (y - curr_y) - dt_dy
+                origin_x = 4 * 8
+                origin_y = 4 * 8
 
-        if (
-                self.step_count >= 2
-                and goal_map_id == curr_map_id == prev_prev_map_id
-                and not self.game_stats[IN_BATTLE][-1]
-        ):
-            dt_dx = x - xm1
-            dt_dy = y - ym1
-            dx = (x - curr_x) - dt_dx
-            dy = (y - curr_y) - dt_dy
-            origin_x = 4 * 8
-            origin_y = 4 * 8
-
-            if -4 <= dx <= 5 and -4 < dy <= 4:
-                loc_x = (origin_x + dy * 8)
-                loc_y = (origin_y + dx * 8)
-                grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
+                if -4 <= dx <= 5 and -4 < dy <= 4:
+                    loc_x = (origin_x + dy * 8)
+                    loc_y = (origin_y + dx * 8)
+                    grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
         return np.uint8(grayscale_downsampled_screen)
 
@@ -633,7 +633,7 @@ class PkmnRedEnv(Env):
 
     def add_video_frame(self):
         screen = self.screen.screen_ndarray().copy()
-        if self.step_count > 1:
+        if self.step_count > 2:
 
             x, y, goal_map_id = self.current_goal
             curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
