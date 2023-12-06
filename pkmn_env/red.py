@@ -488,7 +488,7 @@ class PkmnRedEnv(Env):
             origin_x = 4 * 8
             origin_y = 4 * 8
 
-            if -4 <= dx <= 4 and -4 < dy <= 5:
+            if -4 <= dx <= 5 and -4 < dy <= 4:
                 loc_x = (origin_x + dy * 8)
                 loc_y = (origin_y + dx * 8)
                 grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
