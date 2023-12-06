@@ -375,7 +375,7 @@ class PkmnRedEnv(Env):
         if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            dx, dy = np.random.randint(4, 8, 2) * np.random.choice([-1, 1], 2)
+            dx, dy = np.random.randint(3, 8, 2) * np.random.choice([-1, 1], 2)
 
             self.current_goal = (x + dx, y + dy, map_id)
             self.task_timesteps = 0
