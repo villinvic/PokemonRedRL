@@ -262,6 +262,8 @@ class PkmnRedEnv(Env):
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
+            GOAL_TASK                :   1e-2,
+
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
             # TOTAL_EXPERIENCE         :   10.,  # 0.5
@@ -324,6 +326,12 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
+        self.goal_task_timeout_steps = 256
+        self.current_goal = None
+        self.task_timesteps = 0
+        self.target_symbol_mask = np.zeros((8, 8), dtype=np.uint8)
+        self.target_symbol_mask[1 : -1, 1 : -1] = 1
+
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
             latest_opp_level=self.latest_opp_level,
@@ -354,13 +362,24 @@ class PkmnRedEnv(Env):
 
     def _get_obs(self):
 
-        return {
-            "screen" :   self.render(),
+        obs = {
             "stats"  :   self.get_observed_stats(),
             "coordinates": self.get_coordinates(),
             "moved"      : self.get_moved(),
-            #"flags"  :   self.get_event_flags()
         }
+
+        if self.current_goal is None or (self.task_timesteps - self.goal_task_timeout_steps <= 0):
+            x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
+
+            dx, dy = np.random.randint(5, 10, 2) * np.random.choice([-1, 1], 2)
+
+            self.current_goal = (x + dx, y + dy, map_id)
+            self.task_timesteps = 0
+
+        self.task_timesteps += 1
+
+        obs["screen"] = self.render()
+        return obs
 
     def run_action_on_emulator(self, action):
         # press button then release after some steps
@@ -415,6 +434,9 @@ class PkmnRedEnv(Env):
         self.visited_coordinates = defaultdict(lambda: 0)
         self.last_walked_coordinates = []
 
+        self.current_goal = None
+        self.task_timesteps = 0
+
         # we restart the game at a random, relevant state
         self.go_explore.read_session_states()
         self.go_explore()
@@ -452,10 +474,24 @@ class PkmnRedEnv(Env):
             interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
 
+        # Render target
+        x, y, goal_map_id = self.current_goal
+        curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+        if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
+            dx = -(x - curr_x)
+            dy = -(y - curr_y)
+            origin_x = 4 * 8
+            origin_y = 4 * 8
+            if -4 <= dx <= 4 and -4 < dy < 5:
+                loc_x = origin_x + dx * 8
+                loc_y = origin_y + dy * 8
+                grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
+
         return np.uint8(grayscale_downsampled_screen)
 
     def render(self):
         screen = self.screen.screen_ndarray()  # (144, 160, 3)
+
         return self.preprocess_screen(screen)
 
     def get_observed_stats(self):
@@ -474,11 +510,11 @@ class PkmnRedEnv(Env):
         party_levels = self.read_party_levels()
 
         opp_level = self.read_opponent_level()
-        if opp_level not in (0, 255):
+        in_battle = opp_level not in (0, 255)
+        if in_battle :
             self.latest_opp_level = opp_level
-
+        self.game_stats[IN_BATTLE].append(in_battle)
         self.game_stats[PARTY_LEVELS].append(party_levels)
-
 
         self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.latest_opp_level)
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
@@ -668,6 +704,11 @@ class PkmnRedEnv(Env):
             # past_coords = tuple(self.game_stats[COORDINATES][-2])
             # past_2_coords = tuple(self.game_stats[COORDINATES][-3])
             # past_3_coords = tuple(self.game_stats[COORDINATES][-4])
+            goal_reached = int(curr_coords == self.current_goal)
+
+            if goal_reached:
+                self.task_timesteps = self.goal_task_timeout_steps
+
             if walked:
                 self.last_walked_coordinates.append(curr_coords)
             #
@@ -778,7 +819,9 @@ class PkmnRedEnv(Env):
 
                 PARTY_HEALTH: int(total_healing > 0),
 
-                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 500)
+                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 500),
+
+                GOAL_TASK : int(goal_reached)
             })
 
             if total_healing > 0:
