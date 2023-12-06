@@ -370,7 +370,7 @@ class PkmnRedEnv(Env):
             "moved"      : self.get_moved(),
         }
 
-        if self.current_goal is None or (self.task_timesteps - self.goal_task_timeout_steps <= 0):
+        if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
             dx, dy = np.random.randint(1, 4, 2) * np.random.choice([-1, 1], 2)
