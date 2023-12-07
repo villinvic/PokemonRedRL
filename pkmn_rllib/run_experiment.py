@@ -67,7 +67,7 @@ config = VmpoConfig().training(
     train_batch_size=8096//2,
     #num_sgd_iter=1,
     #minibatch_buffer_size=128,
-    gamma=0.995,
+    gamma=0.998,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [
