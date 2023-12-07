@@ -252,19 +252,19 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.05,
-            SEEN_POKEMONS            :   0.,
+            BLACKOUT                 :   - 0.1,
+            SEEN_POKEMONS            :   0.1,
             TOTAL_EXPERIENCE         :   30.,  # 0.5
             BADGE_SUM                :   100.,
-            MAPS_VISITED             :   0., # 3.
+            MAPS_VISITED             :   0.1, # 3.
             TOTAL_EVENTS_TRIGGERED   :   1.,
-            MONEY                    :   1.,
+            MONEY                    :   2.,
             #COORDINATES              :   - 2e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
-            GOAL_TASK                :   2e-1,
+            GOAL_TASK                :  0.25,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -328,7 +328,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 256
+        self.goal_task_timeout_steps = 1024
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
@@ -375,9 +375,12 @@ class PkmnRedEnv(Env):
         if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            dx, dy = np.random.randint(3, 7, 2) * np.random.choice([-1, 1], 2)
+            df = np.random.randint(3, 7) * np.random.choice([-1, 1])
+            dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
+            dd = [df, dc]
+            np.random.shuffle(dd)
 
-            self.current_goal = (x + dx, y + dy, map_id)
+            self.current_goal = (x + dd[0], y + dd[1], map_id)
             self.task_timesteps = 0
 
         self.task_timesteps += 1
@@ -841,7 +844,7 @@ class PkmnRedEnv(Env):
 
                 PARTY_HEALTH: int(total_healing > 0),
 
-                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 500),
+                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 50),
 
                 GOAL_TASK : int(goal_reached)
             })
