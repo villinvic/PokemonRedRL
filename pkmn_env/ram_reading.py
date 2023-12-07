@@ -71,7 +71,7 @@ def read_walking_animation(console):
     return read_m(console, 0xC108)
 
 def read_opp_level(console):
-    return read_m(console, 0xCFE8)
+    return read_m(console, 0xCFF3)
 
 def read_extensive_events(console) -> List[int]:
     t = time()
@@ -115,8 +115,6 @@ def read_money(console):
             100 * read_bcd(console, 0xD348) +
             read_bcd(console, 0xD349))
 
-def read_opponent_level(console) -> int:
-    return read_m(console, 0xCFE8)
 
 def read_combat(console) -> int:
     return read_m(console, 0xD057)
@@ -190,7 +188,7 @@ if __name__ == '__main__':
         #print(screen.screen_ndarray())
         print(
             (read_pos(console), read_map(console)),
-            read_opponent_level(console),
+            read_opp_level(console),
             read_combat(console)
         )
         walked = step(console, int(input("input:")))

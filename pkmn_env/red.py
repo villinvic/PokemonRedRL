@@ -252,19 +252,19 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.1,
+            BLACKOUT                 :   - 0.2,
             SEEN_POKEMONS            :   0.1,
             TOTAL_EXPERIENCE         :   30.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.1, # 3.
-            TOTAL_EVENTS_TRIGGERED   :   1.,
+            TOTAL_EVENTS_TRIGGERED   :   0.5,
             MONEY                    :   2.,
             #COORDINATES              :   - 2e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
-            GOAL_TASK                :  0.25,
+            GOAL_TASK                :  1.,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -328,13 +328,13 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 1024
+        self.goal_task_timeout_steps = 512
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
-        self.target_symbol_mask[2 : -2, 2 : -2] = 1
+        self.target_symbol_mask[1 : -1, 1 : -1] = 1
         self.target_symbol_mask_debug = np.zeros((16, 16, 3), dtype=np.uint8)
-        self.target_symbol_mask_debug[4 : -4, 4 : -4] = 1
+        self.target_symbol_mask_debug[2 : -2, 2 : -2] = 1
 
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
@@ -346,7 +346,7 @@ class PkmnRedEnv(Env):
             environment=self,
             path=self.s_path / "go_explore",
             relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
-            sample_base_state_chance=0.2,
+            sample_base_state_chance=0.5,
             recompute_score_freq=1,
             rendering=False # tests
         )
@@ -382,8 +382,8 @@ class PkmnRedEnv(Env):
 
             self.current_goal = (x + dd[0], y + dd[1], map_id)
             self.task_timesteps = 0
-
-        self.task_timesteps += 1
+        if not self.game_stats[IN_BATTLE][-1]:
+            self.task_timesteps += 1
 
         obs["screen"] = self.render()
         return obs
@@ -518,13 +518,14 @@ class PkmnRedEnv(Env):
         self.game_stats[MONEY].append(self.read_money())
         party_levels = self.read_party_levels()
 
-        #opp_level = self.read_opponent_level()
-        # in_battle = opp_level not in (0, 255)
-        # if in_battle :
-        #     self.latest_opp_level = opp_level
-
-        self.game_stats[IN_BATTLE].append(self.read_in_battle())
+        in_battle = self.read_in_battle()
+        self.game_stats[IN_BATTLE].append(in_battle)
         self.game_stats[PARTY_LEVELS].append(party_levels)
+
+        opp_level = self.read_opponent_level()
+        # in_battle = opp_level not in (0, 255)
+        if in_battle :
+             self.latest_opp_level = np.maximum(opp_level, 1)
 
         #self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.latest_opp_level)
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
@@ -773,18 +774,19 @@ class PkmnRedEnv(Env):
             # we gain more experience as game moves on:
             total_delta_exp = 0
             total_healing = 0
+            highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
+
+            level_fraq = np.maximum(1., self.latest_opp_level / highest_party_level)
 
             if curr_coords not in self.pokemon_centers:
 
                 for i in range(6):
                     # Can be hacked with pc, let's see :)
-
-                    total_delta_exp += np.maximum(
+                    total_delta_exp += level_fraq * np.maximum(
                         (self.game_stats[PARTY_EXPERIENCE][-1][i]
                         - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
                         , 0.
-                    ) / np.maximum(max(self.game_stats[PARTY_LEVELS][-1])**3,
-                    6.)
+                    ) / highest_party_level**3
 
             if not any(self.game_stats[BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
                 for i in range(6):
@@ -1002,7 +1004,7 @@ class PkmnRedEnv(Env):
         return self.read_m(0xC109)
 
     def read_opponent_level(self) -> int:
-        return self.read_m(0xCFE8)
+        return self.read_m(0xCFF3)
 
     def read_sent_out(self) -> List:
         return [int(i == self.read_m(0xCC2F)) for i in range(6)]
