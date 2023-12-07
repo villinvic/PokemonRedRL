@@ -776,7 +776,7 @@ class PkmnRedEnv(Env):
             total_healing = 0
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
-            level_fraq = np.maximum(1., self.latest_opp_level / highest_party_level)
+            level_fraq = np.minimum(1., self.latest_opp_level / highest_party_level)
 
             if curr_coords not in self.pokemon_centers:
 
