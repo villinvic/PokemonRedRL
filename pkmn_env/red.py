@@ -252,19 +252,19 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.2,
+            BLACKOUT                 :   - 0.05,
             SEEN_POKEMONS            :   0.1,
             TOTAL_EXPERIENCE         :   30.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.1, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.5,
-            MONEY                    :   2.,
-            #COORDINATES              :   - 2e-4,
+            MONEY                    :   5.,
+            COORDINATES              :   - 1e-3,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
 
-            GOAL_TASK                :  1.,
+            GOAL_TASK                :  0.15,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -320,7 +320,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.max_steps_noised = 0
         self.episode_reward = 0
-        self.visited_maps = {37, 38, 39}  # red (first and second floor) and blue houses
+        self.visited_maps = {37, 38, 39, 40}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
         self.entrance_coords = (5, 3, 40)
         self.latest_opp_level = 5
@@ -328,7 +328,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 512
+        self.goal_task_timeout_steps = 256
         self.current_goal = None
         self.task_timesteps = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
@@ -373,7 +373,12 @@ class PkmnRedEnv(Env):
         }
 
         if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
+
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
+
+            if map_id in {37, 38, 39, 40}:
+                self.current_goal = (0, 0, -1)
+                self.task_timesteps = self.goal_task_timeout_steps
 
             df = np.random.randint(3, 7) * np.random.choice([-1, 1])
             dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
@@ -836,13 +841,14 @@ class PkmnRedEnv(Env):
                 # COORDINATES + "_NEG": np.minimum(r_nav, 0.),
                 # COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
-                # COORDINATES: int(
-                #     (curr_coords
-                #     in
-                #     self.last_walked_coordinates[-6:-1])
-                #     and
-                #     walked
-                # ),
+                # Punish if walked into wall
+                COORDINATES: int(
+                    (curr_coords
+                    ==
+                    self.last_walked_coordinates[-2])
+                    and
+                    walked
+                ),
 
                 PARTY_HEALTH: int(total_healing > 0),
 

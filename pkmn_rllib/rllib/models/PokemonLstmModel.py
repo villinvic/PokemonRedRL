@@ -174,7 +174,7 @@ class PokemonLstmModel(TFModelV2):
         # )
 
         reward_prediction_logits = tf.keras.layers.Dense(
-            1,
+            3,
             name="reward_logits",
             activation=None,
         )(fc_post_lstm_prediction)
@@ -217,7 +217,7 @@ class PokemonLstmModel(TFModelV2):
 
         self.map_logits = tf.reshape(map_logits, [-1, self.N_MAPS])
         self.moved_logits = tf.reshape(moved_logits, [-1])
-        self.reward_logits = tf.reshape(reward_logits, [-1])
+        self.reward_logits = tf.reshape(reward_logits, [-1, 3])
 
 
         return tf.reshape(context, [-1, self.num_outputs]), [h, c]
@@ -239,7 +239,7 @@ class PokemonLstmModel(TFModelV2):
         map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.map_ids), logits=self.map_logits)
         moved_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(self.moved), y_pred=self.moved_logits, from_logits=True)
 
-        reward_classes = tf.where(self.rewards <= 0, 0, 1) #tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0))
+        reward_classes = tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0)) # tf.where(self.rewards <= 0, 0, 1)
         num_non_zero_rewards = tf.reduce_sum(tf.cast(reward_classes > 0, tf.int32))
 
         zero_indices = tf.where(tf.equal(reward_classes, 0))
@@ -253,8 +253,8 @@ class PokemonLstmModel(TFModelV2):
         labels = tf.gather_nd(reward_classes, all_indices)
         values = tf.gather_nd(self.reward_logits, all_indices)
 
-        reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
-        #tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=values)
+        #reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
+        reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
 
         self.moved_loss_mean = tf.reduce_mean(moved_loss)
         self.moved_loss_max = tf.reduce_max(moved_loss)
