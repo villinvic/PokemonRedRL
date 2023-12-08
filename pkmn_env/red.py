@@ -376,7 +376,7 @@ class PkmnRedEnv(Env):
 
             x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
 
-            if map_id in {37, 38, 39, 40}:
+            if map_id in {0, 37, 38, 39, 40}:
                 self.current_goal = (0, 0, -1)
                 self.task_timesteps = self.goal_task_timeout_steps
             else:
