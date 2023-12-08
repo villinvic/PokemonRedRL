@@ -259,7 +259,7 @@ class PkmnRedEnv(Env):
             MAPS_VISITED             :   0.1, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.5,
             MONEY                    :   5.,
-            COORDINATES              :   - 1e-3,
+            COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   1.,
@@ -379,14 +379,15 @@ class PkmnRedEnv(Env):
             if map_id in {37, 38, 39, 40}:
                 self.current_goal = (0, 0, -1)
                 self.task_timesteps = self.goal_task_timeout_steps
+            else:
+                df = np.random.randint(3, 7) * np.random.choice([-1, 1])
+                dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
+                dd = [df, dc]
+                np.random.shuffle(dd)
 
-            df = np.random.randint(3, 7) * np.random.choice([-1, 1])
-            dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
-            dd = [df, dc]
-            np.random.shuffle(dd)
+                self.current_goal = (x + dd[0], y + dd[1], map_id)
+                self.task_timesteps = 0
 
-            self.current_goal = (x + dd[0], y + dd[1], map_id)
-            self.task_timesteps = 0
         if not self.game_stats[IN_BATTLE][-1]:
             self.task_timesteps += 1
 
