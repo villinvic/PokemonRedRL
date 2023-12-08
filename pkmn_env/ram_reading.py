@@ -165,12 +165,11 @@ def step(console, action):
 
 if __name__ == '__main__':
     console = PyBoy(
-        "PokemonRed.gb",
+        "pokered.gbc",
         debugging=False,
-        disable_input=True,
-        window_type='headless',
-        hide_window=True,
-        disable_renderer=True
+        disable_input=False,
+        hide_window=False,
+        disable_renderer=False
     )
 
     print(valid_actions[5])
@@ -179,7 +178,7 @@ if __name__ == '__main__':
     console.set_emulation_speed(0)
     #console.get_memory_value("bh")
 
-    with open("has_pokedex_nballs.state", "rb") as f:
+    with open("deepred_post_parcel.state", "rb") as f:
         console.load_state(f)
 
     walked = 0
@@ -191,4 +190,4 @@ if __name__ == '__main__':
             read_opp_level(console),
             read_combat(console)
         )
-        walked = step(console, int(input("input:")))
+        #walked = step(console, int(input("input:")))

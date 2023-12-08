@@ -12,7 +12,7 @@ from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
 
-run_steps = 2048*8
+run_steps = 2048*4
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -20,10 +20,10 @@ args = get_args('run_baseline.py', ep_length=run_steps, sess_path=sess_path)
 
 env_config = {
                 'headless': True, 'save_final_state': True, 'early_stop': False,
-                'action_freq': 24, 'init_state': 'has_pokedex_nballs', 'max_steps': run_steps,
+                'action_freq': 24, 'init_state': 'deepred_post_parcel_pokeballs', 'max_steps': run_steps,
                 'print_rewards': False, 'save_video': True, 'fast_video': True,
                 'session_path': sess_path,
-                'gb_path': 'PokemonRed.gb', 'debug': False, 'sim_frame_dist': 70_000_000.,
+                'gb_path': 'pokered.gbc', 'debug': False, 'sim_frame_dist': 70_000_000.,
                 'knn_elements': 20_000,
                 'additional_steps_per_episode': 1
             }
@@ -67,7 +67,7 @@ config = VmpoConfig().training(
     train_batch_size=8096//2,
     #num_sgd_iter=1,
     #minibatch_buffer_size=128,
-    gamma=0.998,
+    gamma=0.997,
     model={
         "custom_model": "pokemon_lstm_model",
         "conv_filters": [

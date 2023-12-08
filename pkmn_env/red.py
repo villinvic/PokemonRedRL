@@ -425,13 +425,9 @@ class PkmnRedEnv(Env):
                 self.add_video_frame()
 
             self.pyboy.tick()
+
         if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
-            for i in range(self.act_freq * 18):
-                #Skip battle animations
-                self.pyboy.tick()
-                if not self.read_in_battle():
-                    self.pyboy.tick()
-                    break
+            pass
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
