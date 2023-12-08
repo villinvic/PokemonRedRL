@@ -842,7 +842,7 @@ class PkmnRedEnv(Env):
                 # COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
                 # Punish if walked into wall
-                COORDINATES: int(
+                COORDINATES: int(len(self.last_walked_coordinates) > 1 and
                     (curr_coords
                     ==
                     self.last_walked_coordinates[-2])
