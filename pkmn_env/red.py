@@ -188,6 +188,12 @@ class PkmnRedEnv(Env):
             VariableGetter(
                 name=IN_BATTLE
             ),
+            VariableGetter(
+                dim=2,
+                name=ITEMS,
+                scale= 0.2,
+                post_process_fn=lambda x: np.clip(x, 0., 2.)
+            ),
             # Needs 1_200_000 exp max to reach level 100
             # We will need better information that that
             # VariableGetter(
@@ -257,12 +263,12 @@ class PkmnRedEnv(Env):
             TOTAL_EXPERIENCE         :   30.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.1, # 3.
-            TOTAL_EVENTS_TRIGGERED   :   0.5,
+            TOTAL_EVENTS_TRIGGERED   :   0.33,
             MONEY                    :   5.,
             COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
-            PARTY_HEALTH             :   1.,
+            PARTY_HEALTH             :   3.,
 
             GOAL_TASK                :  0.15,
 
@@ -346,7 +352,7 @@ class PkmnRedEnv(Env):
             environment=self,
             path=self.s_path / "go_explore",
             relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
-            sample_base_state_chance=0.5,
+            sample_base_state_chance=0.75,
             recompute_score_freq=1,
             rendering=False # tests
         )
@@ -419,6 +425,13 @@ class PkmnRedEnv(Env):
                 self.add_video_frame()
 
             self.pyboy.tick()
+        if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
+            for i in range(self.act_freq * 18):
+                #Skip battle animations
+                self.pyboy.tick()
+                if not self.read_in_battle():
+                    self.pyboy.tick()
+                    break
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
@@ -538,6 +551,7 @@ class PkmnRedEnv(Env):
         party_experience = self.read_party_experience()
         self.game_stats[PARTY_EXPERIENCE].append(party_experience)
         self.game_stats[TOTAL_EXPERIENCE].append(sum(party_experience))
+        self.game_stats[ITEMS].append(self.read_inventory())
         badges = self.read_badges()
         self.game_stats[BADGES].append(badges)
         self.game_stats[BADGE_SUM].append(sum(badges))
@@ -815,8 +829,8 @@ class PkmnRedEnv(Env):
                                0.)
                 ),
                 TOTAL_EVENTS_TRIGGERED: (
-                        self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
-                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2]
+                        np.minimum(self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
+                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2], 0)
                       #                       * (self.game_stats[EVENTS_TRIGGERED][-1] - 11
                 ),
 
@@ -1016,7 +1030,23 @@ class PkmnRedEnv(Env):
     def read_sent_out(self) -> List:
         return [int(i == self.read_m(0xCC2F)) for i in range(6)]
 
-    def read_in_battle(self):
+    def read_in_battle(self) -> int:
         return int(self.read_m(0xD057) != 0)
+
+    def read_inventory(self) -> List:
+
+        pokeballs = 0
+        healing_items = 0
+        for addr in range(0xD31E, 0xD346, 2):
+            item_id = self.read_m(addr)
+            count = self.read_m(addr + 1)
+
+            if 0 < item_id < 5:
+                pokeballs += count
+            elif 15 < item_id < 21:
+                healing_items += count
+
+        return [pokeballs, healing_items]
+
 
 
