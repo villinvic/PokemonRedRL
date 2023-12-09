@@ -119,6 +119,15 @@ def read_money(console):
 def read_combat(console) -> int:
     return read_m(console, 0xD057)
 
+def read_turn_count(console) -> int:
+    return read_m(console, 0xCCD5)
+
+def read_action_taken(console) -> int:
+    return read_m(console, 0xCCF1) # CCF2
+
+def read_textbox_id(console) -> int:
+    return read_m(console, 0xD125)
+
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
             WindowEvent.PRESS_ARROW_LEFT,
@@ -175,7 +184,7 @@ if __name__ == '__main__':
     print(valid_actions[5])
 
     screen = console.botsupport_manager().screen()
-    console.set_emulation_speed(0)
+    #console.set_emulation_speed(0)
     #console.get_memory_value("bh")
 
     with open("deepred_post_parcel.state", "rb") as f:
@@ -188,6 +197,8 @@ if __name__ == '__main__':
         print(
             (read_pos(console), read_map(console)),
             read_opp_level(console),
-            read_combat(console)
+            read_combat(console),
+            read_textbox_id(console)
         )
+
         #walked = step(console, int(input("input:")))

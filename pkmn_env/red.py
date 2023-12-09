@@ -425,9 +425,15 @@ class PkmnRedEnv(Env):
                 self.add_video_frame()
 
             self.pyboy.tick()
-
         if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
-            pass
+
+
+            if self.read_textbox_id() not in {11, 13}:
+                for i in range(self.act_freq * 16):
+                    #Skip battle animations
+                    self.pyboy.tick()
+                    if not self.read_in_battle() or self.read_textbox_id() in {11, 13}:
+                        break
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
@@ -1043,6 +1049,9 @@ class PkmnRedEnv(Env):
                 healing_items += count
 
         return [pokeballs, healing_items]
+
+    def read_textbox_id(self) -> int:
+        return self.read_m(0xD125)
 
 
 
