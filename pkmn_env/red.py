@@ -258,7 +258,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             BLACKOUT                 :   - 0.15,
             SEEN_POKEMONS            :   0.1,
-            TOTAL_EXPERIENCE         :   30.,  # 0.5
+            TOTAL_EXPERIENCE         :   20.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.1, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.1,
@@ -867,7 +867,7 @@ class PkmnRedEnv(Env):
             total_healing = 0
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
-            level_fraq = np.minimum(1., self.latest_opp_level / highest_party_level)
+            level_fraq = np.minimum(1., self.latest_opp_level / highest_party_level) ** 2
 
             if curr_coords not in self.pokemon_centers:
 
