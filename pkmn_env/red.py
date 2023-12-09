@@ -427,7 +427,6 @@ class PkmnRedEnv(Env):
             self.pyboy.tick()
         if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
 
-
             if self.read_textbox_id() not in {11, 13}:
                 for i in range(self.act_freq * 16):
                     #Skip battle animations
