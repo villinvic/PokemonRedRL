@@ -110,13 +110,11 @@ class PkmnRedEnv(Env):
     ):
 
         self.worker_index = 1 if not hasattr(config, "worker_index") else config.worker_index
-
         self.debug = config['debug']
         self.s_path = config['session_path']
         self.headless = config['headless']
         self.num_elements = config['knn_elements']
         self.init_state = config['init_state']
-        self.act_freq = config['action_freq']
         self.max_steps = config['max_steps']
         self.save_video = config['save_video'] and self.worker_index == 1
         self.fast_video = config['fast_video'] and self.worker_index == 1
@@ -265,7 +263,7 @@ class PkmnRedEnv(Env):
             MAPS_VISITED             :   0.1, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.33,
             MONEY                    :   5.,
-            COORDINATES              :   - 5e-4,
+            #COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   3.,
@@ -310,10 +308,9 @@ class PkmnRedEnv(Env):
         self.pyboy = PyBoy(
             config['gb_path'],
             debugging=False,
-            disable_input=False,
+            disable_input=True,
             window_type='headless' if config['headless'] else 'SDL2',
             hide_window='--quiet' in sys.argv,
-            disable_renderer=False #not (self.save_video or self.fast_video)
         )
 
         self.screen = self.pyboy.botsupport_manager().screen()
@@ -348,13 +345,21 @@ class PkmnRedEnv(Env):
             visited_maps=self.visited_maps
         )
 
+        if config["headless"]:
+            # we are not rendering the game live
+            self.act_freq = 18
+
+        else:
+
+            self.act_freq = 18
+
         self.go_explore = GoExplorePokemon(
             environment=self,
             path=self.s_path / "go_explore",
             relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
             sample_base_state_chance=0.75,
             recompute_score_freq=1,
-            rendering=False # tests
+            rendering=not config["headless"] # tests
         )
 
         #self.init_knn()
@@ -400,16 +405,57 @@ class PkmnRedEnv(Env):
         obs["screen"] = self.render()
         return obs
 
-    def run_action_on_emulator(self, action):
+    # def run_action_on_emulator(self, action):
+    #     # press button then release after some steps
+    #     self.pyboy.send_input(self.valid_actions[action])
+    #     walked = False
+    #     action = np.int32(action)
+    #     for i in range(self.act_freq):
+    #         # release action, so they are stateless
+    #         if not walked:
+    #             walked = self.read_walk_animation() > 0
+    #         if i == 8:
+    #             if action < 4:
+    #                 # release arrow
+    #                 self.pyboy.send_input(self.release_arrow[action])
+    #
+    #             if 3 < action < 6:
+    #                 # release button
+    #                 self.pyboy.send_input(self.release_button[action - 4])
+    #
+    #             if action == WindowEvent.PRESS_BUTTON_START:
+    #                 self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_START)
+    #
+    #         if self.save_video and not self.fast_video:
+    #             self.add_video_frame()
+    #
+    #         self.pyboy.tick()
+    #     if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
+    #
+    #         if self.read_textbox_id() not in {11, 13}:
+    #             for i in range(self.act_freq * 16):
+    #                 #Skip battle animations
+    #                 self.pyboy.tick()
+    #                 if not self.read_in_battle() or self.read_textbox_id() in {11, 13}:
+    #                     break
+    #
+    #     if self.save_video and self.fast_video:
+    #         self.add_video_frame()
+    #
+    #     return walked
+
+    def step(self, action):
+
         # press button then release after some steps
-        self.pyboy.send_input(self.valid_actions[action])
+        console_input = self.valid_actions[action]
+        self.pyboy.send_input(console_input)
         walked = False
-        action = np.int32(action)
         for i in range(self.act_freq):
             # release action, so they are stateless
             if not walked:
                 walked = self.read_walk_animation() > 0
             if i == 8:
+
                 if action < 4:
                     # release arrow
                     self.pyboy.send_input(self.release_arrow[action])
@@ -418,26 +464,46 @@ class PkmnRedEnv(Env):
                     # release button
                     self.pyboy.send_input(self.release_button[action - 4])
 
-                if action == WindowEvent.PRESS_BUTTON_START:
+                if console_input == WindowEvent.PRESS_BUTTON_START:
                     self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_START)
+            self.pyboy.tick()
 
             if self.save_video and not self.fast_video:
                 self.add_video_frame()
 
-            self.pyboy.tick()
-        if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
-
-            if self.read_textbox_id() not in {11, 13}:
-                for i in range(self.act_freq * 16):
-                    #Skip battle animations
-                    self.pyboy.tick()
-                    if not self.read_in_battle() or self.read_textbox_id() in {11, 13}:
-                        break
+        if self.skippable_battle_frame():
+            # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
+            self.skip_battle_frames()
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
 
         return walked
+
+    def skippable_battle_frame(self):
+        # We skip the frame if we are in battle, have a certain box id open or if we are in the party menu.
+        return (
+                self.read_in_battle()
+                and
+                not (
+                self.read_textbox_id() in {11, 12, 13}
+                or
+                self.read_party_menu() > 0
+                )
+        )
+
+    def skip_battle_frames(self):
+        c = 0
+        for i in range(18 * 32):
+            # Skip battle animations
+            self.pyboy.tick()
+            if not self.skippable_battle_frame():
+                # Some message box have id 11 midturn, but they are automatically scrolled.
+                # So we just wait them out
+                c += 1
+                if c == 5:
+                    # Needs one more action when battle ends
+                    break
 
 
     def reset(self, options=None, seed=None):
@@ -858,13 +924,13 @@ class PkmnRedEnv(Env):
                 # COORDINATES + "_POS": np.maximum(r_nav, 0.),
 
                 # Punish if walked into wall
-                COORDINATES: int(len(self.last_walked_coordinates) > 1 and
-                    (curr_coords
-                    ==
-                    self.last_walked_coordinates[-2])
-                    and
-                    walked
-                ),
+                # COORDINATES: int(len(self.last_walked_coordinates) > 1 and
+                #     (curr_coords
+                #     ==
+                #     self.last_walked_coordinates[-2])
+                #     and
+                #     walked
+                # ),
 
                 PARTY_HEALTH: int(total_healing > 0),
 
@@ -1052,5 +1118,8 @@ class PkmnRedEnv(Env):
     def read_textbox_id(self) -> int:
         return self.read_m(0xD125)
 
+    def read_party_menu(self) -> int:
+        # Actually reads the sprite animation ids
+        return self.read_m(0xD09B)
 
 

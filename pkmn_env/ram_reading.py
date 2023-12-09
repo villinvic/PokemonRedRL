@@ -128,6 +128,9 @@ def read_action_taken(console) -> int:
 def read_textbox_id(console) -> int:
     return read_m(console, 0xD125)
 
+def read_party_mon_menu(console) -> int:
+    return read_m(console, 0xd09b)
+
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
             WindowEvent.PRESS_ARROW_LEFT,
@@ -135,6 +138,7 @@ valid_actions = [
             WindowEvent.PRESS_ARROW_UP,
             WindowEvent.PRESS_BUTTON_A,
             WindowEvent.PRESS_BUTTON_B,
+            WindowEvent.PRESS_BUTTON_START
 ]
 release_arrow = [
             WindowEvent.RELEASE_ARROW_DOWN,
@@ -148,12 +152,45 @@ release_button = [
             WindowEvent.RELEASE_BUTTON_B
         ]
 
+action_dict = {
+    "[A": 3,
+    "[B": 0,
+    "[D": 1,
+    "[C": 2,
+    "": 4,
+    "0": 5,
+    "5": 6
+
+}
+
+
+def skip_battle_frame(console):
+
+    if read_combat(console) and not (
+            read_textbox_id(console) in {11, 12, 13}
+        or
+            read_party_mon_menu(console) > 0
+    ):
+        c = 0
+        for i in range(18 * 32):
+            # Skip battle animations
+            console.tick()
+            if not read_combat(console) or (
+            read_textbox_id(console) in {11, 12, 13}
+        or
+            read_party_mon_menu(console) > 0
+    ):
+                c += 1
+                if c == 5:
+                    # Needs one more action when battle ends
+                    break
+
 def step(console, action):
 
     # press button then release after some steps
     console.send_input(valid_actions[action])
     walked = False
-    for i in range(24):
+    for i in range(18):
         # release action, so they are stateless
         if not walked:
             walked = read_walking_animation(console) > 0
@@ -166,17 +203,18 @@ def step(console, action):
             if 3 < action < 6:
                 # release button
                 console.send_input(release_button[action - 4])
-
-            if action == WindowEvent.PRESS_BUTTON_START:
+            if valid_actions[action] == WindowEvent.PRESS_BUTTON_START:
                 console.send_input(WindowEvent.RELEASE_BUTTON_START)
         console.tick()
+    skip_battle_frame(console)
+
     return walked
 
 if __name__ == '__main__':
     console = PyBoy(
         "pokered.gbc",
         debugging=False,
-        disable_input=False,
+        disable_input=True,
         hide_window=False,
         disable_renderer=False
     )
@@ -189,16 +227,28 @@ if __name__ == '__main__':
 
     with open("deepred_post_parcel.state", "rb") as f:
         console.load_state(f)
+    console.tick()
+    console.tick()
 
     walked = 0
     while True:
-        console.tick()
         #print(screen.screen_ndarray())
         print(
             (read_pos(console), read_map(console)),
             read_opp_level(console),
             read_combat(console),
-            read_textbox_id(console)
+            read_textbox_id(console),
+            read_party_mon_menu(console)
         )
+        # action_dict[input("input:")]
+        # np.random.choice(5)
+        inputs = input("input:").split("\x1b")
+        if len(inputs) == 1:
+            walked = step(console, action_dict[inputs[0]])
+        else:
+            for i in inputs[1:]:
+                if i not in action_dict:
+                    i = ""
+                walked = step(console, action_dict[i])
+        #console.tick()
 
-        #walked = step(console, int(input("input:")))
