@@ -486,7 +486,7 @@ class PkmnRedEnv(Env):
                 self.read_in_battle()
                 and
                 not (
-                self.read_textbox_id() in {11, 12, 13}
+                self.read_textbox_id() in {11, 12, 13, 20}
                 or
                 self.read_party_menu() > 0
                 )

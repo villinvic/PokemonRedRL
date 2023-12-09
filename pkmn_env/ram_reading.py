@@ -131,6 +131,12 @@ def read_textbox_id(console) -> int:
 def read_party_mon_menu(console) -> int:
     return read_m(console, 0xd09b)
 
+def read_movement_y(console) -> int:
+    return read_m(console, 0xC103)
+
+def read_movement_x(console) -> int:
+    return read_m(console, 0xC105)
+
 valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
             WindowEvent.PRESS_ARROW_LEFT,
@@ -167,7 +173,7 @@ action_dict = {
 def skip_battle_frame(console):
 
     if read_combat(console) and not (
-            read_textbox_id(console) in {11, 12, 13}
+            read_textbox_id(console) in {11, 12, 13, 20}
         or
             read_party_mon_menu(console) > 0
     ):
@@ -176,7 +182,7 @@ def skip_battle_frame(console):
             # Skip battle animations
             console.tick()
             if not read_combat(console) or (
-            read_textbox_id(console) in {11, 12, 13}
+            read_textbox_id(console) in {11, 12, 13, 20}
         or
             read_party_mon_menu(console) > 0
     ):
@@ -225,7 +231,7 @@ if __name__ == '__main__':
     #console.set_emulation_speed(0)
     #console.get_memory_value("bh")
 
-    with open("deepred_post_parcel.state", "rb") as f:
+    with open("deepred_post_parcel_pokeballs.state", "rb") as f:
         console.load_state(f)
     console.tick()
     console.tick()
@@ -233,6 +239,7 @@ if __name__ == '__main__':
     walked = 0
     while True:
         #print(screen.screen_ndarray())
+        x, y = read_pos(console)
         print(
             (read_pos(console), read_map(console)),
             read_opp_level(console),
@@ -244,7 +251,10 @@ if __name__ == '__main__':
         # np.random.choice(5)
         inputs = input("input:").split("\x1b")
         if len(inputs) == 1:
-            walked = step(console, action_dict[inputs[0]])
+            i = inputs[0]
+            if i not in action_dict:
+                    i = ""
+            walked = step(console, action_dict[i])
         else:
             for i in inputs[1:]:
                 if i not in action_dict:

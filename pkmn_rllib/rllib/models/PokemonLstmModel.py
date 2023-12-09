@@ -239,22 +239,29 @@ class PokemonLstmModel(TFModelV2):
         map_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.map_ids), logits=self.map_logits)
         moved_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(self.moved), y_pred=self.moved_logits, from_logits=True)
 
+        prediction_loss = map_loss + moved_loss
+
         reward_classes = tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0)) # tf.where(self.rewards <= 0, 0, 1)
         num_non_zero_rewards = tf.reduce_sum(tf.cast(reward_classes > 0, tf.int32))
 
-        zero_indices = tf.where(tf.equal(reward_classes, 0))
+        if num_non_zero_rewards > 0:
 
-        shuffled_zero_indices = tf.random.shuffle(zero_indices)[:num_non_zero_rewards]
+            zero_indices = tf.where(tf.equal(reward_classes, 0))
 
-        non_zero_indices = tf.where(reward_classes > 0)
+            shuffled_zero_indices = tf.random.shuffle(zero_indices)[:num_non_zero_rewards]
 
-        all_indices = tf.concat([shuffled_zero_indices, non_zero_indices], axis=0)
+            non_zero_indices = tf.where(reward_classes > 0)
 
-        labels = tf.gather_nd(reward_classes, all_indices)
-        values = tf.gather_nd(self.reward_logits, all_indices)
+            all_indices = tf.concat([shuffled_zero_indices, non_zero_indices], axis=0)
 
-        #reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
-        reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
+            labels = tf.gather_nd(reward_classes, all_indices)
+            values = tf.gather_nd(self.reward_logits, all_indices)
+
+            #reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
+            reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
+
+            prediction_loss += prediction_loss
+
 
         self.moved_loss_mean = tf.reduce_mean(moved_loss)
         self.moved_loss_max = tf.reduce_max(moved_loss)
@@ -265,7 +272,6 @@ class PokemonLstmModel(TFModelV2):
         self.reward_loss_mean = tf.reduce_mean(reward_loss)
         self.reward_loss_max = tf.reduce_max(reward_loss)
 
-        prediction_loss = (self.map_loss_mean * 1. + self.moved_loss_mean * 1. + self.reward_loss_mean + 1.)
         return policy_loss + prediction_loss * 0.33
 
     def metrics(self):
