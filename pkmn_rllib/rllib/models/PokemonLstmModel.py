@@ -265,7 +265,7 @@ class PokemonLstmModel(TFModelV2):
         self.reward_loss_mean = tf.reduce_mean(reward_loss)
         self.reward_loss_max = tf.reduce_max(reward_loss)
 
-        prediction_loss = reward_loss + moved_loss + map_loss
+        prediction_loss = self.moved_loss_mean + self.map_loss_mean + self.reward_loss_mean
 
         return policy_loss + prediction_loss * 0.33
 
