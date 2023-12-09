@@ -244,23 +244,21 @@ class PokemonLstmModel(TFModelV2):
         reward_classes = tf.where(self.rewards < 0, 1, tf.where(self.rewards > 0, 2, 0)) # tf.where(self.rewards <= 0, 0, 1)
         num_non_zero_rewards = tf.reduce_sum(tf.cast(reward_classes > 0, tf.int32))
 
-        if num_non_zero_rewards > 0:
+        zero_indices = tf.where(tf.equal(reward_classes, 0))
 
-            zero_indices = tf.where(tf.equal(reward_classes, 0))
+        shuffled_zero_indices = tf.random.shuffle(zero_indices)[:num_non_zero_rewards]
 
-            shuffled_zero_indices = tf.random.shuffle(zero_indices)[:num_non_zero_rewards]
+        non_zero_indices = tf.where(reward_classes > 0)
 
-            non_zero_indices = tf.where(reward_classes > 0)
+        all_indices = tf.concat([shuffled_zero_indices, non_zero_indices], axis=0)
 
-            all_indices = tf.concat([shuffled_zero_indices, non_zero_indices], axis=0)
+        labels = tf.gather_nd(reward_classes, all_indices)
+        values = tf.gather_nd(self.reward_logits, all_indices)
 
-            labels = tf.gather_nd(reward_classes, all_indices)
-            values = tf.gather_nd(self.reward_logits, all_indices)
+        #reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
+        reward_loss = tf.cast(num_non_zero_rewards > 0, tf.float32) * tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
 
-            #reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
-            reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
-
-            prediction_loss += prediction_loss
+        prediction_loss += prediction_loss
 
 
         self.moved_loss_mean = tf.reduce_mean(moved_loss)
