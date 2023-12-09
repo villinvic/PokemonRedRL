@@ -2,6 +2,7 @@ import os
 import pickle
 from collections import defaultdict
 from pathlib import Path
+from filelock import FileLock
 
 import numpy as np
 from pyboy.pyboy import PyBoy
@@ -71,10 +72,12 @@ class GoExplorePokemon:
                                     latest_opp_level=self.environment.latest_opp_level,
                                     visited_maps=self.environment.visited_maps
                                     )
-            with open(save_state_path, "wb") as f:
-                self.console.save_state(f)
-            with open(info_path, "wb") as f:
-                pickle.dump(info.to_dict(), f)
+            with FileLock(save_state_path):
+                with open(save_state_path, "wb") as f:
+                    self.console.save_state(f)
+            with FileLock(info_path):
+                with open(info_path, "wb") as f:
+                    pickle.dump(info.to_dict(), f)
 
     def read_session_states(self):
         _, _, files = next(os.walk(self.path))
