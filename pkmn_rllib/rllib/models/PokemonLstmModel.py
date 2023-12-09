@@ -254,7 +254,8 @@ class PokemonLstmModel(TFModelV2):
         values = tf.gather_nd(self.reward_logits, all_indices)
 
         #reward_loss = tf.losses.binary_crossentropy(y_true=tf.squeeze(labels), y_pred=tf.squeeze(values), from_logits=True)
-        reward_loss = tf.cast(num_non_zero_rewards > 0, tf.float32) * tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
+        reward_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(labels), logits=values)
+        reward_loss = tf.where(tf.math.is_nan(reward_loss), tf.zeros_like(reward_loss), reward_loss)
 
         self.moved_loss_mean = tf.reduce_mean(moved_loss)
         self.moved_loss_max = tf.reduce_max(moved_loss)

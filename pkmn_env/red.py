@@ -256,12 +256,12 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.05,
+            BLACKOUT                 :   - 0.15,
             SEEN_POKEMONS            :   0.1,
             TOTAL_EXPERIENCE         :   30.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.1, # 3.
-            TOTAL_EVENTS_TRIGGERED   :   0.33,
+            TOTAL_EVENTS_TRIGGERED   :   0.1,
             MONEY                    :   5.,
             #COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
@@ -631,15 +631,19 @@ class PkmnRedEnv(Env):
         self.game_stats[PARTY_FILLS].append(self.read_party_fills())
         self.game_stats[SENT_OUT].append(self.read_sent_out())
         party_health = self.read_party_health()
-        self.game_stats[BLACKOUT].append(
-            int(sum(party_health) == 0)
-            and
-            (len(self.game_stats[PARTY_HEALTH]) == 0 or sum(self.game_stats[PARTY_HEALTH][-1]) > 0)
-        )
         self.game_stats[PARTY_HEALTH].append(party_health)
 
         map_id = self.read_map_id()
         self.game_stats[MAP_ID].append(map_id)
+
+        self.game_stats[BLACKOUT].append(
+            self.step_count > 2
+            and
+            (self.game_stats[IN_BATTLE][-2] and not in_battle)
+            and
+            (self.game_stats[MAP_ID][-3] != map_id)
+
+        )
 
         if self.step_count > 2 and (map_id not in self.visited_maps
             or
