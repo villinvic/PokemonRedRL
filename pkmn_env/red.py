@@ -444,7 +444,7 @@ class PkmnRedEnv(Env):
     #
     #     return walked
 
-    def step(self, action):
+    def run_action_on_emulator(self, action):
 
         # press button then release after some steps
         console_input = self.valid_actions[action]
