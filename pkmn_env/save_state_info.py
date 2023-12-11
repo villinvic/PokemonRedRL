@@ -14,7 +14,7 @@ class PokemonStateInfo:
     ):
         self.save_path = save_path
         self.latest_opp_level = copy(latest_opp_level)
-        self.visited_maps = visited_maps.copy()
+        self.visited_maps = None if visited_maps is None else visited_maps.copy()
 
     def to_dict(self):
 
