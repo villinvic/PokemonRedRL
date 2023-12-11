@@ -196,7 +196,7 @@ def step(console, action):
     # press button then release after some steps
     console.send_input(valid_actions[action])
     walked = False
-    for i in range(18):
+    for i in range(19):
         # release action, so they are stateless
         if not walked:
             walked = read_walking_animation(console) > 0
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     console = PyBoy(
         "pokered.gbc",
         debugging=False,
-        disable_input=False,
+        disable_input=True,
         hide_window=False,
         disable_renderer=False
     )
@@ -239,7 +239,6 @@ if __name__ == '__main__':
     walked = 0
     while True:
         #print(screen.screen_ndarray())
-        x, y = read_pos(console)
         print(
             (read_pos(console), read_map(console)),
             read_opp_level(console),
@@ -247,18 +246,17 @@ if __name__ == '__main__':
             read_textbox_id(console),
             read_party_mon_menu(console)
         )
-        # action_dict[input("input:")]
-        # np.random.choice(5)
-        # inputs = input("input:").split("\x1b")
-        # if len(inputs) == 1:
-        #     i = inputs[0]
-        #     if i not in action_dict:
-        #             i = ""
-        #     walked = step(console, action_dict[i])
-        # else:
-        #     for i in inputs[1:]:
-        #         if i not in action_dict:
-        #             i = ""
-        #         walked = step(console, action_dict[i])
-        console.tick()
+
+        inputs = input("input:").split("\x1b")
+        if len(inputs) == 1:
+            i = inputs[0]
+            if i not in action_dict:
+                    i = ""
+            walked = step(console, action_dict[i])
+        else:
+            for i in inputs[1:]:
+                if i not in action_dict:
+                    i = ""
+                walked = step(console, action_dict[i])
+        #console.tick()
 

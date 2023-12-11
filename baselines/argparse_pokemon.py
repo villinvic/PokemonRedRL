@@ -16,7 +16,7 @@ def get_args(usage_string=None, ep_length=None, sess_path=None, headless=True):
     parser.add_argument('--headless', type=bool, default=headless, help='Whether to run the environment in headless mode')
     parser.add_argument('--save_final_state', type=bool, default=True, help='Whether to save the final state of the environment')
     parser.add_argument('--early_stop', type=bool, default=False, help='Whether to stop the environment early')
-    parser.add_argument('--action_freq', type=int, default=18, help='Frequency of actions')
+    parser.add_argument('--action_freq', type=int, default=19, help='Frequency of actions')
     parser.add_argument('--init_state', type=str, default='deepred_post_parcel_pokeballs', help='Initial state of the environment')
     parser.add_argument('--max_steps', type=int, default=ep_length, help='Maximum number of steps in the environment')
     parser.add_argument('--print_rewards', type=bool, default=True, help='Whether to print rewards')
