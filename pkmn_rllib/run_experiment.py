@@ -12,7 +12,7 @@ from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
 
-run_steps = 2048*6
+run_steps = 2048*8
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 

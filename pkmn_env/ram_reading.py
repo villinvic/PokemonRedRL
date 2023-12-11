@@ -220,7 +220,7 @@ if __name__ == '__main__':
     console = PyBoy(
         "pokered.gbc",
         debugging=False,
-        disable_input=True,
+        disable_input=False,
         hide_window=False,
         disable_renderer=False
     )
@@ -249,16 +249,16 @@ if __name__ == '__main__':
         )
         # action_dict[input("input:")]
         # np.random.choice(5)
-        inputs = input("input:").split("\x1b")
-        if len(inputs) == 1:
-            i = inputs[0]
-            if i not in action_dict:
-                    i = ""
-            walked = step(console, action_dict[i])
-        else:
-            for i in inputs[1:]:
-                if i not in action_dict:
-                    i = ""
-                walked = step(console, action_dict[i])
-        #console.tick()
+        # inputs = input("input:").split("\x1b")
+        # if len(inputs) == 1:
+        #     i = inputs[0]
+        #     if i not in action_dict:
+        #             i = ""
+        #     walked = step(console, action_dict[i])
+        # else:
+        #     for i in inputs[1:]:
+        #         if i not in action_dict:
+        #             i = ""
+        #         walked = step(console, action_dict[i])
+        console.tick()
 

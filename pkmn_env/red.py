@@ -256,19 +256,19 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.15,
-            SEEN_POKEMONS            :   0.1,
+            BLACKOUT                 :   - 0.1,
+            SEEN_POKEMONS            :   0.2,
             TOTAL_EXPERIENCE         :   20.,  # 0.5
             BADGE_SUM                :   100.,
-            MAPS_VISITED             :   0.1, # 3.
-            TOTAL_EVENTS_TRIGGERED   :   0.1,
+            MAPS_VISITED             :   0.2, # 3.
+            TOTAL_EVENTS_TRIGGERED   :   0.0, # TODO : bugged
             MONEY                    :   5.,
             #COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   3.,
 
-            GOAL_TASK                :  0.15,
+            GOAL_TASK                :  0.1,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -357,7 +357,7 @@ class PkmnRedEnv(Env):
             environment=self,
             path=self.s_path / "go_explore",
             relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
-            sample_base_state_chance=0.75,
+            sample_base_state_chance=0.9,
             recompute_score_freq=1,
             rendering=not config["headless"] # tests
         )
@@ -391,7 +391,7 @@ class PkmnRedEnv(Env):
                 self.current_goal = (0, 0, -1)
                 self.task_timesteps = self.goal_task_timeout_steps
             else:
-                df = np.random.randint(3, 7) * np.random.choice([-1, 1])
+                df = np.random.randint(3, 8) * np.random.choice([-1, 1])
                 dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
                 dd = [df, dc]
                 np.random.shuffle(dd)
@@ -867,13 +867,18 @@ class PkmnRedEnv(Env):
             total_healing = 0
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
-            level_fraq = np.minimum(1., self.latest_opp_level / highest_party_level) ** 2
+            level_fraq = self.latest_opp_level / highest_party_level
+            if level_fraq <= 0.5:
+                overleveled_penaly = 1e-3
+            else:
+                overleveled_penaly = np.minimum(level_fraq ** 2, 1)
+
 
             if curr_coords not in self.pokemon_centers:
 
                 for i in range(6):
-                    # Can be hacked with pc, let's see :)
-                    total_delta_exp += level_fraq * np.maximum(
+
+                    total_delta_exp += overleveled_penaly * np.maximum(
                         (self.game_stats[PARTY_EXPERIENCE][-1][i]
                         - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
                         , 0.

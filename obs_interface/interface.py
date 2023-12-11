@@ -4,7 +4,7 @@ import time
 
 import zmq
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import QMovie, QPainter, QFont, QFontDatabase
+from PyQt5.QtGui import QMovie, QPainter, QFont, QFontDatabase, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QGridLayout, QGraphicsOpacityEffect, QLayout
 from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtProperty, QPropertyAnimation, QSequentialAnimationGroup, \
     QEasingCurve, QParallelAnimationGroup, QSize, QRect
@@ -16,6 +16,18 @@ from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtProperty, QPropertyAnimati
 # -> Best so far
 # How long have we been learning
 
+# IDEAS
+"""
+- Cool timer
+- Show beautiful graph of learing curve ?
+- Caught pokemons ?
+
+- Simple stats with RED/GREEN arrows showing tendency:
+    - Maximum - avg - min score
+    - Max exp 
+    - Max badges ...
+"""
+
 class PokemonAIInterface(QWidget):
     def __init__(self):
         super().__init__()
@@ -25,8 +37,17 @@ class PokemonAIInterface(QWidget):
         self.pokemon_ids = [0] * 6
 
     def init_ui(self):
-        self.setFixedSize(400, 300)
+        self.setFixedSize(1280, 720)
         # Set up the layout
+
+        self.trainer_card_label = QLabel(self)
+        self.trainer_card_label.setFixedSize(600, 800)
+
+        pixmap = QPixmap("obs_interface/assets/ui/trainer_card/trainer_card_0_badges.png")
+        pixmap.setDevicePixelRatio(0.5)
+        self.trainer_card_label.setPixmap(pixmap)
+        self.trainer_card_label.show()
+        #self.trainer_card_label.move(400, 400)
 
 
 
@@ -88,7 +109,7 @@ class PokemonAIInterface(QWidget):
 
         # Set window properties
         self.setWindowTitle('Pokemon AI Interface')
-        self.setGeometry(100, 100, 400, 300)
+        self.setGeometry(100, 100, 1280, 720)
 
     def update_data(self, data):
         # Update episode information labels
