@@ -202,7 +202,7 @@ class PokemonLstmModel(TFModelV2):
         #flags_inputs = input_dict[SampleBatch.OBS]["flags"]
         self.map_ids = tf.cast(input_dict[SampleBatch.OBS]["coordinates"], tf.int32)
         self.moved = tf.cast(input_dict[SampleBatch.NEXT_OBS]["moved"], tf.int32)
-        allowed_actions = tf.cast(input_dict[SampleBatch.OBS]["allowed_actions"])
+        allowed_actions = tf.cast(input_dict[SampleBatch.OBS]["allowed_actions"], tf.float32)
         self.rewards = tf.squeeze(input_dict[SampleBatch.REWARDS])
         prev_reward = input_dict[SampleBatch.PREV_REWARDS]
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
