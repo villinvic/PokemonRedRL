@@ -219,8 +219,10 @@ class PokemonLstmModel(TFModelV2):
         self.moved_logits = tf.reshape(moved_logits, [-1])
         self.reward_logits = tf.reshape(reward_logits, [-1, 3])
 
+        action_logits = tf.reshape(context, [-1, self.num_outputs])
 
-        return tf.reshape(context, [-1, self.num_outputs]), [h, c]
+
+        return action_logits, [h, c]
 
     def value_function(self):
         return tf.reshape(self._value_out, [-1])

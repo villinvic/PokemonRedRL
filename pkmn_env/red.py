@@ -868,7 +868,7 @@ class PkmnRedEnv(Env):
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
             level_fraq = self.latest_opp_level / highest_party_level
-            if level_fraq <= 0.5:
+            if level_fraq < 0.5:
                 overleveled_penaly = 1e-3
             else:
                 overleveled_penaly = np.minimum(level_fraq ** 2, 1)

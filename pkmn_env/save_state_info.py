@@ -1,3 +1,4 @@
+from copy import copy
 from pathlib import Path
 
 
@@ -12,8 +13,8 @@ class PokemonStateInfo:
 
     ):
         self.save_path = save_path
-        self.latest_opp_level = latest_opp_level
-        self.visited_maps = visited_maps
+        self.latest_opp_level = copy(latest_opp_level)
+        self.visited_maps = visited_maps.copy()
 
     def to_dict(self):
 
