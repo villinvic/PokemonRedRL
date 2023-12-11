@@ -101,7 +101,9 @@ class PkmnRedEnv(Env):
         SEEN_POKEMONS,
         CAUGHT_POKEMONS,
         TOTAL_BLACKOUT,
-        TOTAL_EVENTS_TRIGGERED
+        TOTAL_EVENTS_TRIGGERED,
+        NUM_BALLS,
+        NUM_HEALING_ITEMS
     )
 
     def __init__(
@@ -134,6 +136,24 @@ class PkmnRedEnv(Env):
         self.pokemon_centers = {
             41, 58, 64, 68, 81, 89, 133, 141, 154, 171, 174, 182,
         }
+        self.poke_marts = {
+            42, 56, 67, 91, 150, 152, 172, 173, 180
+        }
+
+        # self.ball_price_to_item_value = {
+        #     200: 1, # pokeball
+        #     600: 2, # greatball
+        #     1200: 1.5, # ultraball
+        #     0: 2, # ball was obtained
+        # }
+        #
+        # self.heal_price_to_item_value = {
+        #     3000 : 4,  # full restore
+        #     2500: 4,  # max potion
+        #     1500 : 3,  # hyper potion
+        #     1200: 1.5,  # ultraball
+        #     0   : 5,  # ball was obtained
+        # }
 
         self.valid_actions = [
             WindowEvent.PRESS_ARROW_DOWN,
@@ -187,9 +207,13 @@ class PkmnRedEnv(Env):
                 name=IN_BATTLE
             ),
             VariableGetter(
-                dim=2,
-                name=ITEMS,
+                name=NUM_BALLS,
                 scale= 0.2,
+                post_process_fn=lambda x: np.clip(x, 0., 2.)
+            ),
+            VariableGetter(
+                name=NUM_HEALING_ITEMS,
+                scale=0.2,
                 post_process_fn=lambda x: np.clip(x, 0., 2.)
             ),
             # Needs 1_200_000 exp max to reach level 100
@@ -210,11 +234,11 @@ class PkmnRedEnv(Env):
                 name=PARTY_LEVELS,
                 scale=0.02,
             ),
-            # VariableGetter(
-            #     name=DELTA_LEVEL,
-            #     scale=0.1,
-            #     post_process_fn=lambda x: np.clip(x, -2., 2.)
-            # ),
+            VariableGetter(
+                name=LEVEL_FRAQ,
+                scale=0.1,
+                post_process_fn=lambda x: np.maximum(x, 2.)
+            ),
             VariableGetter(
                 name=TOTAL_EVENTS_TRIGGERED,
                 scale=0.02 #319
@@ -269,6 +293,8 @@ class PkmnRedEnv(Env):
             PARTY_HEALTH             :   3.,
 
             GOAL_TASK                :  0.1,
+
+            #ITEMS                    :  0.1,
 
             # BLACKOUT                 :   -0.3,
             # SEEN_POKEMONS            :   0.,
@@ -333,6 +359,7 @@ class PkmnRedEnv(Env):
         self.goal_task_timeout_steps = 256
         self.current_goal = None
         self.task_timesteps = 0
+        self.stuck_count = 0
         self.target_symbol_mask = np.zeros((8, 8, 1), dtype=np.uint8)
         self.target_symbol_mask[1 : -1, 1 : -1] = 1
         self.target_symbol_mask_debug = np.zeros((16, 16, 3), dtype=np.uint8)
@@ -611,12 +638,16 @@ class PkmnRedEnv(Env):
         if in_battle :
              self.latest_opp_level = np.maximum(opp_level, 1)
 
-        #self.game_stats[DELTA_LEVEL].append(max(party_levels) - self.latest_opp_level)
+        self.game_stats[LEVEL_FRAQ].append(self.latest_opp_level / (max(party_levels)+1e-8))
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         self.game_stats[PARTY_EXPERIENCE].append(party_experience)
         self.game_stats[TOTAL_EXPERIENCE].append(sum(party_experience))
-        self.game_stats[ITEMS].append(self.read_inventory())
+
+        num_balls, num_healing_items = self.read_inventory()
+        self.game_stats[NUM_BALLS].append(num_balls)
+        self.game_stats[NUM_HEALING_ITEMS].append(num_healing_items)
+
         badges = self.read_badges()
         self.game_stats[BADGES].append(badges)
         self.game_stats[BADGE_SUM].append(sum(badges))
@@ -701,8 +732,7 @@ class PkmnRedEnv(Env):
     def get_allowed_actions(self):
         allowed_actions = np.ones(self.action_space.n, dtype=np.uint8)
         
-        if len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
-        
+        if self.stuck_count < 128 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
             # Does not handle map changes
             curr_x, curr_y, _ = self.last_walked_coordinates[-1]
             past_x, past_y, past_map = self.last_walked_coordinates[-2]
@@ -840,47 +870,16 @@ class PkmnRedEnv(Env):
 
         if self.step_count >= 4:
             curr_coords = tuple(self.game_stats[COORDINATES][-1])
-            # past_coords = tuple(self.game_stats[COORDINATES][-2])
-            # past_2_coords = tuple(self.game_stats[COORDINATES][-3])
-            # past_3_coords = tuple(self.game_stats[COORDINATES][-4])
+            past_coords = tuple(self.game_stats[COORDINATES][-2])
+            if not self.game_stats[IN_BATTLE] and curr_coords == past_coords:
+                self.stuck_count += 1
+            else:
+                self.stuck_count = 0
+
             goal_reached = int(curr_coords == self.current_goal)
 
             if goal_reached:
                 self.task_timesteps = self.goal_task_timeout_steps
-
-            #
-            # if (
-            #         self.entrance_coords is None
-            #         or
-            #         (
-            #             self.entrance_coords[-1] != curr_coords[-1]
-            #             and
-            #             curr_coords[-1] == past_coords[-1] == past_2_coords[-1]
-            #         )
-            # ):
-            #     self.entrance_coords = curr_coords
-            #
-            # if (
-            #         curr_coords[-1] == past_coords[-1] == past_3_coords[-1] == self.entrance_coords[-1]
-            # ):
-            #     dx = abs(curr_coords[0] - self.entrance_coords[0])
-            #     dy = abs(curr_coords[1] - self.entrance_coords[1])
-            #     # the past coord might be far away if we teleported, but should not happen as we still have to walk away
-            #     # from the entrance coord a bit before getting there
-            #     dx2 = abs(past_coords[0] - self.entrance_coords[0])
-            #     dy2 = abs(past_coords[1] - self.entrance_coords[1])
-            #
-            #     assert abs(dx-dx2) + abs(dy-dy2) <= 1, self.game_stats[COORDINATES][-6:]
-            #
-            #     r_nav = dx - dx2 + dy - dy2
-            #
-            #     # if dx < 9 or dy < 9: # we do not reward for navigating in small rooms
-            #     #     r_nav = np.minimum(r_nav, 0.)
-            #
-            # elif self.entrance_coords[-1] != curr_coords[-1]:
-            #     r_nav = -1.
-            # else:
-            #     r_nav = 0.
 
             # we gain more experience as game moves on:
             total_delta_exp = 0
@@ -891,7 +890,7 @@ class PkmnRedEnv(Env):
             if level_fraq < 0.5:
                 overleveled_penaly = 1e-3
             else:
-                overleveled_penaly = np.minimum(level_fraq ** 2, 1)
+                overleveled_penaly = np.minimum(level_fraq, 1)
 
 
             if curr_coords not in self.pokemon_centers:
@@ -913,6 +912,21 @@ class PkmnRedEnv(Env):
                         and
                         self.game_stats[PARTY_HEALTH][-2][i] > 0
                     )
+
+            # shopping
+
+            # curr_balls, curr_potions = self.game_stats[ITEMS][-1]
+            # past_balls, past_potions = self.game_stats[ITEMS][-2]
+            # curr_money = self.game_stats[MONEY][-1]
+            # past_money = self.game_stats[MONEY][-2]
+            # db = np.maximum(curr_balls - past_balls, 0)
+            # dp = np.maximum(curr_potions - past_potions, 0)
+            #
+            # if db > 0:
+            #     mean_cost = int((curr_money-past_money) / db)
+            #
+            # elif dp > 0:
+
 
             rewards.update(**{
                 BLACKOUT: self.game_stats[BLACKOUT][-1],
@@ -963,7 +977,10 @@ class PkmnRedEnv(Env):
 
                 PARTY_HEALTH: int(total_healing > 0),
 
-                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 50),
+                MONEY : int(self.game_stats[MONEY][-1] - self.game_stats[MONEY][-2] > 50
+                            and
+                            curr_coords[-1] not in self.poke_marts
+                            ),
 
                 GOAL_TASK : int(goal_reached)
             })
