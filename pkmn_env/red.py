@@ -719,6 +719,9 @@ class PkmnRedEnv(Env):
                 allowed_actions[2] = 0
             elif curr_x - past_x == -1:
                 allowed_actions[0] = 0
+
+            if self.worker_index == 1:
+                print(curr_x - past_x, curr_y - past_y)
             
         return allowed_actions
 
