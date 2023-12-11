@@ -376,7 +376,7 @@ class PkmnRedEnv(Env):
         self.knn_index.set_ef(200)
         self.knn_index.set_num_threads(1)
 
-    def _get_obs(self, walked):
+    def _get_obs(self, walked=False):
 
         obs = {
             "stats"  :   self.get_observed_stats(walked),
