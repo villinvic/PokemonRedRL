@@ -282,19 +282,19 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.1,
-            SEEN_POKEMONS            :   0.2,
-            TOTAL_EXPERIENCE         :   15.,  # 0.5
+            BLACKOUT                 :   - 0.15,
+            SEEN_POKEMONS            :   0.3,
+            TOTAL_EXPERIENCE         :   16.,  # 0.5
             BADGE_SUM                :   100.,
-            MAPS_VISITED             :   0.2, # 3.
+            MAPS_VISITED             :   0.25, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.0, # TODO : bugged
-            MONEY                    :   5.,
+            MONEY                    :   8.,
             #COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   3.,
 
-            GOAL_TASK                :  0.1,
+            GOAL_TASK                :  0.25,
 
             #ITEMS                    :  0.1,
 
@@ -358,7 +358,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 256
+        self.goal_task_timeout_steps = 512
         self.current_goal = None
         self.task_timesteps = 0
         self.stuck_count = 0
@@ -385,7 +385,7 @@ class PkmnRedEnv(Env):
             environment=self,
             path=self.s_path / "go_explore",
             relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
-            sample_base_state_chance=0.6,
+            sample_base_state_chance=1.0,
             recompute_score_freq=1,
             rendering=not config["headless"] # tests
         )
@@ -420,7 +420,7 @@ class PkmnRedEnv(Env):
                 self.current_goal = (0, 0, -1)
                 self.task_timesteps = self.goal_task_timeout_steps
             else:
-                df = np.random.randint(3, 8) * np.random.choice([-1, 1])
+                df = np.random.randint(4, 8) * np.random.choice([-1, 1])
                 dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
                 dd = [df, dc]
                 np.random.shuffle(dd)

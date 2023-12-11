@@ -8,6 +8,7 @@ from PyQt5.QtGui import QMovie, QPainter, QFont, QFontDatabase, QPixmap, QPalett
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QGridLayout, QGraphicsOpacityEffect, QLayout
 from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtProperty, QPropertyAnimation, QSequentialAnimationGroup, \
     QEasingCurve, QParallelAnimationGroup, QSize, QRect
+from PIL import Image
 
 # TODO : animations
 # badges
@@ -38,7 +39,8 @@ class PokemonAIInterface(QWidget):
 
     def init_ui(self):
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(0, 177, 64))
+        palette.setColor(QPalette.Window, QColor(0, 255, 0))
+        palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
         self.setPalette(palette)
 
         self.setFixedSize(1920, 1080)
@@ -59,13 +61,13 @@ class PokemonAIInterface(QWidget):
         pixmap.setDevicePixelRatio(0.5)
         self.trainer_card_label.setPixmap(pixmap)
         self.trainer_card_label.show()
-        self.trainer_card_label.move(800, 400)
+        self.trainer_card_label.move(1200, 100)
 
-        # self.obs_layout = QLabel(self)
-        # pixmap = QPixmap("obs_interface/assets/ui/layout/rby_deepred_160x144.png")
-        # pixmap.setDevicePixelRatio(1.9)
-        # self.obs_layout.setPixmap(pixmap)
-        # self.obs_layout.show()
+        self.obs_layout = QLabel(self)
+        pixmap = QPixmap("obs_interface/assets/ui/layout/layout.png")
+        pixmap.setDevicePixelRatio(1)
+        self.obs_layout.setPixmap(pixmap)
+        self.obs_layout.show()
         # #self.trainer_card_label.move(800, 400)
 
 
@@ -99,21 +101,21 @@ class PokemonAIInterface(QWidget):
         for i in range(6):
             pokemon_label = QLabel(self)
             pokemon_label.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
-            pokemon_label.setFixedSize(400, 400)
+            pokemon_label.setFixedSize(200, 200)
 
             pokemon_animation_label = QLabel(self)
             pokemon_animation_label.setAlignment(Qt.AlignCenter)
-            pokemon_animation_label.setFixedSize(400, 400)
+            pokemon_animation_label.setFixedSize(200, 200)
 
             pokemon_stats_label = QLabel("", self)
             pokemon_stats_label.setAlignment(Qt.AlignCenter)
-            pokemon_stats_label.setFixedSize(100, 24)
+            pokemon_stats_label.setFixedSize(200, 24)
 
-            x = -6 + i * 50
-            y = 100 + 14 + 128
+            x = -6 + i * 128
+            y = 600 + 14 + 80
             pokemon_label.move(x, y)
             pokemon_animation_label.move(x, y + 40)
-            pokemon_stats_label.move(x, y + 110)
+            pokemon_stats_label.move(x, y + 220)
 
 
             #layout.addWidget(pokemon_label, i // 3 + 1, i % 3)
@@ -163,13 +165,13 @@ class PokemonAIInterface(QWidget):
 
         # Load entrance GIF and play the animation
         pokemon_gif_path = f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif"
+        w, h = Image.open(f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif").size
         pokemon_movie = QMovie(pokemon_gif_path)
-        curr_size = pokemon_movie.scaledSize()
-        print(curr_size.width()*8, curr_size.height()*8)
-        pokemon_movie.setScaledSize(QSize(curr_size.width()*8, curr_size.height()*8))
-
         pokemon_label.setMovie(pokemon_movie)
+        pokemon_movie.setScaledSize(QSize(w*2, h*2))
         pokemon_movie.start()
+
+
 
         entrance_gif_path = 'obs_interface/assets/animations/animation7.gif'
         entrance_movie = QMovie(entrance_gif_path)
@@ -260,7 +262,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     _id = QtGui.QFontDatabase.addApplicationFont("obs_interface/assets/fonts/RBY.ttf")
-    custom_font = QFont("PKMN RBYGSC", 16, 8, False)
+    custom_font = QFont("PKMN RBYGSC", 12, 8, False)
     app.setFont(custom_font, "QLabel")
 
     # Create the GUI window
