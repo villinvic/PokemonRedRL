@@ -376,10 +376,10 @@ class PkmnRedEnv(Env):
         self.knn_index.set_ef(200)
         self.knn_index.set_num_threads(1)
 
-    def _get_obs(self, walked=False):
+    def _get_obs(self):
 
         obs = {
-            "stats"  :   self.get_observed_stats(walked),
+            "stats"  :   self.get_observed_stats(),
             "coordinates": self.get_coordinates(),
             "moved"      : self.get_moved(),
             "allowed_actions": self.get_allowed_actions(),
@@ -451,11 +451,9 @@ class PkmnRedEnv(Env):
         # press button then release after some steps
         console_input = self.valid_actions[action]
         self.pyboy.send_input(console_input)
-        walked = False
         for i in range(self.act_freq):
             # release action, so they are stateless
-            if not walked:
-                walked = self.read_walk_animation() > 0
+
             if i == 8:
 
                 if action < 4:
@@ -480,7 +478,7 @@ class PkmnRedEnv(Env):
         if self.save_video and self.fast_video:
             self.add_video_frame()
 
-        return walked
+
 
     def skippable_battle_frame(self):
         # We skip the frame if we are in battle, have a certain box id open or if we are in the party menu.
@@ -591,7 +589,7 @@ class PkmnRedEnv(Env):
 
         return self.preprocess_screen(screen)
 
-    def get_observed_stats(self, walked):
+    def get_observed_stats(self):
         """
         We want to observe:
             - screen
@@ -661,7 +659,7 @@ class PkmnRedEnv(Env):
         curr_coords = pos + [map_id]
         self.game_stats[COORDINATES].append(curr_coords)
 
-        if walked:
+        if len(self.last_walked_coordinates) == 0 or curr_coords != self.last_walked_coordinates[-1]:
             self.last_walked_coordinates.append(curr_coords)
 
         # x, y = pos
@@ -728,8 +726,8 @@ class PkmnRedEnv(Env):
         
     def step(self, action):
 
-        walked = self.run_action_on_emulator(action)
-        obs = self._get_obs(walked)
+        self.run_action_on_emulator(action)
+        obs = self._get_obs()
         self.step_count += 1
 
         reward = self.get_game_state_reward()
