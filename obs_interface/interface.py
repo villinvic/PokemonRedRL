@@ -4,7 +4,7 @@ import time
 
 import zmq
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import QMovie, QPainter, QFont, QFontDatabase, QPixmap
+from PyQt5.QtGui import QMovie, QPainter, QFont, QFontDatabase, QPixmap, QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QGridLayout, QGraphicsOpacityEffect, QLayout
 from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtProperty, QPropertyAnimation, QSequentialAnimationGroup, \
     QEasingCurve, QParallelAnimationGroup, QSize, QRect
@@ -37,17 +37,36 @@ class PokemonAIInterface(QWidget):
         self.pokemon_ids = [0] * 6
 
     def init_ui(self):
-        self.setFixedSize(1280, 720)
+        palette = self.palette()
+        palette.setColor(QPalette.Window, QColor(0, 177, 64))
+        self.setPalette(palette)
+
+        self.setFixedSize(1920, 1080)
         # Set up the layout
 
+        self.game_placeholder = QLabel(self)
+        #self.game_placeholder.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.game_placeholder.move(14, 14)
+        pixmap = QPixmap("obs_interface/assets/test/game_sample.jpeg")
+        pixmap.setDevicePixelRatio(0.25)
+        self.game_placeholder.setPixmap(pixmap)
+        self.game_placeholder.show()
+
         self.trainer_card_label = QLabel(self)
-        self.trainer_card_label.setFixedSize(600, 800)
+        #self.trainer_card_label.setFixedSize(600, 800)
 
         pixmap = QPixmap("obs_interface/assets/ui/trainer_card/trainer_card_0_badges.png")
         pixmap.setDevicePixelRatio(0.5)
         self.trainer_card_label.setPixmap(pixmap)
         self.trainer_card_label.show()
-        #self.trainer_card_label.move(400, 400)
+        self.trainer_card_label.move(800, 400)
+
+        # self.obs_layout = QLabel(self)
+        # pixmap = QPixmap("obs_interface/assets/ui/layout/rby_deepred_160x144.png")
+        # pixmap.setDevicePixelRatio(1.9)
+        # self.obs_layout.setPixmap(pixmap)
+        # self.obs_layout.show()
+        # #self.trainer_card_label.move(800, 400)
 
 
 
@@ -109,10 +128,11 @@ class PokemonAIInterface(QWidget):
 
         # Set window properties
         self.setWindowTitle('Pokemon AI Interface')
-        self.setGeometry(100, 100, 1280, 720)
+        self.setGeometry(100, 100, 1920, 1080)
 
     def update_data(self, data):
         # Update episode information labels
+
         self.episode_label.setText(f'Episode: {data["episode_id"]}')
         self.score_label.setText(f'Score: {data["score"]}')
         self.total_exp_label.setText(f'Total Exp: {data["total_exp"]}')

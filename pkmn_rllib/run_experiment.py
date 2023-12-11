@@ -65,8 +65,8 @@ config = VmpoConfig().training(
     grad_clip=1.,
     opt_type="rmsprop",
     train_batch_size=8096//2,
-    num_sgd_iter=4,
-    minibatch_buffer_size=16,
+    #num_sgd_iter=4,
+    #minibatch_buffer_size=16,
     gamma=0.997,
     model={
         "custom_model": "pokemon_lstm_model",

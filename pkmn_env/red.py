@@ -102,8 +102,10 @@ class PkmnRedEnv(Env):
         CAUGHT_POKEMONS,
         TOTAL_BLACKOUT,
         TOTAL_EVENTS_TRIGGERED,
-        NUM_BALLS,
-        NUM_HEALING_ITEMS
+        NUM_BALLS_USED,
+        NUM_HEALING_ITEMS_USED,
+        NUM_BALLS_BOUGHT,
+        NUM_HEALING_ITEMS_BOUGHT,
     )
 
     def __init__(
@@ -236,7 +238,7 @@ class PkmnRedEnv(Env):
             ),
             VariableGetter(
                 name=LEVEL_FRAQ,
-                scale=0.1,
+                scale=0.5,
                 post_process_fn=lambda x: np.maximum(x, 2.)
             ),
             VariableGetter(
@@ -282,7 +284,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             BLACKOUT                 :   - 0.1,
             SEEN_POKEMONS            :   0.2,
-            TOTAL_EXPERIENCE         :   20.,  # 0.5
+            TOTAL_EXPERIENCE         :   15.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.2, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.0, # TODO : bugged
@@ -383,7 +385,7 @@ class PkmnRedEnv(Env):
             environment=self,
             path=self.s_path / "go_explore",
             relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
-            sample_base_state_chance=0.9,
+            sample_base_state_chance=0.6,
             recompute_score_freq=1,
             rendering=not config["headless"] # tests
         )
@@ -645,8 +647,21 @@ class PkmnRedEnv(Env):
         self.game_stats[TOTAL_EXPERIENCE].append(sum(party_experience))
 
         num_balls, num_healing_items = self.read_inventory()
+        dballs = num_balls - self.game_stats[NUM_BALLS][-1]
+        dhealing_items = num_healing_items - self.game_stats[NUM_HEALING_ITEMS][-1]
+        prev_count = 0 if self.step_count == 0 else self.game_stats[NUM_BALLS_USED][-1]
+        self.game_stats[NUM_BALLS_USED].append(prev_count + np.maximum(0, -dballs))
+        prev_count = 0 if self.step_count == 0 else self.game_stats[NUM_BALLS_BOUGHT][-1]
+        self.game_stats[NUM_BALLS_BOUGHT].append(prev_count + np.maximum(0, dballs))
+
+        prev_count = 0 if self.step_count == 0 else self.game_stats[NUM_HEALING_ITEMS_USED][-1]
+        self.game_stats[NUM_HEALING_ITEMS_USED].append(prev_count + np.maximum(0, -dhealing_items))
+        prev_count = 0 if self.step_count == 0 else self.game_stats[NUM_HEALING_ITEMS_BOUGHT][-1]
+        self.game_stats[NUM_HEALING_ITEMS_BOUGHT].append(prev_count + np.maximum(0, dhealing_items))
+
         self.game_stats[NUM_BALLS].append(num_balls)
         self.game_stats[NUM_HEALING_ITEMS].append(num_healing_items)
+
 
         badges = self.read_badges()
         self.game_stats[BADGES].append(badges)
