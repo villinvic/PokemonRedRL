@@ -647,8 +647,14 @@ class PkmnRedEnv(Env):
         self.game_stats[TOTAL_EXPERIENCE].append(sum(party_experience))
 
         num_balls, num_healing_items = self.read_inventory()
-        dballs = num_balls - self.game_stats[NUM_BALLS][-1]
-        dhealing_items = num_healing_items - self.game_stats[NUM_HEALING_ITEMS][-1]
+        if self.step_count == 0:
+            dballs = 0
+            dhealing_items = 0
+        else:
+
+            dballs = num_balls - self.game_stats[NUM_BALLS][-1]
+            dhealing_items = num_healing_items - self.game_stats[NUM_HEALING_ITEMS][-1]
+
         prev_count = 0 if self.step_count == 0 else self.game_stats[NUM_BALLS_USED][-1]
         self.game_stats[NUM_BALLS_USED].append(prev_count + np.maximum(0, -dballs))
         prev_count = 0 if self.step_count == 0 else self.game_stats[NUM_BALLS_BOUGHT][-1]

@@ -48,7 +48,7 @@ class PokemonAIInterface(QWidget):
         #self.game_placeholder.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.game_placeholder.move(14, 14)
         pixmap = QPixmap("obs_interface/assets/test/game_sample.jpeg")
-        pixmap.setDevicePixelRatio(0.25)
+        pixmap.setDevicePixelRatio(0.2)
         self.game_placeholder.setPixmap(pixmap)
         self.game_placeholder.show()
 
@@ -99,18 +99,18 @@ class PokemonAIInterface(QWidget):
         for i in range(6):
             pokemon_label = QLabel(self)
             pokemon_label.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
-            pokemon_label.setFixedSize(100, 100)
+            pokemon_label.setFixedSize(400, 400)
 
             pokemon_animation_label = QLabel(self)
             pokemon_animation_label.setAlignment(Qt.AlignCenter)
-            pokemon_animation_label.setFixedSize(100, 100)
+            pokemon_animation_label.setFixedSize(400, 400)
 
             pokemon_stats_label = QLabel("", self)
             pokemon_stats_label.setAlignment(Qt.AlignCenter)
             pokemon_stats_label.setFixedSize(100, 24)
 
             x = -6 + i * 50
-            y = 50
+            y = 100 + 14 + 128
             pokemon_label.move(x, y)
             pokemon_animation_label.move(x, y + 40)
             pokemon_stats_label.move(x, y + 110)
@@ -164,6 +164,9 @@ class PokemonAIInterface(QWidget):
         # Load entrance GIF and play the animation
         pokemon_gif_path = f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif"
         pokemon_movie = QMovie(pokemon_gif_path)
+        curr_size = pokemon_movie.scaledSize()
+        pokemon_movie.setScaledSize(QSize(curr_size.width()*8, curr_size.height()*8))
+
         pokemon_label.setMovie(pokemon_movie)
         pokemon_movie.start()
 
@@ -256,7 +259,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     _id = QtGui.QFontDatabase.addApplicationFont("obs_interface/assets/fonts/RBY.ttf")
-    custom_font = QFont("PKMN RBYGSC", 8, 8, False)
+    custom_font = QFont("PKMN RBYGSC", 16, 8, False)
     app.setFont(custom_font, "QLabel")
 
     # Create the GUI window
