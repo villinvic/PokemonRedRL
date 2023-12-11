@@ -165,6 +165,7 @@ class PokemonAIInterface(QWidget):
         pokemon_gif_path = f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif"
         pokemon_movie = QMovie(pokemon_gif_path)
         curr_size = pokemon_movie.scaledSize()
+        print(curr_size.width()*8, curr_size.height()*8)
         pokemon_movie.setScaledSize(QSize(curr_size.width()*8, curr_size.height()*8))
 
         pokemon_label.setMovie(pokemon_movie)
