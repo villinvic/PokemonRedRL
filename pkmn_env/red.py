@@ -871,7 +871,7 @@ class PkmnRedEnv(Env):
         if self.step_count >= 4:
             curr_coords = tuple(self.game_stats[COORDINATES][-1])
             past_coords = tuple(self.game_stats[COORDINATES][-2])
-            if not self.game_stats[IN_BATTLE] and curr_coords == past_coords:
+            if not self.game_stats[IN_BATTLE][-1] and curr_coords == past_coords:
                 self.stuck_count += 1
             else:
                 self.stuck_count = 0
