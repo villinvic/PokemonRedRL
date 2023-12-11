@@ -709,12 +709,12 @@ class PkmnRedEnv(Env):
 
             if curr_y - past_y == 1:
                 allowed_actions[3] = 0
-            elif curr_y - past_y == 1:
+            elif curr_y - past_y == -1:
+                allowed_actions[0] = 0
+            elif curr_x - past_x == 1:
                 allowed_actions[1] = 0
             elif curr_x - past_x == -1:
                 allowed_actions[2] = 0
-            elif curr_x - past_x == -1:
-                allowed_actions[0] = 0
             
         return allowed_actions
 
