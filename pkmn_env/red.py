@@ -324,10 +324,8 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.max_steps_noised = 0
         self.episode_reward = 0
-        self.visited_maps = {37, 38, 39, 40}  # red (first and second floor) and blue houses
         self.visited_coordinates = defaultdict(lambda: 0)
         self.entrance_coords = (5, 3, 40)
-        self.latest_opp_level = 5
         self.last_reward_dict = {}
         self.last_walked_coordinates = []
         self.full_frame_writer = None
@@ -342,17 +340,17 @@ class PkmnRedEnv(Env):
 
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
-            latest_opp_level=self.latest_opp_level,
-            visited_maps=self.visited_maps
+            latest_opp_level=3,
+            visited_maps={37, 38, 39, 40}  # red (first and second floor) and blue houses
         )
 
         if config["headless"]:
             # we are not rendering the game live
-            self.act_freq = 18
+            self.act_freq = 19
 
         else:
 
-            self.act_freq = 18
+            self.act_freq = 19
 
         self.go_explore = GoExplorePokemon(
             environment=self,

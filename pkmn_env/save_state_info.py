@@ -20,8 +20,8 @@ class PokemonStateInfo:
 
         return {
             "save_path": self.save_path,
-            "latest_opp_level": self.latest_opp_level,
-            "visited_maps": self.visited_maps
+            "latest_opp_level": copy(self.latest_opp_level),
+            "visited_maps": self.visited_maps.copy()
         }
 
     def get_save_path(self):
