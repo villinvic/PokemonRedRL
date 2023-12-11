@@ -301,7 +301,8 @@ class PkmnRedEnv(Env):
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
             #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
             "coordinates": spaces.Box(low=0, high=255, shape=(1,), dtype=np.uint8),
-            "moved": spaces.Box(low=0, high=1, shape=(1,), dtype=np.uint8)
+            "moved": spaces.Box(low=0, high=1, shape=(1,), dtype=np.uint8),
+            "allowed_actions": spaces.Box(low=0, high=1, shape=(self.action_space.n,), dtype=np.uint8),
 
         })
 
@@ -381,6 +382,7 @@ class PkmnRedEnv(Env):
             "stats"  :   self.get_observed_stats(),
             "coordinates": self.get_coordinates(),
             "moved"      : self.get_moved(),
+            "allowed_actions": self.get_allowed_actions(),
         }
 
         if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
@@ -696,7 +698,28 @@ class PkmnRedEnv(Env):
     def get_moved(self):
         walked = False if self.step_count < 2 else self.game_stats[COORDINATES][-1] != self.game_stats[COORDINATES][-2]
         return np.array([walked], dtype=np.uint8)
+    
+    def get_allowed_actions(self):
+        allowed_actions = np.ones(self.action_space.n, dtype=np.uint8)
+        
+        if not self.game_stats[IN_BATTLE][-1]:
+        
+            # Does not handle map changes
+            curr_x, curr_y, _ = self.last_walked_coordinates[-1]
+            past_x, past_y, past_map = self.last_walked_coordinates[-2]
 
+            if curr_y - past_y == 1:
+                allowed_actions[3] = 0
+            elif curr_y - past_y == 1:
+                allowed_actions[1] = 0
+            elif curr_x - past_x == -1:
+                allowed_actions[2] = 0
+            elif curr_x - past_x == -1:
+                allowed_actions[0] = 0
+            
+        return allowed_actions
+
+        
     def step(self, action):
 
         walked = self.run_action_on_emulator(action)
