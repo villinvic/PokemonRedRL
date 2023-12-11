@@ -376,10 +376,10 @@ class PkmnRedEnv(Env):
         self.knn_index.set_ef(200)
         self.knn_index.set_num_threads(1)
 
-    def _get_obs(self):
+    def _get_obs(self, walked):
 
         obs = {
-            "stats"  :   self.get_observed_stats(),
+            "stats"  :   self.get_observed_stats(walked),
             "coordinates": self.get_coordinates(),
             "moved"      : self.get_moved(),
             "allowed_actions": self.get_allowed_actions(),
@@ -591,7 +591,7 @@ class PkmnRedEnv(Env):
 
         return self.preprocess_screen(screen)
 
-    def get_observed_stats(self):
+    def get_observed_stats(self, walked):
         """
         We want to observe:
             - screen
@@ -658,8 +658,11 @@ class PkmnRedEnv(Env):
         self.game_stats[MAPS_VISITED].append(len(tmp))
 
         pos = self.read_pos()
+        curr_coords = pos + [map_id]
+        self.game_stats[COORDINATES].append(curr_coords)
 
-        self.game_stats[COORDINATES].append(pos + [map_id])
+        if walked:
+            self.last_walked_coordinates.append(curr_coords)
 
         # x, y = pos
         # x2, y2, _ = self.entrance_coords
@@ -723,10 +726,10 @@ class PkmnRedEnv(Env):
     def step(self, action):
 
         walked = self.run_action_on_emulator(action)
-        obs = self._get_obs()
+        obs = self._get_obs(walked)
         self.step_count += 1
 
-        reward = self.get_game_state_reward(obs, walked)
+        reward = self.get_game_state_reward()
         self.episode_reward += reward
 
         self.maximum_experience_in_party_so_far = np.maximum(
@@ -825,7 +828,7 @@ class PkmnRedEnv(Env):
         self.reset_count += 1
         self.max_steps *= self.additional_steps_per_episode
 
-    def get_game_state_reward(self, obs, walked):
+    def get_game_state_reward(self):
         """
         proposed reward function:
             - knn (reset every important event, hopefully)
@@ -849,8 +852,6 @@ class PkmnRedEnv(Env):
             if goal_reached:
                 self.task_timesteps = self.goal_task_timeout_steps
 
-            if walked:
-                self.last_walked_coordinates.append(curr_coords)
             #
             # if (
             #         self.entrance_coords is None
