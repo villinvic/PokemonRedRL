@@ -702,7 +702,7 @@ class PkmnRedEnv(Env):
     def get_allowed_actions(self):
         allowed_actions = np.ones(self.action_space.n, dtype=np.uint8)
         
-        if not self.game_stats[IN_BATTLE][-1]:
+        if self.step_count > 1 and not self.game_stats[IN_BATTLE][-1]:
         
             # Does not handle map changes
             curr_x, curr_y, _ = self.last_walked_coordinates[-1]
