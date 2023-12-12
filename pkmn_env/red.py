@@ -753,7 +753,7 @@ class PkmnRedEnv(Env):
     def get_allowed_actions(self):
         allowed_actions = np.ones(self.action_space.n, dtype=np.uint8)
         
-        if self.stuck_count < 64 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
+        if self.stuck_count < 8 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
             # Does not handle map changes
             curr_x, curr_y, map_id = self.last_walked_coordinates[-1]
             forbidden_locations = self.last_walked_coordinates[-7: -1]
