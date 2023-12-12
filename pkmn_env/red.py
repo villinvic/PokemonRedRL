@@ -283,11 +283,11 @@ class PkmnRedEnv(Env):
 
         self.reward_function_config = {
             BLACKOUT                 :   - 0.05,
-            SEEN_POKEMONS            :   0.3,
+            SEEN_POKEMONS            :   0.1,
             TOTAL_EXPERIENCE         :   16.,  # 0.5
             BADGE_SUM                :   100.,
-            MAPS_VISITED             :   0.25, # 3.
-            TOTAL_EVENTS_TRIGGERED   :   0.0, # TODO : bugged
+            MAPS_VISITED             :   0.05, # 3.
+            TOTAL_EVENTS_TRIGGERED   :   0.03, # TODO : bugged
             MONEY                    :   8.,
             #COORDINATES              :   - 5e-4,
             # COORDINATES + "_NEG"     :   0.003 * 0.9,
@@ -674,9 +674,9 @@ class PkmnRedEnv(Env):
         self.game_stats[BADGE_SUM].append(sum(badges))
         self.game_stats[SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[CAUGHT_POKEMONS].append(self.read_caught())
-        event_flag_indices = self.read_extensive_events()
-        self.game_stats[TOTAL_EVENTS_TRIGGERED].append(len(event_flag_indices))
-        self.game_stats[EVENTS_TRIGGERED].append(event_flag_indices)
+        total_events = sum(self.read_events())
+        self.game_stats[TOTAL_EVENTS_TRIGGERED].append(total_events)
+        #self.game_stats[EVENTS_TRIGGERED].append(event_flag_indices)
         # self.triggered_event_flags[event_flag_indices] = 1
         self.game_stats[PARTY_FILLS].append(self.read_party_fills())
         self.game_stats[SENT_OUT].append(self.read_sent_out())
@@ -922,7 +922,7 @@ class PkmnRedEnv(Env):
                         (self.game_stats[PARTY_EXPERIENCE][-1][i]
                         - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
                         , 0.
-                    ) / highest_party_level**3
+                    ) / highest_party_level**2 # **3 encourage going further
 
             if not any(self.game_stats[BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
                 for i in range(6):
@@ -952,17 +952,16 @@ class PkmnRedEnv(Env):
             rewards.update(**{
                 BLACKOUT: self.game_stats[BLACKOUT][-1],
                 BADGE_SUM: (
-                    np.maximum(self.game_stats[BADGE_SUM][-1] - self.game_stats[BADGE_SUM][-2], 0.)
+                    np.maximum(self.game_stats[BADGE_SUM][-1] - self.game_stats[BADGE_SUM][-2], 0.) * (self.game_stats[BADGE_SUM][-2] + 1)
                 ),
                 TOTAL_EXPERIENCE: total_delta_exp,
                 SEEN_POKEMONS : (
                     np.maximum(self.game_stats[SEEN_POKEMONS][-1] - self.game_stats[SEEN_POKEMONS][-2],
-                               0.)
+                               0.) * (self.game_stats[SEEN_POKEMONS][-2])
                 ),
                 TOTAL_EVENTS_TRIGGERED: (
                         np.minimum(self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
-                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2], 0)
-                      #                       * (self.game_stats[EVENTS_TRIGGERED][-1] - 11
+                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2], 0) * (self.game_stats[EVENTS_TRIGGERED][-1] - 11)
                 ),
 
                 MAPS_VISITED: (
@@ -979,7 +978,7 @@ class PkmnRedEnv(Env):
                 #     and
                 #     12 not in self.visited_maps
                 # )
-                (self.game_stats[MAPS_VISITED][-1] - self.game_stats[MAPS_VISITED][-2])
+                (self.game_stats[MAPS_VISITED][-1] - self.game_stats[MAPS_VISITED][-2]) * self.game_stats[MAPS_VISITED][-2]
                 #* self.game_stats[MAPS_VISITED][-1]
                 ),
 
