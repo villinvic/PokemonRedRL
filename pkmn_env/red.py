@@ -961,7 +961,7 @@ class PkmnRedEnv(Env):
                 ),
                 TOTAL_EVENTS_TRIGGERED: (
                         np.minimum(self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
-                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2], 0) * (self.game_stats[EVENTS_TRIGGERED][-1] - 11)
+                        - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2], 0) * (self.game_stats[TOTAL_EVENTS_TRIGGERED][-1] - 11)
                 ),
 
                 MAPS_VISITED: (
