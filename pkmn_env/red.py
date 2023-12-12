@@ -755,17 +755,27 @@ class PkmnRedEnv(Env):
         
         if self.stuck_count < 64 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
             # Does not handle map changes
-            curr_x, curr_y, _ = self.last_walked_coordinates[-1]
-            past_x, past_y, past_map = self.last_walked_coordinates[-2]
+            curr_x, curr_y, map_id = self.last_walked_coordinates[-1]
+            forbidden_locations = self.last_walked_coordinates[-7: -1]
+            #past_x, past_y, past_map = self.last_walked_coordinates[-2]
 
-            if curr_y - past_y == 1:
+            if [curr_x, curr_y - 1, map_id] in forbidden_locations:
                 allowed_actions[3] = 0
-            elif curr_y - past_y == -1:
+            if [curr_x, curr_y + 1, map_id] in forbidden_locations:
                 allowed_actions[0] = 0
-            elif curr_x - past_x == 1:
+            if [curr_x - 1, curr_y, map_id] in forbidden_locations:
                 allowed_actions[1] = 0
-            elif curr_x - past_x == -1:
+            if [curr_x + 1, curr_y, map_id] in forbidden_locations:
                 allowed_actions[2] = 0
+
+            # if curr_y - past_y == 1:
+            #     allowed_actions[3] = 0
+            # elif curr_y - past_y == -1:
+            #     allowed_actions[0] = 0
+            # elif curr_x - past_x == 1:
+            #     allowed_actions[1] = 0
+            # elif curr_x - past_x == -1:
+            #     allowed_actions[2] = 0
             
         return allowed_actions
 
