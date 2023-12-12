@@ -48,7 +48,7 @@ class PokemonAIInterface(QWidget):
 
         self.game_placeholder = QLabel(self)
         #self.game_placeholder.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.game_placeholder.move(14, 14)
+        self.game_placeholder.move(32, 32)
         pixmap = QPixmap("obs_interface/assets/test/game_sample.jpeg")
         pixmap.setDevicePixelRatio(0.2)
         self.game_placeholder.setPixmap(pixmap)
@@ -100,7 +100,7 @@ class PokemonAIInterface(QWidget):
 
         for i in range(6):
             pokemon_label = QLabel(self)
-            pokemon_label.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
+            pokemon_label.setAlignment(Qt.AlignCenter)
             pokemon_label.setFixedSize(200, 200)
 
             pokemon_animation_label = QLabel(self)
@@ -108,14 +108,15 @@ class PokemonAIInterface(QWidget):
             pokemon_animation_label.setFixedSize(200, 200)
 
             pokemon_stats_label = QLabel("", self)
-            pokemon_stats_label.setAlignment(Qt.AlignCenter)
+            #pokemon_stats_label.setStyleSheet()
+            pokemon_stats_label.setAlignment(Qt.AlignLeft)
             pokemon_stats_label.setFixedSize(200, 24)
 
-            x = -6 + i * 128
-            y = 600 + 14 + 80
+            y = i * 128
+            x = 840
             pokemon_label.move(x, y)
             pokemon_animation_label.move(x, y + 40)
-            pokemon_stats_label.move(x, y + 220)
+            pokemon_stats_label.move(x + 182, y + 72)
 
 
             #layout.addWidget(pokemon_label, i // 3 + 1, i % 3)
@@ -150,7 +151,8 @@ class PokemonAIInterface(QWidget):
                 self.pokemon_labels[i].clear()
             elif pokemon_id != 0 and self.pokemon_ids[i] == 0:
                 # pokemon added to party
-                self.animate_pokemon_entrance(pokemon_id, i)
+                self.show_pokemon(pokemon_id, i)
+
             elif pokemon_id != self.pokemon_ids[i]:
                 # changed pokemon at idx i : TODO
                 self.load_and_display_gif(pokemon_id, self.pokemon_labels[i])
@@ -158,80 +160,87 @@ class PokemonAIInterface(QWidget):
             self.pokemon_ids[i] = pokemon_id
 
 
-    def animate_pokemon_entrance(self, new_pokemon_id, idx):
+    def show_pokemon(self, new_pokemon_id, idx):
 
-        pokemon_label = self.pokemon_labels[idx]
-        animation_label = self.pokemon_animation_labels[idx]
+        pixmap = QPixmap(f"obs_interface/assets/sprites/rby/{new_pokemon_id}.png")
+        pixmap.setDevicePixelRatio(0.75)
+        self.pokemon_labels[idx].setPixmap(pixmap)
+        self.pokemon_labels[idx].show()
 
-        # Load entrance GIF and play the animation
-        pokemon_gif_path = f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif"
-        w, h = Image.open(f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif").size
-        pokemon_movie = QMovie(pokemon_gif_path)
-        pokemon_label.setMovie(pokemon_movie)
-        pokemon_movie.setScaledSize(QSize(w*2, h*2))
-        pokemon_movie.start()
-
-
-
-        entrance_gif_path = 'obs_interface/assets/animations/animation7.gif'
-        entrance_movie = QMovie(entrance_gif_path)
-        entrance_movie.setSpeed(200)
-        animation_label.setMovie(entrance_movie)
-        entrance_movie.start()
-
-        # Create a fade-out animation for the entrance GIF
-        animation_effect = QGraphicsOpacityEffect()
-        animation_label.setGraphicsEffect(animation_effect)
-        wait_animation = QPropertyAnimation(animation_effect, b"opacity")
-        wait_animation.setStartValue(1.0)
-        wait_animation.setEndValue(1.0)
-        wait_animation.setDuration(600)
-        fade_out_animation = QPropertyAnimation(animation_effect, b"opacity")
-        fade_out_animation.setStartValue(1.0)
-        fade_out_animation.setEndValue(0.0)
-        #fade_out_animation.setEasingCurve(QEasingCurve.InCubic)
-        fade_out_animation.setDuration(200)
-        pokeball_thrown_animation_full_animation = QSequentialAnimationGroup(self)
-        pokeball_thrown_animation_full_animation.addAnimation(wait_animation)
-        pokeball_thrown_animation_full_animation.addAnimation(fade_out_animation)
-
-        # Create a fade-in animation for the Pokémon appearance
-        pokemon_effect = QGraphicsOpacityEffect()
-        pokemon_label.setGraphicsEffect(pokemon_effect)
-        wait_animation = QPropertyAnimation(pokemon_effect, b"opacity")
-        wait_animation.setStartValue(0.0)
-        wait_animation.setEndValue(0.0)
-        wait_animation.setDuration(600)
-
-        fade_in_animation = QPropertyAnimation(pokemon_effect, b"opacity")
-        fade_in_animation.setStartValue(0.0)
-        fade_in_animation.setEndValue(1.0)
-        fade_in_animation.setDuration(200)
-
-        # Wont work because widget has fixed size
-
-        spawn_pokemon_full_animation = QSequentialAnimationGroup(self)
-        spawn_pokemon_full_animation.addAnimation(wait_animation)
-        spawn_pokemon_full_animation.addAnimation(fade_in_animation)
-
-        # Set up animation groups for concurrent execution
-        parallel_group = QParallelAnimationGroup(self)
-        parallel_group.addAnimation(pokeball_thrown_animation_full_animation)
-        parallel_group.addAnimation(spawn_pokemon_full_animation)
-
-        parallel_group.start()
-
-
-    def load_and_display_gif(self, pokemon_id, label):
-        try:
-            # Load the new Pokémon gif
-            gif_path = f"obs_interface/assets/sprites/ani_bw_{pokemon_id:03d}.gif"
-            movie = QMovie(gif_path)
-            label.setMovie(movie)
-            movie.start()
-
-        except Exception as e:
-            print(f"Error loading gif: {e}")
+    # def animate_pokemon_entrance(self, new_pokemon_id, idx):
+    #
+    #     pokemon_label = self.pokemon_labels[idx]
+    #     animation_label = self.pokemon_animation_labels[idx]
+    #
+    #     # Load entrance GIF and play the animation
+    #     pokemon_gif_path = f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif"
+    #     w, h = Image.open(f"obs_interface/assets/sprites/ani_bw_{new_pokemon_id:03d}.gif").size
+    #     pokemon_movie = QMovie(pokemon_gif_path)
+    #     pokemon_label.setMovie(pokemon_movie)
+    #     pokemon_movie.setScaledSize(QSize(w*2, h*2))
+    #     pokemon_movie.start()
+    #
+    #
+    #
+    #     entrance_gif_path = 'obs_interface/assets/animations/animation7.gif'
+    #     entrance_movie = QMovie(entrance_gif_path)
+    #     entrance_movie.setSpeed(200)
+    #     animation_label.setMovie(entrance_movie)
+    #     entrance_movie.start()
+    #
+    #     # Create a fade-out animation for the entrance GIF
+    #     animation_effect = QGraphicsOpacityEffect()
+    #     animation_label.setGraphicsEffect(animation_effect)
+    #     wait_animation = QPropertyAnimation(animation_effect, b"opacity")
+    #     wait_animation.setStartValue(1.0)
+    #     wait_animation.setEndValue(1.0)
+    #     wait_animation.setDuration(600)
+    #     fade_out_animation = QPropertyAnimation(animation_effect, b"opacity")
+    #     fade_out_animation.setStartValue(1.0)
+    #     fade_out_animation.setEndValue(0.0)
+    #     #fade_out_animation.setEasingCurve(QEasingCurve.InCubic)
+    #     fade_out_animation.setDuration(200)
+    #     pokeball_thrown_animation_full_animation = QSequentialAnimationGroup(self)
+    #     pokeball_thrown_animation_full_animation.addAnimation(wait_animation)
+    #     pokeball_thrown_animation_full_animation.addAnimation(fade_out_animation)
+    #
+    #     # Create a fade-in animation for the Pokémon appearance
+    #     pokemon_effect = QGraphicsOpacityEffect()
+    #     pokemon_label.setGraphicsEffect(pokemon_effect)
+    #     wait_animation = QPropertyAnimation(pokemon_effect, b"opacity")
+    #     wait_animation.setStartValue(0.0)
+    #     wait_animation.setEndValue(0.0)
+    #     wait_animation.setDuration(600)
+    #
+    #     fade_in_animation = QPropertyAnimation(pokemon_effect, b"opacity")
+    #     fade_in_animation.setStartValue(0.0)
+    #     fade_in_animation.setEndValue(1.0)
+    #     fade_in_animation.setDuration(200)
+    #
+    #     # Wont work because widget has fixed size
+    #
+    #     spawn_pokemon_full_animation = QSequentialAnimationGroup(self)
+    #     spawn_pokemon_full_animation.addAnimation(wait_animation)
+    #     spawn_pokemon_full_animation.addAnimation(fade_in_animation)
+    #
+    #     # Set up animation groups for concurrent execution
+    #     parallel_group = QParallelAnimationGroup(self)
+    #     parallel_group.addAnimation(pokeball_thrown_animation_full_animation)
+    #     parallel_group.addAnimation(spawn_pokemon_full_animation)
+    #
+    #     parallel_group.start()
+    #
+    #
+    # def load_and_display_gif(self, pokemon_id, label):
+    #     try:
+    #         # Load the new Pokémon gif
+    #         gif_path = f"obs_interface/assets/sprites/ani_bw_{pokemon_id:03d}.gif"
+    #         movie = QMovie(gif_path)
+    #         label.setMovie(movie)
+    #         movie.start()
+    #
+    #     except Exception as e:
+    #         print(f"Error loading gif: {e}")
 
 
 # Define a thread to read data from the named pipe
@@ -262,7 +271,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     _id = QtGui.QFontDatabase.addApplicationFont("obs_interface/assets/fonts/RBY.ttf")
-    custom_font = QFont("PKMN RBYGSC", 12, 8, False)
+    custom_font = QFont("PKMN RBYGSC", 14, 32, False)
     app.setFont(custom_font, "QLabel")
 
     # Create the GUI window

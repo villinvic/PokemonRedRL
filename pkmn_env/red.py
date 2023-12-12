@@ -282,7 +282,7 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.15,
+            BLACKOUT                 :   - 0.05,
             SEEN_POKEMONS            :   0.3,
             TOTAL_EXPERIENCE         :   16.,  # 0.5
             BADGE_SUM                :   100.,
@@ -420,7 +420,7 @@ class PkmnRedEnv(Env):
                 self.current_goal = (0, 0, -1)
                 self.task_timesteps = self.goal_task_timeout_steps
             else:
-                df = np.random.randint(4, 8) * np.random.choice([-1, 1])
+                df = np.random.randint(3, 7) * np.random.choice([-1, 1])
                 dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
                 dd = [df, dc]
                 np.random.shuffle(dd)
@@ -753,7 +753,7 @@ class PkmnRedEnv(Env):
     def get_allowed_actions(self):
         allowed_actions = np.ones(self.action_space.n, dtype=np.uint8)
         
-        if self.stuck_count < 128 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
+        if self.stuck_count < 64 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
             # Does not handle map changes
             curr_x, curr_y, _ = self.last_walked_coordinates[-1]
             past_x, past_y, past_map = self.last_walked_coordinates[-2]
