@@ -960,7 +960,7 @@ class PkmnRedEnv(Env):
                                0.) * (self.game_stats[SEEN_POKEMONS][-2])
                 ),
                 TOTAL_EVENTS_TRIGGERED: (
-                        np.minimum(self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
+                        np.maximum(self.game_stats[TOTAL_EVENTS_TRIGGERED][-1]
                         - self.game_stats[TOTAL_EVENTS_TRIGGERED][-2], 0) * (self.game_stats[TOTAL_EVENTS_TRIGGERED][-2] - 10)
                 ),
 
