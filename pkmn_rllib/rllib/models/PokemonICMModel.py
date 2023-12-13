@@ -183,10 +183,10 @@ class PokemonICMModel(TFModelV2):
                 activation="relu",
             )(state_prediction_fc1)
 
-            self.icm_forward_model = tf.keras.Model(
-                [screen_input, stats_input],
-                [curr_state_embedding]
-            )
+            # self.icm_forward_model = tf.keras.Model(
+            #     [screen_input, stats_input],
+            #     [curr_state_embedding]
+            # )
 
             self.icm_prediction_model = tf.keras.Model(
             [screen_input, next_screen_input, stats_input, next_stats_input,
@@ -228,7 +228,7 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
+        return tf.math.square(tf.stop_gradient(self.icm_next_state_embedding) - self.icm_state_predictions) * 0.5
 
     def action_prediction_loss(self):
         return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
