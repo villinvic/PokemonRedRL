@@ -149,8 +149,8 @@ class VmpoPolicy(
     def make_model(self) -> ModelV2:
 
         model_config= {
-            "learner_bound": self.learner_bound,
 
+            "learner_bound": self.learner_bound,
             **self.config["model"]
         }
 
@@ -236,7 +236,7 @@ class VmpoPolicy(
         state_prediction_loss = self.model.state_prediction_loss()
         action_prediction_loss = self.model.action_prediction_loss()
 
-        intrinsic_rewards = tf.expand_dims(state_prediction_loss * self.model.curiosity_reward_scale, axis=1)
+        intrinsic_rewards = tf.reduce_mean(state_prediction_loss * self.model.curiosity_reward_scale, axis=1, keepdims=True)
         rewards = rewards + tf.stop_gradient(intrinsic_rewards)
 
         self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
