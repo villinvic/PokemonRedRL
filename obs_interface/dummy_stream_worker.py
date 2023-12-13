@@ -21,11 +21,12 @@ def send_dummy_data():
     total_exp = 0
     pokemons = [33, 0, 0, 0, 0, 0]
     pokemon_levels = [6, 0, 0, 0, 0, 0]
+    pokemon_max_healths = [32, 0, 0, 0, 0, 0]
+    pokemon_current_healths = [32, 0, 0, 0, 0, 0]
     num_pokemons = 1
     context = zmq.Context()
     socket = context.socket(zmq.PUSH)
     socket.bind(pipe_path)
-    print("inited")
 
     to_send = []
 
@@ -40,7 +41,26 @@ def send_dummy_data():
 
         for i in range(6):
             if pokemons[i] != 0:
-                pokemon_levels[i] = np.minimum(pokemon_levels[i] + int(np.random.random() < 0.55), 100)
+                if pokemon_levels[i] == 0:
+                    pokemon_levels[i] = np.random.randint(1, 50)
+
+                if pokemon_max_healths[i] == 0:
+                    pokemon_max_healths[i] = np.random.randint(2, 7) * pokemon_levels[i]
+                    pokemon_current_healths[i] = pokemon_max_healths[i]
+
+                if np.random.random() < 0.15 and pokemon_levels[i] < 100:
+                    pokemon_max_healths[i] = int(pokemon_max_healths[i] * (pokemon_levels[i] + 1) / pokemon_levels[i])
+
+                    pokemon_levels[i] += 1
+
+                if np.random.random() < 0.15:
+                    if np.random.random() < 0.05:
+                        pokemon_current_healths[i] = pokemon_max_healths[i]
+                    else:
+                        pokemon_current_healths[i] -= np.random.randint(32)
+                        if pokemon_current_healths[i] < 0:
+                            pokemon_current_healths[i] = 0
+
 
 
         # Format the data
@@ -49,7 +69,9 @@ def send_dummy_data():
             "score": score,
             "total_exp": total_exp,
             "pokemon_ids": pokemons,
-            "pokemon_levels": pokemon_levels
+            "pokemon_levels": pokemon_levels,
+            "pokemon_max_healths": pokemon_max_healths,
+            "pokemon_current_healths": pokemon_current_healths
             # exp
             # badges
             # see environment actually

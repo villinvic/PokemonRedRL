@@ -10,6 +10,8 @@ from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtProperty, QPropertyAnimati
     QEasingCurve, QParallelAnimationGroup, QSize, QRect
 from PIL import Image
 
+import pypokedex
+
 # TODO : animations
 # badges
 # pokemon info
@@ -93,38 +95,28 @@ class PokemonAIInterface(QWidget):
         # Add episode information labels to the layout
 
         # Create labels for Pokémon gifs
-        self.pokemon_labels = []
-        self.pokemon_animation_labels = []
+        self.pokemon_sprite_labels = []
         self.pokemon_stat_labels = []
 
 
         for i in range(6):
-            pokemon_label = QLabel(self)
-            pokemon_label.setAlignment(Qt.AlignCenter)
-            pokemon_label.setFixedSize(200, 200)
+            pokemon_sprite_label = QLabel(self)
+            pokemon_sprite_label.setAlignment(Qt.AlignCenter)
+            pokemon_sprite_label.setFixedSize(200, 200)
 
-            pokemon_animation_label = QLabel(self)
-            pokemon_animation_label.setAlignment(Qt.AlignCenter)
-            pokemon_animation_label.setFixedSize(200, 200)
-
-            pokemon_stats_label = QLabel("", self)
-            #pokemon_stats_label.setStyleSheet()
-            pokemon_stats_label.setAlignment(Qt.AlignLeft)
-            pokemon_stats_label.setFixedSize(200, 24)
+            pokemon_labels = [QLabel("", self) for _ in range(3)]
 
             y = i * 128
             x = 840
-            pokemon_label.move(x, y)
-            pokemon_animation_label.move(x, y + 40)
-            pokemon_stats_label.move(x + 182, y + 72)
+            pokemon_sprite_label.move(x, y)
 
+            for i, pokemon_label in enumerate(pokemon_labels):
+                pokemon_label.setAlignment(Qt.AlignLeft)
+                pokemon_label.setFixedSize(200, 24)
+                pokemon_label.move(x + 182, y + 76 + 24 * i)
 
-            #layout.addWidget(pokemon_label, i // 3 + 1, i % 3)
-            #layout.addWidget(pokemon_animation_label, i // 3 + 1, i % 3)
-
-            self.pokemon_labels.append(pokemon_label)
-            self.pokemon_animation_labels.append(pokemon_animation_label)
-            self.pokemon_stat_labels.append(pokemon_stats_label)
+            self.pokemon_sprite_labels.append(pokemon_sprite_label)
+            self.pokemon_stat_labels.append(pokemon_labels)
 
 
         # Set the layout for the main window
@@ -144,7 +136,19 @@ class PokemonAIInterface(QWidget):
         for i, pokemon_id in enumerate(data["pokemon_ids"]):
 
             if pokemon_id != 0:
-                self.pokemon_stat_labels[i].setText(f"Lv {data['pokemon_levels'][i]}")
+                level_label, name_label, health_label = self.pokemon_stat_labels[i]
+                level_label.setText(f"Lv {data['pokemon_levels'][i]}")
+                pokemon_name = pypokedex.get(dex=pokemon_id).name
+                pokemon_name = pokemon_name[:1].upper() +pokemon_name[1:]
+                name_label.setText(pokemon_name)
+
+                curr_health = data['pokemon_current_healths'][i]
+                if curr_health == 0:
+                    text = f'<b style="color: #FF0000;">0</b>/{data["pokemon_max_healths"][i]}'
+                else:
+                    text = f"{data['pokemon_current_healths'][i]}/{data['pokemon_max_healths'][i]}"
+
+                health_label.setText(text)
 
             if pokemon_id == 0 and self.pokemon_ids[i] != 0:
                 # pokemon removed from party : TODO
@@ -164,8 +168,8 @@ class PokemonAIInterface(QWidget):
 
         pixmap = QPixmap(f"obs_interface/assets/sprites/rby/{new_pokemon_id}.png")
         pixmap.setDevicePixelRatio(0.75)
-        self.pokemon_labels[idx].setPixmap(pixmap)
-        self.pokemon_labels[idx].show()
+        self.pokemon_sprite_labels[idx].setPixmap(pixmap)
+        self.pokemon_sprite_labels[idx].show()
 
     # def animate_pokemon_entrance(self, new_pokemon_id, idx):
     #
