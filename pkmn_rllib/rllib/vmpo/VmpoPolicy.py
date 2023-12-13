@@ -286,7 +286,7 @@ class VmpoPolicy(
             mask = tf.reshape(mask, [-1])
             mask = make_time_major(mask)
         else:
-            mask = tf.ones_like(actions)
+            mask = tf.ones(actions.shape, dtype=tf.float32)
             mask = make_time_major(mask)
 
         # Prepare actions for loss
