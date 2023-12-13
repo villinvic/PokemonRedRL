@@ -178,7 +178,7 @@ class VmpoPolicy(
                 obs_space=self.observation_space,
                 action_space=self.action_space,
                 num_outputs=self.action_space.n,
-                model_config=self.config["model"],
+                model_config=model_config,
                 framework=self.config["framework"],
                 model_interface=VmpoInterface,
                 name="target_model",
