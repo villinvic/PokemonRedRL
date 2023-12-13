@@ -103,7 +103,8 @@ class ICMClipGradient:
         if self.config["_tf_policy_handles_more_than_one_loss"]:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
-            print(optimizers, losses)
+
+            print("\nBAHABHABHABHAB\n", self.learner_bound, optimizers, losses)
             #assert len(optimizers) == len(losses)
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
