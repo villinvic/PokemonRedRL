@@ -104,14 +104,14 @@ class ICMClipGradient:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
             print(optimizers, losses)
-            assert len(optimizers) == len(losses)
+            #assert len(optimizers) == len(losses)
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
                 grads_and_vars = optim.compute_gradients(loss_, trainable_variables)
                 clipped_g_and_v = []
                 for i, (g, v) in enumerate(grads_and_vars):
                     if g is not None:
-                        if i == 100:
+                        if i == 1:
                             clipped_g = g
                         else:
                             clipped_g, _ = tf.clip_by_global_norm(
@@ -164,15 +164,17 @@ class ICMOptimizer:
                 optim = tf.keras.optimizers.RMSprop(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
-                icm_optimizer = tf.keras.optimizers.Adam(1e-3, name="ICM_optim")
-                return optim, icm_optimizer
+                if self.learner_bound:
+                    icm_optimizer = tf.keras.optimizers.Adam(1e-3, name="ICM_optim")
+                    return optim, icm_optimizer
 
             else:
                 optim = tf1.train.RMSPropOptimizer(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
-                icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3, name="ICM_optim")
-                return optim, icm_optimizer
+                if self.learner_bound:
+                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3, name="ICM_optim")
+                    return optim, icm_optimizer
 
         return optim
 
@@ -500,7 +502,7 @@ class VmpoPolicy(
         if self.learner_bound:
             return self.total_loss, self.mean_icm_loss
         else:
-            return self.total_loss, tf.zeros((1,), dtype=tf.float32)
+            return self.total_loss
 
     @override(DynamicTFPolicyV2)
     def stats_fn(self, train_batch: SampleBatch) -> Dict[str, TensorType]:
