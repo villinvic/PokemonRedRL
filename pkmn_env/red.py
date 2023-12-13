@@ -126,7 +126,9 @@ class PkmnRedEnv(Env):
 
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
-        self.screen_shape = (72, 80)  # (48, 56)
+        self.screen_shape = (36, 40)  # (48, 56) # (72, 80)
+        self.stacked_frames = 3
+        self.screen_observation = np.zeros((self.screen_shape[0]*self.stacked_frames, self.screen_shape[1], 1), dtype=np.uint8)
         self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
@@ -294,25 +296,9 @@ class PkmnRedEnv(Env):
             # COORDINATES + "_POS"     :   0.003,
             PARTY_HEALTH             :   3.,
 
-            GOAL_TASK                :  0.5,
+            #GOAL_TASK                :  0.5,
 
             #ITEMS                    :  0.1,
-
-            # BLACKOUT                 :   -0.3,
-            # SEEN_POKEMONS            :   0.,
-            # TOTAL_EXPERIENCE         :   10.,  # 0.5
-            # BADGE_SUM                :   100.,
-            # MAPS_VISITED             :   0., # 3.
-            # TOTAL_EVENTS_TRIGGERED   :   1.,
-            # COORDINATES              :   0,
-            # # COORDINATES + "_NEG"     :   0.003 * 0.9,
-            # # COORDINATES + "_POS"     :   0.003,
-            # PARTY_HEALTH             :   1.,
-
-            # Additional
-
-            # Not really novelty but ok, we have to work on that
-            #"novelty"                           :   1.,  # 1e-3  #/ (self.similar_frame_dist)
 
 
         }
@@ -325,7 +311,7 @@ class PkmnRedEnv(Env):
         #self.triggered_event_flags = np.zeros((0xD886 - 0xD747) * 8, dtype=np.uint8)
 
         self.observation_space = spaces.Dict({
-            "screen": spaces.Box(low=0, high=255, shape=self.screen_shape + (1,), dtype=np.uint8),
+            "screen": spaces.Box(low=0, high=255, shape=(self.screen_shape[0]*self.stacked_frames, self.screen_shape[1], 1,), dtype=np.uint8),
             "stats": spaces.Box(low=-np.inf, high=np.inf, shape=self.additional_features_shape, dtype=np.float32),
             #"flags": spaces.Box(low=0, high=1, shape=(len(self.triggered_event_flags),), dtype=np.uint8),
             "coordinates": spaces.Box(low=0, high=255, shape=(1,), dtype=np.uint8),
@@ -394,15 +380,6 @@ class PkmnRedEnv(Env):
 
         self.inited = 0
 
-    def init_knn(self):
-        clipped_shape = (self.screen_shape[0]//4-5, self.screen_shape[1]//4)
-        self.knn_index = hnswlib.Index(space='l2', dim=np.prod(clipped_shape))
-        self.knn_index.init_index(
-            max_elements=self.num_elements, ef_construction=200, M=16
-        )
-        self.knn_index.set_ef(200)
-        self.knn_index.set_num_threads(1)
-
     def _get_obs(self):
 
         obs = {
@@ -412,66 +389,27 @@ class PkmnRedEnv(Env):
             "allowed_actions": self.get_allowed_actions(),
         }
 
-        if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
-
-            x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
-
-            if map_id in {0, 37, 38, 39, 40}:
-                self.current_goal = (0, 0, -1)
-                self.task_timesteps = self.goal_task_timeout_steps
-            else:
-                df = np.random.randint(3, 8) * np.random.choice([-1, 1])
-                dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
-                dd = [df, dc]
-                np.random.shuffle(dd)
-
-                self.current_goal = (x + dd[0], y + dd[1], map_id)
-                self.task_timesteps = 0
-
-        if not self.game_stats[IN_BATTLE][-1]:
-            self.task_timesteps += 1
+        # if self.current_goal is None or (self.goal_task_timeout_steps - self.task_timesteps <= 0):
+        #
+        #     x, y, map_id = tuple(self.game_stats[COORDINATES][-1])
+        #
+        #     if map_id in {0, 37, 38, 39, 40}:
+        #         self.current_goal = (0, 0, -1)
+        #         self.task_timesteps = self.goal_task_timeout_steps
+        #     else:
+        #         df = np.random.randint(3, 8) * np.random.choice([-1, 1])
+        #         dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
+        #         dd = [df, dc]
+        #         np.random.shuffle(dd)
+        #
+        #         self.current_goal = (x + dd[0], y + dd[1], map_id)
+        #         self.task_timesteps = 0
+        #
+        # if not self.game_stats[IN_BATTLE][-1]:
+        #     self.task_timesteps += 1
 
         obs["screen"] = self.render()
         return obs
-
-    # def run_action_on_emulator(self, action):
-    #     # press button then release after some steps
-    #     self.pyboy.send_input(self.valid_actions[action])
-    #     walked = False
-    #     action = np.int32(action)
-    #     for i in range(self.act_freq):
-    #         # release action, so they are stateless
-    #         if not walked:
-    #             walked = self.read_walk_animation() > 0
-    #         if i == 8:
-    #             if action < 4:
-    #                 # release arrow
-    #                 self.pyboy.send_input(self.release_arrow[action])
-    #
-    #             if 3 < action < 6:
-    #                 # release button
-    #                 self.pyboy.send_input(self.release_button[action - 4])
-    #
-    #             if action == WindowEvent.PRESS_BUTTON_START:
-    #                 self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_START)
-    #
-    #         if self.save_video and not self.fast_video:
-    #             self.add_video_frame()
-    #
-    #         self.pyboy.tick()
-    #     if self.step_count > 0 and self.game_stats[IN_BATTLE][-1]:
-    #
-    #         if self.read_textbox_id() not in {11, 13}:
-    #             for i in range(self.act_freq * 16):
-    #                 #Skip battle animations
-    #                 self.pyboy.tick()
-    #                 if not self.read_in_battle() or self.read_textbox_id() in {11, 13}:
-    #                     break
-    #
-    #     if self.save_video and self.fast_video:
-    #         self.add_video_frame()
-    #
-    #     return walked
 
     def run_action_on_emulator(self, action):
 
@@ -548,6 +486,7 @@ class PkmnRedEnv(Env):
         self.step_count = 0
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
+        self.screen_observation[:] = 0
         self.visited_maps = {37, 38, 39}
         self.entrance_coords = (5, 30, 40)
         self.latest_opp_level = 5
@@ -595,21 +534,24 @@ class PkmnRedEnv(Env):
         )[:, :, np.newaxis]
 
         # Render target
-        x, y, goal_map_id = self.current_goal
-        curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+        # x, y, goal_map_id = self.current_goal
+        # curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+        #
+        # if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
+        #     dx = (x - curr_x)
+        #     dy = (y - curr_y)
+        #     origin_x = 4 * 8
+        #     origin_y = 4 * 8
+        #
+        #     if -4 <= dx <= 5 and -4 < dy <= 4:
+        #         loc_x = (origin_x + dy * 8)
+        #         loc_y = (origin_y + dx * 8)
+        #         grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
 
-        if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
-            dx = (x - curr_x)
-            dy = (y - curr_y)
-            origin_x = 4 * 8
-            origin_y = 4 * 8
+        self.screen_observation[:] = np.roll(self.screen_observation, self.screen_shape[0], axis=0)
+        self.screen_observation[:self.screen_shape[0]] = grayscale_downsampled_screen
 
-            if -4 <= dx <= 5 and -4 < dy <= 4:
-                loc_x = (origin_x + dy * 8)
-                loc_y = (origin_y + dx * 8)
-                grayscale_downsampled_screen[loc_x: loc_x + 8, loc_y : loc_y + 8] *= self.target_symbol_mask
-
-        return np.uint8(grayscale_downsampled_screen)
+        return self.screen_observation
 
     def render(self):
         screen = self.screen.screen_ndarray()  # (144, 160, 3)
@@ -802,20 +744,20 @@ class PkmnRedEnv(Env):
 
     def add_video_frame(self):
         screen = self.screen.screen_ndarray().copy()
-        if self.step_count > 1:
-            x, y, goal_map_id = self.current_goal
-            curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
-
-            if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
-                dx = (x - curr_x)
-                dy = (y - curr_y)
-                origin_x = 4 * 16
-                origin_y = 4 * 16
-
-                if -4 <= dx <= 5 and -4 < dy <= 4:
-                    loc_x = (origin_x + dy * 16)
-                    loc_y = (origin_y + dx * 16)
-                    screen[loc_x: loc_x + 16, loc_y: loc_y + 16] *= self.target_symbol_mask_debug
+        # if self.step_count > 1:
+        #     x, y, goal_map_id = self.current_goal
+        #     curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
+        #
+        #     if goal_map_id == curr_map_id and not self.game_stats[IN_BATTLE][-1]:
+        #         dx = (x - curr_x)
+        #         dy = (y - curr_y)
+        #         origin_x = 4 * 16
+        #         origin_y = 4 * 16
+        #
+        #         if -4 <= dx <= 5 and -4 < dy <= 4:
+        #             loc_x = (origin_x + dy * 16)
+        #             loc_y = (origin_y + dx * 16)
+        #             screen[loc_x: loc_x + 16, loc_y: loc_y + 16] *= self.target_symbol_mask_debug
         self.full_frame_writer.add_image(screen)
 
     def update_frame_knn_index(self, frame):
@@ -907,10 +849,10 @@ class PkmnRedEnv(Env):
             else:
                 self.stuck_count = 0
 
-            goal_reached = int(curr_coords == self.current_goal)
+            #goal_reached = int(curr_coords == self.current_goal)
 
-            if goal_reached:
-                self.task_timesteps = self.goal_task_timeout_steps
+            # if goal_reached:
+            #     self.task_timesteps = self.goal_task_timeout_steps
 
             # we gain more experience as game moves on:
             total_delta_exp = 0
@@ -1012,7 +954,7 @@ class PkmnRedEnv(Env):
                             curr_coords[-1] not in self.poke_marts
                             ),
 
-                GOAL_TASK : int(goal_reached)
+                #GOAL_TASK : int(goal_reached)
             })
 
             if total_healing > 0:
@@ -1047,7 +989,7 @@ class PkmnRedEnv(Env):
             ss_dir / Path(f'{name}_original.jpeg'),
             curr_screen
         )
-        observed = image if image is not None else self.preprocess_screen(curr_screen)
+        observed = image if image is not None else self.screen_observation
         plt.imsave(
             ss_dir / Path(f'{name}_observed.jpeg'),
             observed[:, :, 0],

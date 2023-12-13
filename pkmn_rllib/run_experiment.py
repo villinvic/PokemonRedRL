@@ -8,6 +8,8 @@ from ray import air, tune
 from pkmn_env.red import PkmnRedEnv
 from pkmn_rllib.rllib.models.PokemonBaseModel import PokemonBaseModel
 from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
+from pkmn_rllib.rllib.models.PokemonICMModel import PokemonICMModel
+
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
@@ -45,6 +47,11 @@ ModelCatalog.register_custom_model(
         PokemonLstmModel,
     )
 
+ModelCatalog.register_custom_model(
+        "pokemon_icm_model",
+        PokemonICMModel,
+    )
+
 num_workers = 124
 num_envs_per_worker = 1
 rollout_fragment_length = 128
@@ -69,16 +76,13 @@ config = VmpoConfig().training(
     #minibatch_buffer_size=16,
     gamma=0.997,
     model={
-        "custom_model": "pokemon_lstm_model",
+        "custom_model": "pokemon_icm_model",
         "conv_filters": [
-            [32, [8, 8], 4, "valid"],
-            [64, [4, 4], 2, "valid"],
-            [64, [3, 3], 1, "valid"],
+            [32, [4, 4], 2, "valid"],
+            [64, [2, 2], 1, "valid"],
+            [64, [2, 2], 1, "valid"],
         ],
         "fcnet_size": 512,
-        "lstm_size": 512,
-        #"flag_embedding_size": 64,
-        "max_seq_lens": 64,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
@@ -135,3 +139,13 @@ exp = tune.run(
     )
 
 
+# "custom_model": "pokemon_lstm_model",
+#         "conv_filters": [
+#             [32, [8, 8], 4, "valid"],
+#             [64, [4, 4], 2, "valid"],
+#             [64, [3, 3], 1, "valid"],
+#         ],
+#         "fcnet_size": 512,
+#         "lstm_size": 512,
+#         #"flag_embedding_size": 64,
+#         "max_seq_lens": 64,

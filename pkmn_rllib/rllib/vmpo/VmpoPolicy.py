@@ -148,11 +148,17 @@ class VmpoPolicy(
     @override(DynamicTFPolicyV2)
     def make_model(self) -> ModelV2:
 
+        model_config= {
+            "learner_bound": self.learner_bound,
+
+            **self.config["model"]
+        }
+
         self.model = ModelCatalog.get_model_v2(
             obs_space=self.observation_space,
             action_space=self.action_space,
             num_outputs=self.action_space.n,
-            model_config=self.config["model"],
+            model_config=model_config,
             framework=self.config["framework"],
             model_interface=VmpoInterface,
             name="model",
@@ -224,6 +230,24 @@ class VmpoPolicy(
         actions = train_batch[SampleBatch.ACTIONS]
         dones = train_batch[SampleBatch.TERMINATEDS]
         rewards = train_batch[SampleBatch.REWARDS]
+
+        # ICM ####################################
+
+        state_prediction_loss = self.model.state_prediction_loss()
+        action_prediction_loss = self.model.action_prediction_loss()
+
+        intrinsic_rewards = tf.expand_dims(state_prediction_loss * self.model.curiosity_reward_scale, axis=1)
+        rewards = rewards + tf.stop_gradient(intrinsic_rewards)
+
+        self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
+        icm_loss = ((action_prediction_loss * (1. - self.model.icm_beta) + state_prediction_loss * self.model.icm_beta)
+                    / self.model.icm_lambda)
+
+        self.mean_icm_loss = tf.reduce_mean(icm_loss)
+        self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
+        self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
+
+        ##########################################
 
         self.batch_reward_std = tf.math.reduce_std(rewards)
         self.batch_reward_mean = tf.math.reduce_mean(rewards)
@@ -359,7 +383,7 @@ class VmpoPolicy(
         # self.auxiliary_value_loss = self.model.policy_value_function_loss()
         self.total_loss = (
                 self.vf_loss + self.policy_loss - self.entropy_loss
-                + self.trust_region_loss + self.temperate_loss
+                + self.trust_region_loss + self.temperate_loss + self.mean_icm_loss
             # + self.auxiliary_value_loss
         )
 
@@ -410,7 +434,12 @@ class VmpoPolicy(
             "baseline_popart_std"  : self.model.popart_std,
             "baseline_popart_mean" : self.model.popart_mean,
             "normalization_scale"  : self.normalization_scale,
-            # "auxiliary_value_loss": self.auxiliary_value_loss,
+
+            # ICM
+            "curiosity/state_prediction_loss": self.mean_state_prediction_loss,
+            "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
+            "curiosity/total_loss": self.mean_icm_loss,
+            "curiosity/intrinsic_rewards": self.mean_intrinsic_rewards,
 
         }
 
@@ -429,7 +458,7 @@ class VmpoPolicy(
             # We do not care about value related weights
             keys = list(weights.keys())
             for k in keys:
-                if "value" in k:
+                if "value" in k or "ICM" in k:
                     weights.pop(k)
 
         # state["weights"] = weights
@@ -451,8 +480,6 @@ class VmpoPolicy(
 
             kernel_weights = w[f"{scope}/value_out/kernel"]
             biases_weights = w[f"{scope}/value_out/bias"]
-            # aux_kernel_weights = w[f"{policy_id}/auxiliary_value_out/kernel"]
-            # aux_biases_weights = w[f"{policy_id}/auxiliary_value_out/bias"]
 
             old_mean = w[f"{scope}/popart_mean"]
             old_std = w[f"{scope}/popart_std"]
@@ -484,6 +511,7 @@ class VmpoPolicy(
         else:
             return {
                 k: v for k, v in zip(super().get_weights().keys(), self._target_variables.get_weights().values())
+                if ("value" not in k or "ICM" not in k)
             }
 
 

@@ -15,11 +15,15 @@ class PokemonLstmModel(TFModelV2):
 
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
 
-        # learns to play as one character, against many characters
-
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
         self.lstm_size = model_config.get("lstm_size")
+        self.icm_beta = model_config.get("icm_beta", 0.2)
+        self.curiosty_reward_scale = model_config.get("icm_eta", 0.1) / 2.
+        self.icm_lambda = model_config.get("icm_lambda", 0.1)
+
+
+
         #self.flag_embedding_size = model_config.get("flag_embedding_size")
 
         super(PokemonLstmModel, self).__init__(
@@ -39,6 +43,11 @@ class PokemonLstmModel(TFModelV2):
         screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="screen_input",
                                                  dtype=tf.float32)
         stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="stats_input",
+                                                 dtype=tf.float32)
+
+        next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
+                                                 dtype=tf.float32)
+        next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
                                                  dtype=tf.float32)
         # flags_input = tf.keras.layers.Input(shape=obs_space["flags"].shape, name="flags_input",
         #                                          dtype=tf.float32)
@@ -70,21 +79,10 @@ class PokemonLstmModel(TFModelV2):
 
         post_cnn = tf.keras.layers.Flatten()(last_layer)
 
-        # flags_embedding = tf.keras.layers.Dense(
-        #     self.flag_embedding_size,
-        #     name="flags_dense_embedding",
-        #     activation="tanh",
-        # )(flags_input)
-
         concat_features = tf.keras.layers.Concatenate(axis=-1, name="screen_and_stats_pre_embedding")(
             [post_cnn, stats_input,
-            # flags_embedding
              ]
         )
-
-        # pre_lstm_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="pre_lstm_prediction_input")(
-        #     [post_cnn, action_one_hot]
-        # )
 
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
@@ -185,12 +183,15 @@ class PokemonLstmModel(TFModelV2):
             activation=None,
         )(fc_post_lstm_prediction)
 
+        # ICM
 
         self.base_model = tf.keras.Model(
             [screen_input, stats_input,
              #flags_input,
              previous_reward_input, previous_action_input, action_input,
-             seq_in, state_in_h, state_in_c],
+             seq_in, state_in_h, state_in_c,
+             next_screen_input, next_stats_input,
+             ],
 
             [action_logits, value_out, map_logits, moved_logits, reward_prediction_logits, state_h, state_c]
         )
@@ -208,13 +209,22 @@ class PokemonLstmModel(TFModelV2):
         prev_action = input_dict[SampleBatch.PREV_ACTIONS]
         action = input_dict[SampleBatch.ACTIONS]
 
+        next_screen_input = tf.cast(input_dict[SampleBatch.NEXT_OBS]["screen"], tf.float32) / 255.
+        next_stat_inputs = input_dict[SampleBatch.NEXT_OBS]["stats"]
+
 
         context, self._value_out, map_logits, moved_logits, reward_logits, h, c = self.base_model(
             [screen_input, stat_inputs,
              #flags_inputs,
              prev_reward, prev_action, action,
              seq_lens] + state
+            + [next_screen_input, next_stat_inputs]
         )
+
+        self._curiosty_rewards = ...
+        self.icm_state_predictions = ...
+        self.icm_action_predictions = ...
+
 
         self.map_logits = tf.reshape(map_logits, [-1, self.N_MAPS])
         self.moved_logits = tf.reshape(moved_logits, [-1])
@@ -229,6 +239,9 @@ class PokemonLstmModel(TFModelV2):
 
     def value_function(self):
         return tf.reshape(self._value_out, [-1])
+
+    def curiosty_rewards(self):
+        return tf.reshape(self._curiosty_rewards, [-1]) * self.curiosty_reward_scale
 
     def get_initial_state(self) -> List[np.ndarray]:
 
@@ -273,7 +286,14 @@ class PokemonLstmModel(TFModelV2):
 
         prediction_loss = self.moved_loss_mean + self.map_loss_mean + self.reward_loss_mean
 
-        return policy_loss + prediction_loss * 0.33
+        # train ICM here
+
+        self.icm_inverse_loss = ...
+        self.icm_forward_loss = ...
+
+        self.curiosty_loss = (1.-self.icm_beta) * self.icm_inverse_loss + self.icm_beta * self.icm_forward_loss
+
+        return policy_loss + prediction_loss * 0.33 + self.curiosty_loss / self.icm_lambda
 
     def metrics(self):
 
@@ -286,6 +306,12 @@ class PokemonLstmModel(TFModelV2):
 
             "reward_loss_max" : self.reward_loss_max,
             "reward_loss_mean": self.reward_loss_mean,
+
+            "icm_inverse_loss": self.icm_inverse_loss,
+            "icm_forward_loss": self.icm_forward_loss,
+            "curiosty_loss": self.curiosty_loss,
+
+            "curiosty_rewards": tf.reduce_mean(self._curiosty_rewards)
         }
 
 
