@@ -114,13 +114,13 @@ class ICMClipGradient:
                 clipped_g_and_v = []
                 for i, (g, v) in enumerate(grads_and_vars):
                     if g is not None:
-                        if i == 100:
-                            clipped_g = g
+                        if i == 1:
+                            clipped_g_and_v.append((g, v))
                         else:
                             clipped_g, _ = tf.clip_by_global_norm(
                                 [g], self.config["grad_clip"]
                             )
-                        clipped_g_and_v.append((clipped_g[0], v))
+                            clipped_g_and_v.append((clipped_g[0], v))
                 clipped_grads_and_vars.append(clipped_g_and_v)
 
             self.grads = [g for g_and_v in clipped_grads_and_vars for (g, v) in g_and_v]
