@@ -7,7 +7,7 @@ import logging
 import numpy as np
 from ray.rllib import SampleBatch, Policy
 from ray.rllib.algorithms.impala import vtrace_tf
-from ray.rllib.algorithms.impala.impala_tf_policy import VTraceClipGradients, VTraceOptimizer, _make_time_major
+from ray.rllib.algorithms.impala.impala_tf_policy import _make_time_major
 from ray.rllib.algorithms.impala.vtrace_tf import multi_log_probs_from_logits_and_actions, get_log_rhos, \
     VTraceFromLogitsReturns, VTraceReturns
 from ray.rllib.evaluation.episode_v2 import EpisodeV2
@@ -17,12 +17,12 @@ from ray.rllib.models import ModelV2, ModelCatalog
 from ray.rllib.models.tf.tf_action_dist import TFActionDistribution, Categorical
 from ray.rllib.policy.dynamic_tf_policy_v2 import DynamicTFPolicyV2, TFPolicy
 from ray.rllib.policy.tf_mixins import GradStatsMixin, EntropyCoeffSchedule, LearningRateSchedule
-from ray.rllib.utils import override, try_import_tf
+from ray.rllib.utils import override, try_import_tf, force_list
 from ray.rllib.utils.tf_utils import explained_variance, make_tf_callable
 
 import ray
 import gymnasium as gym
-from ray.rllib.utils.typing import TensorType, PolicyState, AgentID, PolicyID
+from ray.rllib.utils.typing import TensorType, PolicyState, AgentID, PolicyID, LocalOptimizer, ModelGradients
 
 from pkmn_rllib.rllib.vmpo.VmpoInterface import VmpoInterface
 
@@ -83,10 +83,101 @@ class TargetNetworkMixin:
     #    self.update_target(weights)
 
 
+class ICMClipGradient:
+    """VTrace version of gradient computation logic."""
+
+    def __init__(self):
+        """No special initialization required."""
+        pass
+
+    def compute_gradients_fn(
+        self, optimizer: LocalOptimizer, loss: TensorType
+    ) -> ModelGradients:
+        # Supporting more than one loss/optimizer.
+        if self.config.get("_enable_rl_module_api", False):
+            # In order to access the variables for rl modules, we need to
+            # use the underlying keras api model.trainable_variables.
+            trainable_variables = self.model.trainable_variables
+        else:
+            trainable_variables = self.model.trainable_variables()
+        if self.config["_tf_policy_handles_more_than_one_loss"]:
+            optimizers = force_list(optimizer)
+            losses = force_list(loss)
+            assert len(optimizers) == len(losses)
+            clipped_grads_and_vars = []
+            for optim, loss_ in zip(optimizers, losses):
+                grads_and_vars = optim.compute_gradients(loss_, trainable_variables)
+                clipped_g_and_v = []
+                for i, g, v in enumerate(grads_and_vars):
+                    if g is not None:
+                        if i == 1:
+                            clipped_g = g
+                        else:
+                            clipped_g, _ = tf.clip_by_global_norm(
+                                [g], self.config["grad_clip"]
+                            )
+                        clipped_g_and_v.append((clipped_g[0], v))
+                clipped_grads_and_vars.append(clipped_g_and_v)
+
+            self.grads = [g for g_and_v in clipped_grads_and_vars for (g, v) in g_and_v]
+        # Only one optimizer and and loss term.
+        else:
+            grads_and_vars = optimizer.compute_gradients(
+                loss, self.model.trainable_variables()
+            )
+            grads = [g for (g, v) in grads_and_vars]
+            self.grads, _ = tf.clip_by_global_norm(grads, self.config["grad_clip"])
+            clipped_grads_and_vars = list(zip(self.grads, trainable_variables))
+
+        return clipped_grads_and_vars
+
+class ICMOptimizer:
+    """Optimizer function for VTrace policies."""
+
+    def __init__(self):
+        pass
+
+    # TODO: maybe standardize this function, so the choice of optimizers are more
+    #  predictable for common algorithms.
+    def optimizer(
+        self,
+    ) -> Union["tf.keras.optimizers.Optimizer", List["tf.keras.optimizers.Optimizer"]]:
+        config = self.config
+        if config["opt_type"] == "adam":
+            if config["framework"] == "tf2":
+                optim = tf.keras.optimizers.Adam(self.cur_lr)
+                if config["_separate_vf_optimizer"]:
+                    return optim, tf.keras.optimizers.Adam(config["_lr_vf"])
+            else:
+                optim = tf1.train.AdamOptimizer(self.cur_lr)
+                if config["_separate_vf_optimizer"]:
+                    return optim, tf1.train.AdamOptimizer(config["_lr_vf"])
+        else:
+            if config["_separate_vf_optimizer"]:
+                raise ValueError(
+                    "RMSProp optimizer not supported for separate"
+                    "vf- and policy losses yet! Set `opt_type=adam`"
+                )
+
+            if config["framework"] == "tf2":
+                optim = tf.keras.optimizers.RMSprop(
+                    self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
+                )
+                icm_optimizer = tf.keras.optimizers.Adam(1e-3)
+                return optim, icm_optimizer
+
+            else:
+                optim = tf1.train.RMSPropOptimizer(
+                    self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
+                )
+
+        return optim
+
+
 class VmpoPolicy(
 
-    VTraceClipGradients,
-    VTraceOptimizer,
+    ICMClipGradient,
+    ICMOptimizer,
     LearningRateSchedule,
     EntropyCoeffSchedule,
     TargetNetworkMixin,
@@ -108,8 +199,8 @@ class VmpoPolicy(
 
         tf1.disable_eager_execution()
 
-        VTraceClipGradients.__init__(self)
-        VTraceOptimizer.__init__(self)
+        ICMClipGradient.__init__(self)
+        ICMOptimizer.__init__(self)
 
         # Initialize base class.
         DynamicTFPolicyV2.__init__(
@@ -395,14 +486,14 @@ class VmpoPolicy(
         # self.auxiliary_value_loss = self.model.policy_value_function_loss()
         self.total_loss = (
                 self.vf_loss + self.policy_loss - self.entropy_loss
-                + self.trust_region_loss + self.temperate_loss + self.mean_icm_loss
+                + self.trust_region_loss + self.temperate_loss
             # + self.auxiliary_value_loss
         )
 
         self.new_mean = vtrace_returns.new_mean
         self.new_moment = vtrace_returns.new_moment
 
-        return self.total_loss
+        return self.total_loss, self.mean_icm_loss
 
     @override(DynamicTFPolicyV2)
     def stats_fn(self, train_batch: SampleBatch) -> Dict[str, TensorType]:
