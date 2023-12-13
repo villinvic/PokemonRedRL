@@ -520,7 +520,7 @@ class VmpoPolicy(
         else:
             return {
                 k: v for k, v in zip(super().get_weights().keys(), self._target_variables.get_weights().values())
-                if ("value" not in k or "ICM" not in k)
+                #if ("value" not in k or "ICM" not in k)
             }
 
 
