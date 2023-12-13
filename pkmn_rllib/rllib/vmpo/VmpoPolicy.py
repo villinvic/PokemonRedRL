@@ -208,8 +208,8 @@ class VmpoPolicy(
 
         tf1.disable_eager_execution()
 
-        ICMClipGradient.__init__(self)
         ICMOptimizer.__init__(self)
+        ICMClipGradient.__init__(self)
 
         # Initialize base class.
         DynamicTFPolicyV2.__init__(
