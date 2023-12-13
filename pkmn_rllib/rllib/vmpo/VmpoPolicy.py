@@ -629,7 +629,6 @@ class VmpoPolicy(
 
 
     @override(TFPolicy)
-    @DeveloperAPI
     def copy(self, existing_inputs: List[Tuple[str, "tf1.placeholder"]]) -> TFPolicy:
         """Creates a copy of self using existing input placeholders."""
 
