@@ -103,6 +103,7 @@ class ICMClipGradient:
         if self.config["_tf_policy_handles_more_than_one_loss"]:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
+            print(optimizers, losses)
             assert len(optimizers) == len(losses)
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
@@ -164,7 +165,7 @@ class ICMOptimizer:
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
                 if self.learner_bound:
-                    icm_optimizer = tf.keras.optimizers.Adam(1e-3)
+                    icm_optimizer = tf.keras.optimizers.Adam(1e-3, name="ICM_optim")
                     return optim, icm_optimizer
                 else:
                     return optim
@@ -174,7 +175,7 @@ class ICMOptimizer:
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
                 if self.learner_bound:
-                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
+                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3, name="ICM_optim")
                     return optim, icm_optimizer
                 else:
                     return optim
@@ -504,7 +505,6 @@ class VmpoPolicy(
 
         if self.learner_bound:
             return self.total_loss, self.mean_icm_loss
-
         else:
             return self.total_loss
 
