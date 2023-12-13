@@ -100,7 +100,7 @@ class ICMClipGradient:
             trainable_variables = self.model.trainable_variables
         else:
             trainable_variables = self.model.trainable_variables()
-        if self.config["_tf_policy_handles_more_than_one_loss"]:
+        if self.learner_bound:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
             print(optimizers, losses)
