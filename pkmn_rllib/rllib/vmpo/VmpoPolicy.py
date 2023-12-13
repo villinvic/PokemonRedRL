@@ -108,7 +108,7 @@ class ICMClipGradient:
             for optim, loss_ in zip(optimizers, losses):
                 grads_and_vars = optim.compute_gradients(loss_, trainable_variables)
                 clipped_g_and_v = []
-                for i, g, v in enumerate(grads_and_vars):
+                for i, (g, v) in enumerate(grads_and_vars):
                     if g is not None:
                         if i == 1:
                             clipped_g = g
