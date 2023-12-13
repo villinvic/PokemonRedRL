@@ -103,7 +103,6 @@ class ICMClipGradient:
         if self.config["_tf_policy_handles_more_than_one_loss"]:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
-            print(optimizers, losses)
             assert len(optimizers) == len(losses)
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
@@ -171,6 +170,8 @@ class ICMOptimizer:
                 optim = tf1.train.RMSPropOptimizer(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
+                icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
+                return optim, icm_optimizer
 
         return optim
 
