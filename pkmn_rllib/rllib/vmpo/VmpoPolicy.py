@@ -100,7 +100,7 @@ class ICMClipGradient:
             trainable_variables = self.model.trainable_variables
         else:
             trainable_variables = self.model.trainable_variables()
-        if self.learner_bound:
+        if self.config["_tf_policy_handles_more_than_one_loss"]:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
             print(optimizers, losses)
@@ -164,21 +164,15 @@ class ICMOptimizer:
                 optim = tf.keras.optimizers.RMSprop(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
-                if self.learner_bound:
-                    icm_optimizer = tf.keras.optimizers.Adam(1e-3, name="ICM_optim")
-                    return optim, icm_optimizer
-                else:
-                    return optim
+                icm_optimizer = tf.keras.optimizers.Adam(1e-3, name="ICM_optim")
+                return optim, icm_optimizer
 
             else:
                 optim = tf1.train.RMSPropOptimizer(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
-                if self.learner_bound:
-                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3, name="ICM_optim")
-                    return optim, icm_optimizer
-                else:
-                    return optim
+                icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3, name="ICM_optim")
+                return optim, icm_optimizer
 
         return optim
 
@@ -208,8 +202,9 @@ class VmpoPolicy(
 
         tf1.disable_eager_execution()
 
-        ICMOptimizer.__init__(self)
+
         ICMClipGradient.__init__(self)
+        ICMOptimizer.__init__(self)
 
         # Initialize base class.
         DynamicTFPolicyV2.__init__(
@@ -503,10 +498,7 @@ class VmpoPolicy(
         self.new_moment = vtrace_returns.new_moment
 
 
-        if self.learner_bound:
-            return self.total_loss, self.mean_icm_loss
-        else:
-            return self.total_loss
+        return self.total_loss, self.mean_icm_loss
 
     @override(DynamicTFPolicyV2)
     def stats_fn(self, train_batch: SampleBatch) -> Dict[str, TensorType]:
