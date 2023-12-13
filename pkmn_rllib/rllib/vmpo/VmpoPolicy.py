@@ -105,7 +105,7 @@ class ICMClipGradient:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
 
-            assert len(optimizers) == len(losses), (optimizers, losses, self.optimizer())
+            #assert len(optimizers) == len(losses), (optimizers, losses, self.optimizer())
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
                 grads_and_vars = optim.compute_gradients(loss_, trainable_variables)
