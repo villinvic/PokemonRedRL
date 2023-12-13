@@ -69,7 +69,7 @@ class PokemonICMModel(TFModelV2):
 
         fc2 = tf.keras.layers.Dense(
             self.fcnet_size,
-            name="fc1",
+            name="fc2",
             activation="relu",
         )(fc1)
 
