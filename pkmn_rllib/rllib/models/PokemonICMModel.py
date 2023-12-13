@@ -211,14 +211,15 @@ class PokemonICMModel(TFModelV2):
         )
         allowed_action_logits = action_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
-        action_prediction_logits, state_prediction_out, self.icm_next_state_embedding = self.icm_prediction_model(
-            self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs, self.actions
-        )
+        if self.learner_bound:
+            action_prediction_logits, state_prediction_out, self.icm_next_state_embedding = self.icm_prediction_model(
+                self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs, self.actions
+            )
 
-        allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
+            allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
-        self.icm_state_predictions = state_prediction_out
-        self.icm_action_predictions = allowed_action_prediction_logits
+            self.icm_state_predictions = state_prediction_out
+            self.icm_action_predictions = allowed_action_prediction_logits
 
         return allowed_action_logits, state
 
