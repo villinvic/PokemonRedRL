@@ -98,6 +98,7 @@ class PokemonICMModel(TFModelV2):
         )
 
         if self.learner_bound:
+
             action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
             action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
             next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
@@ -106,7 +107,7 @@ class PokemonICMModel(TFModelV2):
                                                      dtype=tf.float32)
 
 
-            cnn_layers = [tf.keras.layers.Conv2D(
+            cnn_layers = ([tf.keras.layers.Conv2D(
                     out_size,
                     kernel,
                     strides=stride
@@ -116,9 +117,8 @@ class PokemonICMModel(TFModelV2):
                     padding=padding,
                     data_format="channels_last",
                     name="ICM_conv{}".format(i),
-                ) for i, (out_size, kernel, stride, padding) in enumerate(filters, 1)
-                + tf.keras.layers.Flatten()
-            ]
+                ) for i, (out_size, kernel, stride, padding) in enumerate(filters, 1)]
+                + [tf.keras.layers.Flatten()])
 
             state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
