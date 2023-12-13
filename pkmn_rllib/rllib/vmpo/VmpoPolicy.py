@@ -90,6 +90,7 @@ class ICMClipGradient:
         """No special initialization required."""
         pass
 
+    @override(DynamicTFPolicyV2)
     def compute_gradients_fn(
         self, optimizer: LocalOptimizer, loss: TensorType
     ) -> ModelGradients:
@@ -104,7 +105,9 @@ class ICMClipGradient:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
 
-            print("\nBAHABHABHABHAB\n", self.learner_bound, optimizers, losses)
+
+            print("\nBAHABHABHABHAB\n", self.learner_bound, optimizers, losses,
+                  self.optimizer())
             #assert len(optimizers) == len(losses)
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
