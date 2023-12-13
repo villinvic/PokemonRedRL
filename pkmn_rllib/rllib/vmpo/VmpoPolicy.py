@@ -5,6 +5,7 @@ from typing import Union, Type, List, Dict, Tuple
 import logging
 
 import numpy as np
+import tree
 from ray.rllib import SampleBatch, Policy
 from ray.rllib.algorithms.impala import vtrace_tf
 from ray.rllib.algorithms.impala.impala_tf_policy import _make_time_major
@@ -625,6 +626,81 @@ class VmpoPolicy(
                 k: v for k, v in zip(super().get_weights().keys(), self._target_variables.get_weights().values())
                 #if ("value" not in k or "ICM" not in k)
             }
+
+
+    @override(TFPolicy)
+    @DeveloperAPI
+    def copy(self, existing_inputs: List[Tuple[str, "tf1.placeholder"]]) -> TFPolicy:
+        """Creates a copy of self using existing input placeholders."""
+
+        flat_loss_inputs = tree.flatten(self._loss_input_dict)
+        flat_loss_inputs_no_rnn = tree.flatten(self._loss_input_dict_no_rnn)
+
+        # Note that there might be RNN state inputs at the end of the list
+        if len(flat_loss_inputs) != len(existing_inputs):
+            raise ValueError(
+                "Tensor list mismatch",
+                self._loss_input_dict,
+                self._state_inputs,
+                existing_inputs,
+            )
+        for i, v in enumerate(flat_loss_inputs_no_rnn):
+            if v.shape.as_list() != existing_inputs[i].shape.as_list():
+                raise ValueError(
+                    "Tensor shape mismatch", i, v.shape, existing_inputs[i].shape
+                )
+        # By convention, the loss inputs are followed by state inputs and then
+        # the seq len tensor.
+        rnn_inputs = []
+        for i in range(len(self._state_inputs)):
+            rnn_inputs.append(
+                (
+                    "state_in_{}".format(i),
+                    existing_inputs[len(flat_loss_inputs_no_rnn) + i],
+                )
+            )
+        if rnn_inputs:
+            rnn_inputs.append((SampleBatch.SEQ_LENS, existing_inputs[-1]))
+        existing_inputs_unflattened = tree.unflatten_as(
+            self._loss_input_dict_no_rnn,
+            existing_inputs[: len(flat_loss_inputs_no_rnn)],
+        )
+        input_dict = collections.OrderedDict(
+            [("is_exploring", self._is_exploring), ("timestep", self._timestep)]
+            + [
+                (k, existing_inputs_unflattened[k])
+                for i, k in enumerate(self._loss_input_dict_no_rnn.keys())
+            ]
+            + rnn_inputs
+        )
+
+        instance = self.__class__(
+            self.observation_space,
+            self.action_space,
+            self.config,
+            existing_inputs=input_dict,
+            existing_model=[
+                self.model,
+                # Deprecated: Target models should all reside under
+                # `policy.target_model` now.
+                ("target_q_model", getattr(self, "target_q_model", None)),
+                ("target_model", getattr(self, "target_model", None)),
+            ],
+        )
+        instance.learner_bound = self.learner_bound
+
+        instance._loss_input_dict = input_dict
+        losses = instance._do_loss_init(SampleBatch(input_dict))
+        loss_inputs = [
+            (k, existing_inputs_unflattened[k])
+            for i, k in enumerate(self._loss_input_dict_no_rnn.keys())
+        ]
+
+        TFPolicy._initialize_loss(instance, losses, loss_inputs)
+        instance._stats_fetches.update(
+            instance.grad_stats_fn(input_dict, instance._grads)
+        )
+        return instance
 
 
 def temp_loss(advantage, eta, eps_eta, rhos, mask):
