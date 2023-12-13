@@ -106,6 +106,9 @@ class PokemonICMModel(TFModelV2):
             next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
                                                      dtype=tf.float32)
 
+            curr_state_embedding_input = tf.keras.layers.Input(shape=(self.fcnet_size,), name="curr_state_embedding_input",
+                                                     dtype=tf.float32)
+
 
             cnn_layers = ([tf.keras.layers.Conv2D(
                     out_size,
@@ -168,9 +171,10 @@ class PokemonICMModel(TFModelV2):
             )(action_prediction_fc1)
 
             state_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_prediction_input")(
-            [curr_state_embedding, action_one_hot,
+            [curr_state_embedding_input, action_one_hot,
              ]
             )
+
             state_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_state_prediction_fc1",
@@ -183,16 +187,15 @@ class PokemonICMModel(TFModelV2):
                 activation=None,
             )(state_prediction_fc1)
 
-            # self.icm_forward_model = tf.keras.Model(
-            #     [screen_input, stats_input],
-            #     [curr_state_embedding]
-            # )
+            self.icm_forward_model = tf.keras.Model(
+                [curr_state_embedding_input, action_input],
+                [state_prediction_out]
+            )
 
             self.icm_prediction_model = tf.keras.Model(
-            [screen_input, next_screen_input, stats_input, next_stats_input,
-             action_input
+            [screen_input, next_screen_input, stats_input, next_stats_input
              ],
-            [action_prediction_logits, state_prediction_out, next_state_embedding]
+            [action_prediction_logits, curr_state_embedding, next_state_embedding]
 
             )
 
@@ -213,13 +216,15 @@ class PokemonICMModel(TFModelV2):
 
         if self.learner_bound:
 
-            action_prediction_logits, state_prediction_out, self.icm_next_state_embedding = self.icm_prediction_model(
-                [self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs, self.actions]
+            action_prediction_logits, curr_state_embedding, self.icm_next_state_embedding = self.icm_prediction_model(
+                [self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs]
             )
 
             #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
-            self.icm_state_predictions = state_prediction_out
+            self.icm_state_predictions = self.icm_forward_model(
+                [tf.stop_gradient(curr_state_embedding), self.actions]
+            )
             self.icm_action_predictions = action_prediction_logits
 
         return allowed_action_logits, state
