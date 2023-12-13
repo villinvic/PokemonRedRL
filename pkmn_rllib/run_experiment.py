@@ -78,11 +78,11 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_icm_model",
         "conv_filters": [
-            [32, [4, 4], 2, "valid"],
+            [32, [4, 4], 3, "valid"],
             [64, [2, 2], 1, "valid"],
             [64, [2, 2], 1, "valid"],
         ],
-        "fcnet_size": 512,
+        "fcnet_size": 256,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
