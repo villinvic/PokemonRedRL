@@ -497,8 +497,10 @@ class VmpoPolicy(
         self.new_mean = vtrace_returns.new_mean
         self.new_moment = vtrace_returns.new_moment
 
-
-        return self.total_loss, self.mean_icm_loss
+        if self.learner_bound:
+            return self.total_loss, self.mean_icm_loss
+        else:
+            return self.total_loss, self.total_loss
 
     @override(DynamicTFPolicyV2)
     def stats_fn(self, train_batch: SampleBatch) -> Dict[str, TensorType]:
