@@ -160,7 +160,7 @@ class PokemonICMModel(TFModelV2):
             action_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_action_prediction_fc1",
-                activation="relu",
+                activation="elu",
             )(action_prediction_input)
 
             # TODO : add allowed actions
@@ -178,7 +178,7 @@ class PokemonICMModel(TFModelV2):
             state_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_state_prediction_fc1",
-                activation="relu",
+                activation="elu",
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
@@ -216,12 +216,13 @@ class PokemonICMModel(TFModelV2):
 
         if self.learner_bound:
 
-            action_prediction_logits, curr_state_embedding, self.icm_next_state_embedding = self.icm_prediction_model(
+            action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
                 [self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs]
             )
 
             #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
+            self.icm_next_state_embedding = tf.stop_gradient(icm_next_state_embedding)
             self.icm_state_predictions = self.icm_forward_model(
                 [tf.stop_gradient(curr_state_embedding), self.actions]
             )
@@ -233,7 +234,7 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return self.fcnet_size * tf.math.square(tf.stop_gradient(self.icm_next_state_embedding) - self.icm_state_predictions) * 0.5
+        return self.fcnet_size * tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
 
     def action_prediction_loss(self):
         return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
