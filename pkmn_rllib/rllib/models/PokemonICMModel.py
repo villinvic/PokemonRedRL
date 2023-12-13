@@ -15,8 +15,8 @@ class PokemonICMModel(TFModelV2):
 
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
-        self.icm_beta = model_config.get("icm_beta", 0.2)
-        self.curiosity_reward_scale = model_config.get("icm_eta", 0.1) / 2.
+        self.icm_beta = model_config.get("icm_beta", 1e-2)
+        self.curiosity_reward_scale = model_config.get("icm_eta", 0.1)
         self.icm_lambda = model_config.get("icm_lambda", 0.1)
         self.learner_bound = model_config["learner_bound"]
 
@@ -217,10 +217,10 @@ class PokemonICMModel(TFModelV2):
                 [self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs, self.actions]
             )
 
-            allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
+            #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
             self.icm_state_predictions = state_prediction_out
-            self.icm_action_predictions = allowed_action_prediction_logits
+            self.icm_action_predictions = action_prediction_logits
 
         return allowed_action_logits, state
 
@@ -228,7 +228,7 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions)
+        return tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
 
     def action_prediction_loss(self):
         return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
