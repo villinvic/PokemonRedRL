@@ -105,9 +105,6 @@ class ICMClipGradient:
             optimizers = force_list(optimizer)
             losses = force_list(loss)
 
-            if not self.learner_bound:
-                optimizers = optimizers[:1]
-
             assert len(optimizers) == len(losses), (optimizers, losses, self.optimizer())
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
