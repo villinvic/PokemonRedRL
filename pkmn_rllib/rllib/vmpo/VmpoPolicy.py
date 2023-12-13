@@ -233,19 +233,28 @@ class VmpoPolicy(
 
         # ICM ####################################
 
-        state_prediction_loss = self.model.state_prediction_loss()
-        action_prediction_loss = self.model.action_prediction_loss()
+        if self.learner_bound:
+            state_prediction_loss = self.model.state_prediction_loss()
+            action_prediction_loss = self.model.action_prediction_loss()
 
-        intrinsic_rewards = tf.reduce_mean(state_prediction_loss * self.model.curiosity_reward_scale, axis=1, keepdims=True)
-        rewards = rewards + tf.stop_gradient(intrinsic_rewards)
+            intrinsic_rewards = tf.reduce_mean(state_prediction_loss * self.model.curiosity_reward_scale, axis=1, keepdims=True)
+            rewards = rewards + tf.stop_gradient(intrinsic_rewards)
 
-        self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
-        icm_loss = ((action_prediction_loss * (1. - self.model.icm_beta) + state_prediction_loss * self.model.icm_beta)
-                    / self.model.icm_lambda)
+            self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
+            icm_loss = ((action_prediction_loss * (1. - self.model.icm_beta) + state_prediction_loss * self.model.icm_beta)
+                        / self.model.icm_lambda)
 
-        self.mean_icm_loss = tf.reduce_mean(icm_loss)
-        self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
-        self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
+            self.mean_icm_loss = tf.reduce_mean(icm_loss)
+            self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
+            self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
+        else:
+
+            self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
+            self.mean_icm_loss = tf.zeros((1,), dtype=tf.float32)
+            self.mean_state_prediction_loss = tf.zeros((1,), dtype=tf.float32)
+            self.mean_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
+
+
 
         ##########################################
 
