@@ -228,10 +228,16 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions)
+        if self.learner_bound:
+            return tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions)
+        else:
+            return tf.zeros((1,), dtype=tf.float32)
 
     def action_prediction_loss(self):
-        return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
+        if self.learner_bound:
+            return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
+        else:
+            return tf.zeros((1,), dtype=tf.float32)
 
 
 
