@@ -18,26 +18,38 @@ def create_named_pipe():
 
 def send_dummy_data():
     episode_id = 1
+    time_left = 0
     total_exp = 0
-    pokemons = [33, 0, 0, 0, 0, 0]
-    pokemon_levels = [6, 0, 0, 0, 0, 0]
-    pokemon_max_healths = [32, 0, 0, 0, 0, 0]
-    pokemon_current_healths = [32, 0, 0, 0, 0, 0]
-    num_pokemons = 1
     context = zmq.Context()
     socket = context.socket(zmq.PUSH)
     socket.bind(pipe_path)
-
     to_send = []
 
     while True:
         # Generate dummy score
+
+        if time_left == 0:
+            episode_id += 1
+            time_left = 3600
+            badges = 0
+            money = 2000
+            pokemons = [107, 0, 0, 0, 0, 0]
+            pokemon_levels = [6, 0, 0, 0, 0, 0]
+            pokemon_max_healths = [32, 0, 0, 0, 0, 0]
+            pokemon_current_healths = [32, 0, 0, 0, 0, 0]
+            num_pokemons = 1
+
+
         score = total_exp // episode_id  # Just a placeholder calculation, replace it with your actual scoring logic
 
-        if episode_id % 3 == 0 and num_pokemons < 6:
-
+        if np.random.random() < 0.02 and num_pokemons < 6:
             pokemons[num_pokemons] = np.random.choice(151) + 1
             num_pokemons += 1
+        if np.random.random() < 0.1:
+            money += np.random.randint(-1000, 1000)
+            money = np.clip(money, 0, 100_000)
+        if np.random.random()<0.05 and badges < 8:
+            badges += 1
 
         for i in range(6):
             if pokemons[i] != 0:
@@ -71,7 +83,11 @@ def send_dummy_data():
             "pokemon_ids": pokemons,
             "pokemon_levels": pokemon_levels,
             "pokemon_max_healths": pokemon_max_healths,
-            "pokemon_current_healths": pokemon_current_healths
+            "pokemon_current_healths": pokemon_current_healths,
+
+            "badges": badges,
+            "money": money,
+            "time_left": time_left,
             # exp
             # badges
             # see environment actually
@@ -91,11 +107,10 @@ def send_dummy_data():
         print(f"Sent data: {data}", f"in queue : {len(to_send)}")
 
         # Update episode_id and total_exp for the next iteration
-        episode_id += 1
-        total_exp += 100  # Just an example increment, replace it with your actual increment logic
 
         # Sleep for 10 seconds
-        time.sleep(5)
+        time.sleep(3)
+        time_left -= 1
 
 if __name__ == "__main__":
     # Ensure the named pipe exists before running the script

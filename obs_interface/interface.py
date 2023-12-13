@@ -38,6 +38,7 @@ class PokemonAIInterface(QWidget):
         self.init_ui()
 
         self.pokemon_ids = [0] * 6
+        self.badge_count = 0
 
     def init_ui(self):
         palette = self.palette()
@@ -56,15 +57,6 @@ class PokemonAIInterface(QWidget):
         self.game_placeholder.setPixmap(pixmap)
         self.game_placeholder.show()
 
-        self.trainer_card_label = QLabel(self)
-        #self.trainer_card_label.setFixedSize(600, 800)
-
-        pixmap = QPixmap("obs_interface/assets/ui/trainer_card/trainer_card_0_badges.png")
-        pixmap.setDevicePixelRatio(0.5)
-        self.trainer_card_label.setPixmap(pixmap)
-        self.trainer_card_label.show()
-        self.trainer_card_label.move(1200, 100)
-
         self.obs_layout = QLabel(self)
         pixmap = QPixmap("obs_interface/assets/ui/layout/layout.png")
         pixmap.setDevicePixelRatio(1)
@@ -77,20 +69,52 @@ class PokemonAIInterface(QWidget):
         # Create labels for episode information
         self.episode_label = QLabel('Episode: N/A', self)
         self.episode_label.setAlignment(Qt.AlignLeft)
-        #self.episode_label.setFont(QFont)
-        self.episode_label.setFixedSize(200, 24)
+        self.episode_label.setFixedSize(400, 24)
         self.episode_label.move(10, 10)
         self.score_label = QLabel('Score: N/A', self)
-        self.score_label.setFixedSize(200, 24)
+        self.score_label.setFixedSize(400, 24)
         self.score_label.setAlignment(Qt.AlignLeft)
-
-
         self.score_label.move(110, 10)
+
         self.total_exp_label = QLabel('Total Exp: N/A', self)
-        self.total_exp_label.setFixedSize(200, 24)
+        self.total_exp_label.setFixedSize(400, 24)
         self.total_exp_label.move(210, 10)
         self.total_exp_label.setAlignment(Qt.AlignLeft)
 
+
+        self.trainer_card_label = QLabel(self)
+        pixmap = QPixmap("obs_interface/assets/ui/trainer_card/gray/trainer_card_0_badges_gray.png")
+        pixmap.setDevicePixelRatio(0.5)
+        self.trainer_card_label.setPixmap(pixmap)
+        self.trainer_card_label.show()
+        self.trainer_card_label.move(36, 776)
+
+        self.name_label = QLabel("NAME/DEEPRED", self)
+        self.name_label.setFixedSize(400, 24)
+        self.name_label.move(69, 806)
+        self.name_label.setAlignment(Qt.AlignLeft)
+        self.name_label.setStyleSheet("color: black;")
+        self.name_label.setFont(QFont("PKMN RBYGSC", 10, 32, False))
+
+        self.money_label = QLabel("MONEY/¥0", self)
+        self.money_label.setFixedSize(400, 24)
+        self.money_label.move(69, 806+32)
+        self.money_label.setAlignment(Qt.AlignLeft)
+        self.money_label.setStyleSheet("color: black;")
+        self.money_label.setFont(QFont("PKMN RBYGSC", 10, 32, False))
+
+
+
+        self.time_label = QLabel("TIME LEFT/1:00:00", self)
+        self.time_label.setFixedSize(400, 24)
+        self.time_label.move(69, 806+64)
+        self.time_label.setAlignment(Qt.AlignLeft)
+        self.time_label.setStyleSheet("color: black;")
+        self.time_label.setFont(QFont("PKMN RBYGSC", 10, 32, False))
+
+
+
+        #self.money_label.setFont(QFont("PKMN RBYGSC", 14, 32, False))
 
         # Add episode information labels to the layout
 
@@ -113,7 +137,7 @@ class PokemonAIInterface(QWidget):
             for i, pokemon_label in enumerate(pokemon_labels):
                 pokemon_label.setAlignment(Qt.AlignLeft)
                 pokemon_label.setFixedSize(200, 24)
-                pokemon_label.move(x + 182, y + 76 + 24 * i)
+                pokemon_label.move(x + 180, y + 76 + 24 * i)
 
             self.pokemon_sprite_labels.append(pokemon_sprite_label)
             self.pokemon_stat_labels.append(pokemon_labels)
@@ -131,6 +155,21 @@ class PokemonAIInterface(QWidget):
         self.episode_label.setText(f'Episode: {data["episode_id"]}')
         self.score_label.setText(f'Score: {data["score"]}')
         self.total_exp_label.setText(f'Total Exp: {data["total_exp"]}')
+
+        self.money_label.setText(f"MONEY/¥{data['money']}")
+        time_seconds = data["time_left"]
+        hours = time_seconds // 3600
+        minutes = (time_seconds - 3600 * hours) // 60
+        seconds = (time_seconds - 3600 * hours - 60 * minutes)
+        self.time_label.setText(f"TIME LEFT/{hours}:{minutes:02d}:{seconds:02d}")
+
+        curr_badges = data["badges"]
+        if curr_badges != self.badge_count:
+            pixmap = QPixmap(f"obs_interface/assets/ui/trainer_card/gray/trainer_card_{curr_badges}_badges_gray.png")
+            pixmap.setDevicePixelRatio(0.5)
+            self.trainer_card_label.setPixmap(pixmap)
+
+            self.badge_count = curr_badges
 
         # Load and display Pokémon gifs
         for i, pokemon_id in enumerate(data["pokemon_ids"]):
@@ -152,14 +191,14 @@ class PokemonAIInterface(QWidget):
 
             if pokemon_id == 0 and self.pokemon_ids[i] != 0:
                 # pokemon removed from party : TODO
-                self.pokemon_labels[i].clear()
+                self.pokemon_sprite_labels[i].clear()
             elif pokemon_id != 0 and self.pokemon_ids[i] == 0:
                 # pokemon added to party
                 self.show_pokemon(pokemon_id, i)
 
             elif pokemon_id != self.pokemon_ids[i]:
                 # changed pokemon at idx i : TODO
-                self.load_and_display_gif(pokemon_id, self.pokemon_labels[i])
+                self.show_pokemon(pokemon_id, i)
 
             self.pokemon_ids[i] = pokemon_id
 
