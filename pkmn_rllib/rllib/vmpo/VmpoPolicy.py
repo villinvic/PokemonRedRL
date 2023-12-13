@@ -163,15 +163,21 @@ class ICMOptimizer:
                 optim = tf.keras.optimizers.RMSprop(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
-                icm_optimizer = tf.keras.optimizers.Adam(1e-3)
-                return optim, icm_optimizer
+                if self.learner_bound:
+                    icm_optimizer = tf.keras.optimizers.Adam(1e-3)
+                    return optim, icm_optimizer
+                else:
+                    return optim
 
             else:
                 optim = tf1.train.RMSPropOptimizer(
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
-                icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
-                return optim, icm_optimizer
+                if self.learner_bound:
+                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
+                    return optim, icm_optimizer
+                else:
+                    return optim
 
         return optim
 
@@ -495,7 +501,12 @@ class VmpoPolicy(
         self.new_mean = vtrace_returns.new_mean
         self.new_moment = vtrace_returns.new_moment
 
-        return self.total_loss, self.mean_icm_loss
+
+        if self.learner_bound:
+            return self.total_loss
+
+        else:
+            return self.total_loss, self.mean_icm_loss
 
     @override(DynamicTFPolicyV2)
     def stats_fn(self, train_batch: SampleBatch) -> Dict[str, TensorType]:
