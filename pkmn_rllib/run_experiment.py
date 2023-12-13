@@ -61,7 +61,7 @@ config = VmpoConfig().training(
     eps_alpha=2e-3,
     alpha=5.,
     target_network_update_freq=500, #1536,
-    replay_proportion=0.5,
+    replay_proportion=0.0,
     entropy_coeff=1e-4,
     learner_queue_size=64,
     lr=8e-4,
@@ -82,7 +82,7 @@ config = VmpoConfig().training(
             [64, [2, 2], 1, "valid"],
             [64, [2, 2], 1, "valid"],
         ],
-        "fcnet_size": 256,
+        "fcnet_size": 512,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
