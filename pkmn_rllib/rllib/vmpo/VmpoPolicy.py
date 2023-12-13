@@ -248,7 +248,7 @@ class VmpoPolicy(
                          + self.mean_state_prediction_loss * self.model.icm_beta)
                         / self.model.icm_lambda)
 
-            self.mean_icm_loss = icm_losl
+            self.mean_icm_loss = icm_loss
 
         else:
 
