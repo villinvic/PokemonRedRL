@@ -108,9 +108,7 @@ class ICMClipGradient:
             if not self.learner_bound:
                 optimizers = optimizers[:1]
 
-            print("\nBAHABHABHABHAB\n", self.learner_bound, optimizers, losses)
-
-            #assert len(optimizers) == len(losses)
+            assert len(optimizers) == len(losses), (optimizers, losses, self.optimizer())
             clipped_grads_and_vars = []
             for optim, loss_ in zip(optimizers, losses):
                 grads_and_vars = optim.compute_gradients(loss_, trainable_variables)
@@ -209,7 +207,6 @@ class VmpoPolicy(
         self.total_diff = 0
 
         tf1.disable_eager_execution()
-
 
         ICMClipGradient.__init__(self)
         ICMOptimizer.__init__(self)
