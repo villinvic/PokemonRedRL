@@ -625,7 +625,7 @@ class Vmpo(Impala):
             for p_id in weights:
                 keys = list(weights[p_id].keys())
                 for k in keys:
-                    if "value" in k:
+                    if "value" in k or "ICM" in k:
                         weights[p_id].pop(k)
 
             weights = ray.put(weights)
