@@ -358,7 +358,7 @@ class PkmnRedEnv(Env):
         self.last_walked_coordinates = []
         self.full_frame_writer = None
 
-        self.goal_task_timeout_steps = 512
+        self.goal_task_timeout_steps = 256
         self.current_goal = None
         self.task_timesteps = 0
         self.stuck_count = 0
@@ -420,7 +420,7 @@ class PkmnRedEnv(Env):
                 self.current_goal = (0, 0, -1)
                 self.task_timesteps = self.goal_task_timeout_steps
             else:
-                df = np.random.randint(3, 7) * np.random.choice([-1, 1])
+                df = np.random.randint(3, 8) * np.random.choice([-1, 1])
                 dc = np.random.randint(0, 3) * np.random.choice([-1, 1])
                 dd = [df, dc]
                 np.random.shuffle(dd)
@@ -756,7 +756,7 @@ class PkmnRedEnv(Env):
         if self.stuck_count < 8 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
             # Does not handle map changes
             curr_x, curr_y, map_id = self.last_walked_coordinates[-1]
-            forbidden_locations = self.last_walked_coordinates[-7: -1]
+            forbidden_locations = self.last_walked_coordinates[-2: -1]
             #past_x, past_y, past_map = self.last_walked_coordinates[-2]
 
             if [curr_x, curr_y - 1, map_id] in forbidden_locations:
