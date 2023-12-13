@@ -78,9 +78,9 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_icm_model",
         "conv_filters": [
-            [32, [4, 4], 3, "valid"],
+            [32, [4, 4], 2, "valid"],
             [64, [4, 4], 2, "valid"],
-            [64, [2, 2], 1, "valid"],
+            [64, [3, 3], 1, "valid"],
         ],
         "fcnet_size": 512,
     }

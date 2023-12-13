@@ -160,7 +160,7 @@ class PokemonICMModel(TFModelV2):
             action_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_action_prediction_fc1",
-                activation="elu",
+                activation="relu",
             )(action_prediction_input)
 
             # TODO : add allowed actions
@@ -178,7 +178,7 @@ class PokemonICMModel(TFModelV2):
             state_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_state_prediction_fc1",
-                activation="elu",
+                activation="relu",
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
@@ -220,13 +220,13 @@ class PokemonICMModel(TFModelV2):
                 [self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs]
             )
 
-            #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
+            allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
             self.icm_next_state_embedding = tf.stop_gradient(icm_next_state_embedding)
             self.icm_state_predictions = self.icm_forward_model(
                 [tf.stop_gradient(curr_state_embedding), self.actions]
             )
-            self.icm_action_predictions = action_prediction_logits
+            self.icm_action_predictions = allowed_action_prediction_logits
 
         return allowed_action_logits, state
 
