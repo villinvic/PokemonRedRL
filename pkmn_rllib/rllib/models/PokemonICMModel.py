@@ -110,7 +110,7 @@ class PokemonICMModel(TFModelV2):
             next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
                                                      dtype=tf.float32)
 
-            curr_state_embedding_input = tf.keras.layers.Input(shape=(320,), name="curr_state_embedding_input",
+            curr_state_embedding_input = tf.keras.layers.Input(shape=(self.fcnet_size,), name="curr_state_embedding_input",
                                                      dtype=tf.float32)
 
 
@@ -183,7 +183,7 @@ class PokemonICMModel(TFModelV2):
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
-                320,
+                self.fcnet_size,
                 name="ICM_state_prediction_fc2",
                 activation=None,
                 #kernel_initializer=tf.random_normal_initializer(0, 0.01)
