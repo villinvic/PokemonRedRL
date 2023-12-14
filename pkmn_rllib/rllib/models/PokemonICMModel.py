@@ -17,8 +17,8 @@ class PokemonICMModel(TFModelV2):
 
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
-        self.icm_beta = model_config.get("icm_beta", 0.2)
-        self.curiosity_reward_scale = model_config.get("icm_eta", 0.1)
+        self.icm_beta = model_config.get("icm_beta", 0.01)
+        self.curiosity_reward_scale = model_config.get("icm_eta", 1.)
         self.icm_lambda = model_config.get("icm_lambda", 0.1)
         self.learner_bound = model_config["learner_bound"]
 
@@ -157,12 +157,14 @@ class PokemonICMModel(TFModelV2):
                 self.fcnet_size,
                 name="ICM_action_prediction_fc1",
                 activation="elu",
+                kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(action_prediction_input)
 
             action_prediction_logits = tf.keras.layers.Dense(
                 self.num_outputs,
                 name="ICM_action_logits",
                 activation=None,
+                kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(action_prediction_fc1)
 
             state_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_prediction_input")(
@@ -174,12 +176,14 @@ class PokemonICMModel(TFModelV2):
                 self.fcnet_size,
                 name="ICM_state_prediction_fc1",
                 activation="elu",
+                kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
                 320,
                 name="ICM_state_prediction_fc2",
                 activation=None,
+                kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(state_prediction_fc1)
 
             self.icm_forward_model = tf.keras.Model(

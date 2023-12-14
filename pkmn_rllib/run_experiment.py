@@ -54,13 +54,13 @@ ModelCatalog.register_custom_model(
 
 num_workers = 124
 num_envs_per_worker = 1
-rollout_fragment_length = 128
+rollout_fragment_length = 64
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=2e-3,
     alpha=5.,
-    target_network_update_freq=1000, #1536,
+    target_network_update_freq=2000, #1536,
     replay_proportion=0.0,
     entropy_coeff=1e-4,
     learner_queue_size=64,
@@ -72,8 +72,8 @@ config = VmpoConfig().training(
     grad_clip=1.,
     opt_type="rmsprop",
     train_batch_size=1024,
-    num_sgd_iter=4,
-    minibatch_buffer_size=16,
+    num_sgd_iter=1,
+    minibatch_buffer_size=1,
     gamma=0.997,
     model={
         "custom_model": "pokemon_icm_model",
@@ -83,7 +83,7 @@ config = VmpoConfig().training(
             [32, [3, 3], 2, "same"],
             [32, [3, 3], 2, "same"],
         ],
-        "fcnet_size": 256,
+        "fcnet_size": 300,
     }
 ).rollouts(
     num_rollout_workers=num_workers,

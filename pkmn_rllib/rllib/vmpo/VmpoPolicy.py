@@ -343,6 +343,9 @@ class VmpoPolicy(
             rewards = rewards + tf.stop_gradient(intrinsic_rewards)
 
             self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
+            self.min_intrinsic_rewards = tf.reduce_min(intrinsic_rewards)
+            self.max_intrinsic_rewards = tf.reduce_max(intrinsic_rewards)
+
             icm_loss = (self.mean_action_prediction_loss * (1. - self.model.icm_beta)
                          + self.mean_state_prediction_loss * self.model.icm_beta)
 
@@ -552,7 +555,9 @@ class VmpoPolicy(
             "curiosity/state_prediction_loss": self.mean_state_prediction_loss,
             "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
             "curiosity/total_loss": self.mean_icm_loss,
-            "curiosity/intrinsic_rewards": self.mean_intrinsic_rewards,
+            "curiosity/intrinsic_rewards_mean": self.mean_intrinsic_rewards,
+            "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
+            "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
         }
 
