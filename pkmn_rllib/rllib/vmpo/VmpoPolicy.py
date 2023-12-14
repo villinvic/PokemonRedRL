@@ -339,7 +339,7 @@ class VmpoPolicy(
             self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
             self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
 
-            intrinsic_rewards = tf.reduce_mean(state_prediction_loss * self.model.curiosity_reward_scale, axis=1)
+            intrinsic_rewards = state_prediction_loss * self.model.curiosity_reward_scale
             rewards = rewards + tf.stop_gradient(intrinsic_rewards)
 
             self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)

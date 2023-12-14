@@ -103,9 +103,9 @@ class PokemonICMModel(TFModelV2):
 
             action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
             action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
-            curr_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="curr_screen_input",
+            curr_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="curr_screen_input",
                                                       dtype=tf.float32)
-            next_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="next_screen_input",
+            next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
                                                       dtype=tf.float32)
             #next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
             #                                         dtype=tf.float32)
@@ -211,7 +211,7 @@ class PokemonICMModel(TFModelV2):
         if self.learner_bound:
 
             action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
-                [self.screen_input[:, :36], next_screen_input[:, :36]]
+                [self.screen_input, next_screen_input]
             )
 
             #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
@@ -228,7 +228,7 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return 288. * tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
+        return tf.reduce_sum(tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions), axis=-1) * 0.5
 
     def action_prediction_loss(self):
 
