@@ -163,7 +163,6 @@ class PokemonICMModel(TFModelV2):
                 activation="relu",
             )(action_prediction_input)
 
-            # TODO : add allowed actions
             action_prediction_logits = tf.keras.layers.Dense(
                 self.num_outputs,
                 name="ICM_action_logits",
