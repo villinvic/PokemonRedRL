@@ -362,6 +362,8 @@ class VmpoPolicy(
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
             self.min_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
             self.max_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
+            self.max_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
+            self.min_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
 
 
 
