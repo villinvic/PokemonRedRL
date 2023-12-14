@@ -337,6 +337,8 @@ class VmpoPolicy(
             action_prediction_loss = self.model.action_prediction_loss()
 
             self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
+            self.max_action_prediction_loss = tf.reduce_max(action_prediction_loss)
+            self.min_action_prediction_loss = tf.reduce_min(action_prediction_loss)
             self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
 
             intrinsic_rewards = state_prediction_loss * self.model.curiosity_reward_scale
@@ -557,6 +559,8 @@ class VmpoPolicy(
             # ICM
             "curiosity/state_prediction_loss": self.mean_state_prediction_loss,
             "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
+            "curiosity/action_prediction_loss_min": self.min_action_prediction_loss,
+            "curiosity/action_prediction_loss_max": self.max_action_prediction_loss,
             "curiosity/total_loss": self.mean_icm_loss,
             "curiosity/intrinsic_rewards_mean": self.mean_intrinsic_rewards,
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
