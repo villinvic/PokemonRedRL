@@ -159,7 +159,7 @@ class PokemonICMModel(TFModelV2):
             # action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_action_prediction_input")(
             #     [curr_state_embedding, next_state_embedding]
             # )
-            last_layer = curr_screen_input
+            last_layer = cnn_input
             for cnn_layer in cnn_layers:
                 last_layer = cnn_layer(last_layer)
 
