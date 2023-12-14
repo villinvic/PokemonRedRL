@@ -108,7 +108,7 @@ class PokemonICMModel(TFModelV2):
             #next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
             #                                         dtype=tf.float32)
 
-            curr_state_embedding_input = tf.keras.layers.Input(shape=(32,), name="curr_state_embedding_input",
+            curr_state_embedding_input = tf.keras.layers.Input(shape=(288,), name="curr_state_embedding_input",
                                                      dtype=tf.float32)
 
             cnn_layers = ([tf.keras.layers.Conv2D(
@@ -175,7 +175,7 @@ class PokemonICMModel(TFModelV2):
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
-                self.fcnet_size,
+                288,
                 name="ICM_state_prediction_fc2",
                 activation=None,
             )(state_prediction_fc1)
@@ -226,7 +226,7 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return self.fcnet_size * tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
+        return 288. * tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
 
     def action_prediction_loss(self):
         return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
