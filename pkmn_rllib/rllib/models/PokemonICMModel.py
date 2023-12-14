@@ -216,9 +216,9 @@ class PokemonICMModel(TFModelV2):
 
             #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
-            self.icm_next_state_embedding = icm_next_state_embedding
+            self.icm_next_state_embedding = tf.stop_gradient(icm_next_state_embedding)
             self.icm_state_predictions = self.icm_forward_model(
-                [curr_state_embedding, self.actions]
+                [tf.stop_gradient(curr_state_embedding), self.actions]
             )
             self.icm_action_predictions = action_prediction_logits
 
