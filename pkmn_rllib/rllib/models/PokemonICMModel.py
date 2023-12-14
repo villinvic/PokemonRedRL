@@ -15,7 +15,7 @@ class PokemonICMModel(TFModelV2):
 
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
-        self.icm_beta = model_config.get("icm_beta", 1e-3)
+        self.icm_beta = model_config.get("icm_beta", 0.)
         self.curiosity_reward_scale = model_config.get("icm_eta", 0.1)
         self.icm_lambda = model_config.get("icm_lambda", 0.1)
         self.learner_bound = model_config["learner_bound"]

@@ -83,7 +83,7 @@ config = VmpoConfig().training(
             [32, [3, 3], 2, "same"],
             [32, [3, 3], 2, "same"],
         ],
-        "fcnet_size": 400,
+        "fcnet_size": 256,
     }
 ).rollouts(
     num_rollout_workers=num_workers,
