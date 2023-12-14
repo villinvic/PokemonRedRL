@@ -108,7 +108,7 @@ class PokemonICMModel(TFModelV2):
             #next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
             #                                         dtype=tf.float32)
 
-            curr_state_embedding_input = tf.keras.layers.Input(shape=(384,), name="curr_state_embedding_input",
+            curr_state_embedding_input = tf.keras.layers.Input(shape=(32,), name="curr_state_embedding_input",
                                                      dtype=tf.float32)
 
             cnn_layers = ([tf.keras.layers.Conv2D(
