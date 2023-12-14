@@ -349,7 +349,7 @@ class VmpoPolicy(
             icm_loss = (self.mean_action_prediction_loss * (1. - self.model.icm_beta)
                          + self.mean_state_prediction_loss * self.model.icm_beta)
 
-            self.mean_icm_loss = icm_loss
+            self.mean_icm_loss = icm_loss / self.model.icm_lambda
 
         else:
 
@@ -507,7 +507,7 @@ class VmpoPolicy(
         self.new_moment = vtrace_returns.new_moment
 
         if self.learner_bound:
-            return self.total_loss * self.model.icm_lambda, self.mean_icm_loss
+            return self.total_loss, self.mean_icm_loss
         else:
             return self.total_loss
 

@@ -18,9 +18,6 @@ class PokemonLstmModel(TFModelV2):
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
         self.lstm_size = model_config.get("lstm_size")
-        self.icm_beta = model_config.get("icm_beta", 0.2)
-        self.curiosty_reward_scale = model_config.get("icm_eta", 0.1) / 2.
-        self.icm_lambda = model_config.get("icm_lambda", 0.1)
 
 
 
