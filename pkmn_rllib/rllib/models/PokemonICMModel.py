@@ -133,7 +133,7 @@ class PokemonICMModel(TFModelV2):
                 activation="relu",
             )
 
-            last_layer = screen_input
+            last_layer = curr_screen_input
 
             for cnn_layer in cnn_layers:
 
