@@ -130,7 +130,7 @@ class PokemonICMModel(TFModelV2):
             state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
             state_embedding_fc = tf.keras.layers.Dense(
-                self.fcnet_size,
+                256,
                 name="ICM_state_embedding_fc",
                 activation="relu",
             )
@@ -190,8 +190,8 @@ class PokemonICMModel(TFModelV2):
             )(state_prediction_fc1)
 
             state_prediction_out = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_state_prediction_fc2",
+                256,
+                name="ICM_state_prediction_out",
                 activation=None,
                 #kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(state_prediction_fc2)
