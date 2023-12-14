@@ -50,7 +50,7 @@ class PokemonICMModel(TFModelV2):
                 strides=stride
                 if isinstance(stride, (list, tuple))
                 else (stride, stride),
-                activation="elu",
+                activation="relu",
                 padding=padding,
                 data_format="channels_last",
                 name="conv{}".format(i),
@@ -66,13 +66,13 @@ class PokemonICMModel(TFModelV2):
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
-            activation="elu",
+            activation="relu",
         )(concat_features)
 
         fc2 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc2",
-            activation="elu",
+            activation="relu",
         )(fc1)
 
         action_logits = tf.keras.layers.Dense(
@@ -103,9 +103,9 @@ class PokemonICMModel(TFModelV2):
 
             action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
             action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
-            curr_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="curr_screen_input",
+            curr_screen_input = tf.keras.layers.Input(shape=(72,) + obs_space["screen"].shape[1:], name="curr_screen_input",
                                                       dtype=tf.float32)
-            next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
+            next_screen_input = tf.keras.layers.Input(shape=(72,) + obs_space["screen"].shape[1:], name="next_screen_input",
                                                       dtype=tf.float32)
             #next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
             #                                         dtype=tf.float32)
@@ -113,58 +113,70 @@ class PokemonICMModel(TFModelV2):
             curr_state_embedding_input = tf.keras.layers.Input(shape=(320,), name="curr_state_embedding_input",
                                                      dtype=tf.float32)
 
+
+            cnn_input = tf.keras.layers.Concatenate(axis=1, name="ICM_action_prediction_input")(
+                [curr_screen_input, next_screen_input]
+            )
+
+
             cnn_layers = ([tf.keras.layers.Conv2D(
                     out_size,
                     kernel,
                     strides=stride
                     if isinstance(stride, (list, tuple))
                     else (stride, stride),
-                    activation="elu",
+                    activation="relu",
                     padding=padding,
                     data_format="channels_last",
                     name="ICM_conv{}".format(i),
                 ) for i, (out_size, kernel, stride, padding) in enumerate(filters, 1)]
-                + [tf.keras.layers.Flatten()])
+                + [tf.keras.layers.Flatten(), tf.keras.layers.Dense(
+                        self.fcnet_size*2, name="ICM_state_embedding_fc", activation="relu",)])
 
             #state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
             # state_embedding_fc = tf.keras.layers.Dense(
             #     self.fcnet_size,
             #     name="ICM_state_embedding_fc",
-            #     activation="elu",
+            #     activation="relu",
             # )
 
-            last_layer_curr = curr_screen_input
-            last_layer_next = next_screen_input
-
+            # last_layer_curr = curr_screen_input
+            # last_layer_next = next_screen_input
+            #
+            # for cnn_layer in cnn_layers:
+            #     last_layer_curr = cnn_layer(last_layer_curr)
+            #     last_layer_next = cnn_layer(last_layer_next)
+            #
+            # # curr_state_pre_f1 = state_embedding_concat(
+            # #     [last_layer, stats_input]
+            # # )
+            # # curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
+            # curr_state_embedding = last_layer_curr
+            # next_state_embedding = last_layer_next
+            #
+            #
+            # action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_action_prediction_input")(
+            #     [curr_state_embedding, next_state_embedding]
+            # )
+            last_layer = curr_screen_input
             for cnn_layer in cnn_layers:
-                last_layer_curr = cnn_layer(last_layer_curr)
-                last_layer_next = cnn_layer(last_layer_next)
+                last_layer = cnn_layer(last_layer)
 
-            # curr_state_pre_f1 = state_embedding_concat(
-            #     [last_layer, stats_input]
-            # )
-            # curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
-            curr_state_embedding = last_layer_curr
-            next_state_embedding = last_layer_next
-
-
-            action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_action_prediction_input")(
-                [curr_state_embedding, next_state_embedding]
-            )
+            curr_state_embedding, next_state_embedding = tf.split(last_layer, 2, axis=1)
 
             action_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_action_prediction_fc1",
-                activation="elu",
-                kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(action_prediction_input)
+                activation="relu",
+                #kernel_initializer=tf.random_normal_initializer(0, 0.01)
+            )(last_layer)
 
             action_prediction_logits = tf.keras.layers.Dense(
                 self.num_outputs,
                 name="ICM_action_logits",
                 activation=None,
-                kernel_initializer=tf.random_normal_initializer(0, 0.01)
+                #kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(action_prediction_fc1)
 
             state_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_prediction_input")(
@@ -175,12 +187,12 @@ class PokemonICMModel(TFModelV2):
             state_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_state_prediction_fc1",
-                activation="elu",
+                activation="relu",
                 #kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
-                320,
+                self.fcnet_size,
                 name="ICM_state_prediction_fc2",
                 activation=None,
                 #kernel_initializer=tf.random_normal_initializer(0, 0.01)
