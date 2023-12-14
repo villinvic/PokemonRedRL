@@ -17,8 +17,8 @@ class PokemonICMModel(TFModelV2):
 
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
-        self.icm_beta = model_config.get("icm_beta", 0.2)
-        self.curiosity_reward_scale = model_config.get("icm_eta", 0.1)
+        self.icm_beta = model_config.get("icm_beta", 0.25)
+        self.curiosity_reward_scale = model_config.get("icm_eta", 0.002)
         self.icm_lambda = model_config.get("icm_lambda", 0.1)
         self.learner_bound = model_config["learner_bound"]
 
@@ -182,12 +182,19 @@ class PokemonICMModel(TFModelV2):
                 #kernel_initializer=tf.random_normal_initializer(0, 0.01)
             )(state_prediction_input)
 
+            state_prediction_fc2 = tf.keras.layers.Dense(
+                self.fcnet_size,
+                name="ICM_state_prediction_fc2",
+                activation="relu",
+                # kernel_initializer=tf.random_normal_initializer(0, 0.01)
+            )(state_prediction_fc1)
+
             state_prediction_out = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_state_prediction_fc2",
                 activation=None,
                 #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(state_prediction_fc1)
+            )(state_prediction_fc2)
 
             self.icm_forward_model = tf.keras.Model(
                 [curr_state_embedding_input, action_input],
