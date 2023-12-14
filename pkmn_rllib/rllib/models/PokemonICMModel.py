@@ -224,6 +224,10 @@ class PokemonICMModel(TFModelV2):
         )
         allowed_action_logits = action_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
+
+        self.delta_screen = tf.reduce_sum(tf.math.square(next_screen_input - self.screen_input))
+
+
         if self.learner_bound:
 
             action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
@@ -255,6 +259,13 @@ class PokemonICMModel(TFModelV2):
         # predicted action distribution.
         return -action_dist.logp(tf.convert_to_tensor(self.actions))
         #return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
+
+
+    def metrics(self) -> Dict[str, TensorType]:
+
+        return {
+            "delta_screen": self.delta_screen
+        }
 
 
 
