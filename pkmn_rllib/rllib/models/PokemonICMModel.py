@@ -103,9 +103,9 @@ class PokemonICMModel(TFModelV2):
 
             action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
             action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
-            curr_screen_input = tf.keras.layers.Input(shape=(72,) + obs_space["screen"].shape[1:], name="curr_screen_input",
+            curr_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="curr_screen_input",
                                                       dtype=tf.float32)
-            next_screen_input = tf.keras.layers.Input(shape=(72,) + obs_space["screen"].shape[1:], name="next_screen_input",
+            next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
                                                       dtype=tf.float32)
             #next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
             #                                         dtype=tf.float32)
@@ -127,13 +127,13 @@ class PokemonICMModel(TFModelV2):
                 ) for i, (out_size, kernel, stride, padding) in enumerate(filters, 1)]
                 + [tf.keras.layers.Flatten()])
 
-            state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
-
-            state_embedding_fc = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_state_embedding_fc",
-                activation="relu",
-            )
+            # state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
+            #
+            # state_embedding_fc = tf.keras.layers.Dense(
+            #     self.fcnet_size,
+            #     name="ICM_state_embedding_fc",
+            #     activation="relu",
+            # )
 
             last_layer_curr = curr_screen_input
             last_layer_next = next_screen_input
@@ -220,7 +220,7 @@ class PokemonICMModel(TFModelV2):
         if self.learner_bound:
 
             action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
-                [self.screen_input[:, :72], next_screen_input[:, :72]]
+                [self.screen_input, next_screen_input]
             )
 
             #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
