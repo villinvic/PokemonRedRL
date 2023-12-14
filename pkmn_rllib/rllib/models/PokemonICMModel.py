@@ -48,7 +48,7 @@ class PokemonICMModel(TFModelV2):
                 strides=stride
                 if isinstance(stride, (list, tuple))
                 else (stride, stride),
-                activation="relu",
+                activation="elu",
                 padding=padding,
                 data_format="channels_last",
                 name="conv{}".format(i),
@@ -64,13 +64,13 @@ class PokemonICMModel(TFModelV2):
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
-            activation="relu",
+            activation="elu",
         )(concat_features)
 
         fc2 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc2",
-            activation="relu",
+            activation="elu",
         )(fc1)
 
         action_logits = tf.keras.layers.Dense(
@@ -105,12 +105,11 @@ class PokemonICMModel(TFModelV2):
                                                       dtype=tf.float32)
             next_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="next_screen_input",
                                                       dtype=tf.float32)
-            next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
-                                                     dtype=tf.float32)
+            #next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
+            #                                         dtype=tf.float32)
 
-            curr_state_embedding_input = tf.keras.layers.Input(shape=(self.fcnet_size,), name="curr_state_embedding_input",
+            curr_state_embedding_input = tf.keras.layers.Input(shape=None, name="curr_state_embedding_input",
                                                      dtype=tf.float32)
-
 
             cnn_layers = ([tf.keras.layers.Conv2D(
                     out_size,
@@ -118,41 +117,34 @@ class PokemonICMModel(TFModelV2):
                     strides=stride
                     if isinstance(stride, (list, tuple))
                     else (stride, stride),
-                    activation="relu",
+                    activation="elu",
                     padding=padding,
                     data_format="channels_last",
                     name="ICM_conv{}".format(i),
                 ) for i, (out_size, kernel, stride, padding) in enumerate(filters, 1)]
                 + [tf.keras.layers.Flatten()])
 
-            state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
+            #state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
-            state_embedding_fc = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_state_embedding_fc",
-                activation="relu",
-            )
+            # state_embedding_fc = tf.keras.layers.Dense(
+            #     self.fcnet_size,
+            #     name="ICM_state_embedding_fc",
+            #     activation="elu",
+            # )
 
-            last_layer = curr_screen_input
-
-            for cnn_layer in cnn_layers:
-
-                last_layer = cnn_layer(last_layer)
-
-            curr_state_pre_f1 = state_embedding_concat(
-                [last_layer, stats_input]
-            )
-            curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
-
-            last_layer = next_screen_input
+            last_layer_curr = curr_screen_input
+            last_layer_next = next_screen_input
 
             for cnn_layer in cnn_layers:
-                last_layer = cnn_layer(last_layer)
+                last_layer_curr = cnn_layer(last_layer_curr)
+                last_layer_next = cnn_layer(last_layer_next)
 
-            next_state_pre_f1 = state_embedding_concat(
-                [last_layer, next_stats_input]
-            )
-            next_state_embedding = state_embedding_fc(next_state_pre_f1)
+            # curr_state_pre_f1 = state_embedding_concat(
+            #     [last_layer, stats_input]
+            # )
+            # curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
+            curr_state_embedding = last_layer_curr
+            next_state_embedding = last_layer_next
 
 
             action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_action_prediction_input")(
@@ -162,7 +154,7 @@ class PokemonICMModel(TFModelV2):
             action_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_action_prediction_fc1",
-                activation="relu",
+                activation="elu",
             )(action_prediction_input)
 
             action_prediction_logits = tf.keras.layers.Dense(
@@ -179,7 +171,7 @@ class PokemonICMModel(TFModelV2):
             state_prediction_fc1 = tf.keras.layers.Dense(
                 self.fcnet_size,
                 name="ICM_state_prediction_fc1",
-                activation="relu",
+                activation="elu",
             )(state_prediction_input)
 
             state_prediction_out = tf.keras.layers.Dense(
@@ -194,8 +186,7 @@ class PokemonICMModel(TFModelV2):
             )
 
             self.icm_prediction_model = tf.keras.Model(
-            [curr_screen_input, next_screen_input, stats_input, next_stats_input
-             ],
+            [curr_screen_input, next_screen_input],
             [action_prediction_logits, curr_state_embedding, next_state_embedding]
 
             )
@@ -208,7 +199,7 @@ class PokemonICMModel(TFModelV2):
 
         self.actions = input_dict[SampleBatch.ACTIONS]
         next_screen_input = tf.cast(input_dict[SampleBatch.NEXT_OBS]["screen"], tf.float32) / 255.
-        next_stats_inputs = input_dict[SampleBatch.NEXT_OBS]["stats"]
+        #next_stats_inputs = input_dict[SampleBatch.NEXT_OBS]["stats"]
 
         action_logits, self._value_out = self.base_model(
             [self.screen_input, self.stats_inputs]
@@ -218,7 +209,7 @@ class PokemonICMModel(TFModelV2):
         if self.learner_bound:
 
             action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
-                [self.screen_input[:, :36], next_screen_input[:, :36], self.stats_inputs, next_stats_inputs]
+                [self.screen_input[:, :36], next_screen_input[:, :36]]
             )
 
             allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
