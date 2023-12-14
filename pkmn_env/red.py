@@ -126,7 +126,7 @@ class PkmnRedEnv(Env):
 
         self.save_final_state = config['save_final_state'] and self.worker_index == 1
 
-        self.screen_shape = (72, 80)  # (48, 56) # (72, 80)
+        self.screen_shape = (36, 40)  # (48, 56) # (72, 80)
         self.stacked_frames = 3
         self.screen_observation = np.zeros((self.screen_shape[0]*self.stacked_frames, self.screen_shape[1], 1), dtype=np.uint8)
         self.similar_frame_dist = config['sim_frame_dist']
@@ -551,7 +551,7 @@ class PkmnRedEnv(Env):
         self.screen_observation[:] = np.roll(self.screen_observation, self.screen_shape[0], axis=0)
         self.screen_observation[:self.screen_shape[0]] = grayscale_downsampled_screen
 
-        return self.screen_observation
+        return self.screen_observation.copy()
 
     def render(self):
         screen = self.screen.screen_ndarray()  # (144, 160, 3)
@@ -680,7 +680,7 @@ class PkmnRedEnv(Env):
 
         assert idx == self.additional_features_shape[0], (idx, self.additional_features_shape[0])
 
-        return self.observed_stats
+        return self.observed_stats.copy()
 
     def get_event_flags(self):
         return self.triggered_event_flags
