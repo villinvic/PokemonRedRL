@@ -212,13 +212,13 @@ class PokemonICMModel(TFModelV2):
                 [self.screen_input[:, :36], next_screen_input[:, :36]]
             )
 
-            allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
+            #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
             self.icm_next_state_embedding = tf.stop_gradient(icm_next_state_embedding)
             self.icm_state_predictions = self.icm_forward_model(
                 [tf.stop_gradient(curr_state_embedding), self.actions]
             )
-            self.icm_action_predictions = allowed_action_prediction_logits
+            self.icm_action_predictions = action_prediction_logits
 
         return allowed_action_logits, state
 
@@ -229,7 +229,7 @@ class PokemonICMModel(TFModelV2):
         return 288. * tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
 
     def action_prediction_loss(self):
-        return -tf.math.square(self.icm_action_predictions)#tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
+        return tf.math.square(self.icm_action_predictions)#tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
 
 
 
