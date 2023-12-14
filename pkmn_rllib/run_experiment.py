@@ -78,8 +78,8 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_icm_model",
         "conv_filters": [
-            [32, [3, 3], 2, "valid"],
-            [32, [3, 3], 2, "valid"],
+            [32, [4, 4], 2, "same"],
+            [32, [4, 4], 2, "valid"],
             [32, [3, 3], 2, "valid"],
             [32, [3, 3], 2, "valid"],
         ],
