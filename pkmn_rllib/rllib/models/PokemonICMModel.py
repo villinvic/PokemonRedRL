@@ -8,6 +8,8 @@ from ray.rllib.policy.view_requirement import ViewRequirement
 from ray.rllib.policy.rnn_sequencing import add_time_dimension
 from ray.rllib.utils.typing import TensorType
 from ray.rllib.models.modelv2 import restore_original_dimensions
+from ray.rllib.models.tf.tf_action_dist import Categorical
+
 
 class PokemonICMModel(TFModelV2):
 
@@ -229,7 +231,14 @@ class PokemonICMModel(TFModelV2):
         return 288. * tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions) * 0.5
 
     def action_prediction_loss(self):
-        return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
+
+        action_dist = (
+            Categorical(self.icm_action_predictions, self)
+        )
+        # Neg log(p); p=probability of observed action given the inverse-NN
+        # predicted action distribution.
+        return -action_dist.logp(tf.convert_to_tensor(self.actions))
+        #return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
 
 
 
