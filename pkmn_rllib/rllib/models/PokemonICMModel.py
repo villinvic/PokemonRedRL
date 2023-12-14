@@ -227,7 +227,7 @@ class PokemonICMModel(TFModelV2):
         if self.learner_bound:
 
             action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
-                [self.screen_input[:, 72], next_screen_input[:, 72]]
+                [self.screen_input[:, :72], next_screen_input[:, :72]]
             )
 
             #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
