@@ -360,7 +360,7 @@ class VmpoPolicy(
 
             mean_curiosity_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
 
-            self.surprise_per_map = tf.lookup.StaticHashTable(
+            self.curiosity_per_map = tf.lookup.StaticHashTable(
                 tf.lookup.KeyValueTensorInitializer(tf.cast(visited_maps, tf.int32), mean_curiosity_per_map),
                 default_value=0.0  # Set a default value if a key is not found (you can customize this)
             )
@@ -540,7 +540,7 @@ class VmpoPolicy(
 
         if self.surprise_per_map :
             cur_per_map = {
-                f"curiosity/curiosity_on_map_{i}": self.surprise_per_map.lookup(tf.constant([i], dtype=tf.int32)) for i in range(255)
+                "curiosity_map_table": self.curiosity_per_map
             }
         else:
             cur_per_map = {}
@@ -591,6 +591,18 @@ class VmpoPolicy(
 
             ** cur_per_map
         }
+
+    @override(Policy)
+    def learn_on_batch(self, postprocessed_batch: SampleBatch) -> Dict[str, TensorType]:
+        stats = super().learn_on_batch(postprocessed_batch)
+
+        table = stats.pop("curiosity_map_table", None)
+        if table is not None:
+            stats.update(**{
+                "curiosity/rewards_on_map_{i}": table.lookup([i]) for i in range(255)
+            })
+
+        return stats
 
     @override(DynamicTFPolicyV2)
     def get_batch_divisibility_req(self) -> int:
