@@ -358,12 +358,13 @@ class VmpoPolicy(
 
             visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
 
-            mean_curiosity_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
+            mean_surprise_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
 
-            self.curiosity_per_map = tf.lookup.StaticHashTable(
-                tf.lookup.KeyValueTensorInitializer(tf.cast(visited_maps, tf.int32), mean_curiosity_per_map),
+            self.surprise_per_map = tf.lookup.StaticHashTable(
+                tf.lookup.KeyValueTensorInitializer(tf.cast(visited_maps, tf.int32), mean_surprise_per_map),
                 default_value=0.0  # Set a default value if a key is not found (you can customize this)
             )
+            self.most_surprising_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
         else:
 
@@ -378,6 +379,7 @@ class VmpoPolicy(
             self.min_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
 
             self.surprise_per_map = {}
+            self.most_surprising_state = None
 
 
 
@@ -589,6 +591,7 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
+            "tmp": self.most_surprising_state
             ** cur_per_map
         }
 
@@ -597,6 +600,13 @@ class VmpoPolicy(
         stats = super().learn_on_batch(postprocessed_batch)
 
         table = stats.pop("curiosity_map_table", None)
+        surprising_state = stats.pop("tmp", None)
+        if surprising_state is not None:
+            idx = self.global_timestep % 10
+            pil_img = tf.keras.preprocessing.image.array_to_img(surprising_state)
+            path = Path(f"debug/surprise/surprising_state_{idx}.png")
+            path.mkdir(parents=True, exist_ok=True)
+            pil_img.save(path)
         if table is not None:
             stats.update(**{
                 "curiosity/rewards_on_map_{i}": table.lookup([i]) for i in range(255)
