@@ -373,9 +373,9 @@ class VmpoPolicy(
             self.max_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
             self.min_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
 
-            self.visited_maps = None
-            self.curiosity_per_map = None
-            self.most_curious_state = None
+            self.visited_maps = tf.zeros((1,), dtype=tf.float32)
+            self.curiosity_per_map = tf.zeros((1,), dtype=tf.float32)
+            self.most_curious_state = tf.zeros((1,), dtype=tf.float32)
 
 
 
@@ -588,6 +588,8 @@ class VmpoPolicy(
     @override(Policy)
     def learn_on_batch(self, postprocessed_batch: SampleBatch) -> Dict[str, TensorType]:
         stats = super().learn_on_batch(postprocessed_batch)
+
+        print(stats)
 
         curiosity_per_maps = stats.pop("curiosity_per_maps", None)
         visited_maps = stats.pop("visited_maps", None)
