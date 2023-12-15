@@ -227,7 +227,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
     def state_prediction_loss(self):
 
-        batch_size = tf.shape(self.screen_input[0])
+        batch_size = tf.shape(self.screen_input)[0]
         sample_size = tf.cast(batch_size / 4, tf.int32)
 
         loss = sum([
