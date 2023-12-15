@@ -142,11 +142,11 @@ class PokemonDisagreementMModel(TFModelV2):
             )
 
             stats_normalization_layer = tf.keras.layers.BatchNormalization(
-                momentum=0.05,
+                momentum=0.99,
                 name="ICM_stats_normalization_layer"
             )
             screen_normalization_layer = tf.keras.layers.BatchNormalization(
-                momentum=0.05,
+                momentum=0.99,
                 name="ICM_screen_normalization_layer"
             )
 
