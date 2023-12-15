@@ -605,7 +605,9 @@ class VmpoPolicy(
         if results:
 
             idx = self.global_timestep % 10
-            pil_img = tf.keras.preprocessing.image.array_to_img(self.surprising_state.eval())
+            sess = tf.Session()
+            with sess.as_default():
+                pil_img = tf.keras.preprocessing.image.array_to_img(self.surprising_state.eval())
             path = Path(f"debug/surprise/surprising_image_{idx}.png")
             path.mkdir(parents=True, exist_ok=True)
             pil_img.save(path)
