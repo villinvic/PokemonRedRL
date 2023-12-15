@@ -355,7 +355,12 @@ class VmpoPolicy(
 
             self.mean_icm_loss = icm_loss / self.model.icm_lambda
 
-            self.surprising_state = train_batch[SampleBatch.OBS]["screen"][tf.argmax(intrinsic_rewards)]
+
+            visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
+
+            mean_curiosity_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
+
+            self.surprise_per_map = dict(zip(visited_maps, mean_curiosity_per_map))
 
         else:
 
@@ -368,6 +373,8 @@ class VmpoPolicy(
             self.max_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
             self.max_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
             self.min_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
+
+            self.surprise_per_map = {}
 
 
 
@@ -571,6 +578,8 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_mean": self.mean_intrinsic_rewards,
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
+
+            ** self.surprise_per_map
         }
 
     @override(DynamicTFPolicyV2)
