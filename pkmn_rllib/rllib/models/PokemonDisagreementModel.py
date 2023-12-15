@@ -209,7 +209,7 @@ class PokemonDisagreementMModel(TFModelV2):
         if self.learner_bound:
 
             curr_state_embedding, next_state_embedding = self.state_embedding_model(
-                [self.screen_input, self.stats_inputs, next_stats_inputs, next_screen_input]
+                [self.screen_input, self.stats_inputs, next_screen_input, next_stats_inputs]
             )
 
             self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
