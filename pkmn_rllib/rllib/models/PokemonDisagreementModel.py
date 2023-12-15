@@ -111,7 +111,7 @@ class PokemonDisagreementMModel(TFModelV2):
             next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
                                                      dtype=tf.float32)
 
-            curr_state_embedding_input = tf.keras.layers.Input(shape=(256,), name="curr_state_embedding_input",
+            curr_state_embedding_input = tf.keras.layers.Input(shape=(self.state_embedding_size,), name="curr_state_embedding_input",
                                                      dtype=tf.float32)
 
 
@@ -131,7 +131,7 @@ class PokemonDisagreementMModel(TFModelV2):
             state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
             state_embedding_fc = tf.keras.layers.Dense(
-                512,
+                self.state_embedding_size,
                 name="ICM_state_embedding_fc",
                 activation="elu",
             )
