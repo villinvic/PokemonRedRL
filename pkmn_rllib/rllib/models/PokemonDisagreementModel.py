@@ -143,11 +143,11 @@ class PokemonDisagreementMModel(TFModelV2):
 
             stats_normalization_layer = tf.keras.layers.BatchNormalization(
                 momentum=0.05,
-                name="stats_normalization_layer"
+                name="ICM_stats_normalization_layer"
             )
             screen_normalization_layer = tf.keras.layers.BatchNormalization(
                 momentum=0.05,
-                name="screen_normalization_layer"
+                name="ICM_screen_normalization_layer"
             )
 
             last_layer_curr = screen_normalization_layer(curr_screen_input, training=True)
@@ -173,26 +173,32 @@ class PokemonDisagreementMModel(TFModelV2):
 
             self.disagreement_models = []
 
-            action_concat_layer = tf.keras.layers.Concatenate(axis=-1, name=f"embed_action_concat")
+            action_concat_layer = tf.keras.layers.Concatenate(axis=-1, name=f"ICM_embed_action_concat")
 
             def concat_action(embed):
                 return action_concat_layer([embed, action_one_hot])
 
             for i in range(self.n_models):
 
-                features = tf.keras.layers.Dense(self.state_embedding_size, activation="elu")(concat_action(curr_state_embedding_input))
-                def residual(x):
+                features = tf.keras.layers.Dense(self.state_embedding_size, activation="elu",
+                                                 name=f"ICM_pre_res_{i}"
+                                                 )(concat_action(curr_state_embedding_input))
+                def residual(x, idx):
 
-                    res = tf.keras.layers.Dense(self.state_embedding_size, activation="elu")(concat_action(x))
-                    res = tf.keras.layers.Dense(self.state_embedding_size, activation=None)(concat_action(res))
+                    res = tf.keras.layers.Dense(self.state_embedding_size, activation="elu",
+                                                name=f"ICM_res_{i}{idx}1"
+                                                )(concat_action(x))
+                    res = tf.keras.layers.Dense(self.state_embedding_size, activation=None,
+                                                name=f"ICM_res_{i}{idx}2"
+                                                )(concat_action(res))
                     return x + res
 
                 for j in range(4):
-                    features = residual(features)
+                    features = residual(features, j)
 
                 state_prediction_out = tf.keras.layers.Dense(
                     self.state_embedding_size,
-                    name=f"prediction_out_{i}",
+                    name=f"ICM_prediction_out_{i}",
                     activation=None,
                 )(features)
 
