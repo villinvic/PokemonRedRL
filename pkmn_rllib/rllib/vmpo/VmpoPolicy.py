@@ -591,7 +591,7 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
-            "tmp": self.most_surprising_state
+            "tmp": self.most_surprising_state,
             ** cur_per_map
         }
 
