@@ -151,7 +151,7 @@ class PokemonDisagreementMModel(TFModelV2):
             )
 
             last_layer_curr = screen_normalization_layer(curr_screen_input, training=True)
-            last_layer_next = screen_normalization_layer(next_screen_input, trainable=False)
+            last_layer_next = screen_normalization_layer(next_screen_input, training=False)
 
             for cnn_layer in cnn_layers:
                 last_layer_curr = cnn_layer(last_layer_curr)
