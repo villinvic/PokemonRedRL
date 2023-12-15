@@ -180,11 +180,11 @@ class PokemonDisagreementMModel(TFModelV2):
 
             for i in range(self.n_models):
 
-                features = concat_action(curr_state_embedding_input)
+                features = tf.keras.layers.Dense(self.state_embedding_size, activation="elu")(concat_action(curr_state_embedding_input))
                 def residual(x):
 
-                    res = tf.keras.layers.Dense(concat_action(x), self.state_embedding_size, activation=tf.nn.leaky_relu)
-                    res = tf.keras.layers.Dense(concat_action(res), self.state_embedding_size, activation=None)
+                    res = tf.keras.layers.Dense(self.state_embedding_size, activation="elu")(concat_action(x))
+                    res = tf.keras.layers.Dense(self.state_embedding_size, activation=None)(concat_action(res))
                     return x + res
 
                 for j in range(4):
