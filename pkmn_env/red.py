@@ -440,6 +440,8 @@ class PkmnRedEnv(Env):
             # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
             self.skip_battle_frames()
 
+        self.skip_black_screen()
+
         if self.save_video and self.fast_video:
             self.add_video_frame()
 
@@ -458,7 +460,27 @@ class PkmnRedEnv(Env):
         )
 
     def skippable_black_screen(self):
-        return (np.sum(np.float32(self.screen.screen_ndarray() <= 8)) / np.prod(self.screen_shape)) > 0.8
+        screen = self.screen.screen_ndarray()
+        grayscale_screen = np.uint8(
+            0.299 * screen[:, :, 0]
+            + 0.587 * screen[:, :, 1]
+            + 0.114 * screen[:, :, 2]
+        )
+        return (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.8
+
+    def skip_black_screen(self):
+        skipped = 0
+        while self.skippable_black_screen():
+            skipped += 1
+            self.pyboy.tick()
+
+            if skipped > 1000:
+                print("what")
+
+        if skipped > 0:
+            for i in range(4):
+                self.pyboy.tick()
+
 
     def skip_battle_frames(self):
         c = 0
