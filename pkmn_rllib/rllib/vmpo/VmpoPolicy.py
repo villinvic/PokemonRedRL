@@ -587,7 +587,7 @@ class VmpoPolicy(
             # ICM
             "curiosity/state_prediction_loss_mean": self.mean_state_prediction_loss,
             "curiosity/state_prediction_loss_max": self.max_state_prediction_loss,
-            "curiosity/state_prediction_loss_min": self.min_action_prediction_loss,
+            "curiosity/state_prediction_loss_min": self.min_state_prediction_loss,
 
             # "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
             # "curiosity/action_prediction_loss_min": self.min_action_prediction_loss,
