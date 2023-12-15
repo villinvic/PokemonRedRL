@@ -357,8 +357,9 @@ class VmpoPolicy(
 
 
             self.visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
-
             self.curiosity_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
+
+            self.most_curious_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
         else:
 
@@ -597,7 +598,7 @@ class VmpoPolicy(
             path = Path(f"debug/curiosity/curious_state_{idx}.png")
             path.mkdir(parents=True, exist_ok=True)
             pil_img.save(path)
-        if table is not None:
+        if curiosity_per_maps is not None:
             stats.update(**{
                 f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in enumerate(visited_maps)
             })
