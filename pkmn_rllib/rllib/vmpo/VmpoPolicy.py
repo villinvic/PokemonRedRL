@@ -360,7 +360,10 @@ class VmpoPolicy(
 
             mean_curiosity_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
 
-            self.surprise_per_map = dict(zip(visited_maps, mean_curiosity_per_map))
+            self.surprise_per_map = tf.lookup.StaticHashTable(
+                tf.lookup.KeyValueTensorInitializer(visited_maps, mean_curiosity_per_map),
+                default_value=-1.0  # Set a default value if a key is not found (you can customize this)
+            )
 
         else:
 
