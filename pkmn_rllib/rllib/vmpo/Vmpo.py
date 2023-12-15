@@ -701,9 +701,9 @@ class VmpoLearnerThread(LearnerThread):
                 if curious_state is not None:
                     idx = self.batch_counts[pid] % 15
                     pil_img = tf.keras.preprocessing.image.array_to_img(curious_state)
-                    path = Path(f"debug/curiosity/curious_state_{idx}.png")
+                    path = Path(f"debug/curiosity")
                     path.mkdir(parents=True, exist_ok=True)
-                    pil_img.save(path)
+                    pil_img.save(path / f"curious_state_{idx}.png")
                 if curiosity_per_maps is not None:
                     stats.update(**{
                         f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in
