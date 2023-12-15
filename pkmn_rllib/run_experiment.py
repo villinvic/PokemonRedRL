@@ -81,7 +81,7 @@ config = VmpoConfig().training(
     train_batch_size=4096,
     # num_sgd_iter=12,
     # minibatch_buffer_size=128,
-    gamma=0.997,
+    gamma=0.999,
     model={
         "custom_model": "pokemon_disagreement_model",
         "conv_filters": [

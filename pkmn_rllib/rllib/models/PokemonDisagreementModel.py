@@ -20,7 +20,7 @@ class PokemonDisagreementMModel(TFModelV2):
         self.learner_bound = model_config["learner_bound"]
 
         self.n_models = model_config.get("n_disagreement_models", 5)
-        self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 1e-3)
+        self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 0.2)
         self.state_embedding_size = model_config.get("state_embedding_size", 512)
 
 
@@ -242,9 +242,6 @@ class PokemonDisagreementMModel(TFModelV2):
 
     def state_prediction_loss(self):
 
-        batch_size = tf.shape(self.screen_input)[0]
-        sample_size = tf.cast(batch_size / 2, tf.int32)
-
         loss = sum([
             tf.reduce_mean(tf.math.square(
                 tf.nn.dropout(self.next_state_embedding - predicted_state_embedding,
@@ -259,7 +256,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
     def compute_intrinsic_rewards(self):
 
-        return tf.reduce_sum(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1, keepdims=False)
+        return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1)
 
     def metrics(self) -> Dict[str, TensorType]:
 
