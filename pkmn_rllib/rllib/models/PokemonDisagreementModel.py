@@ -21,7 +21,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
         self.n_models = model_config.get("n_disagreement_models", 5)
         self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 1e-1)
-        self.state_embedding_size = model_config.get("state_embedding_size", 128)
+        self.state_embedding_size = model_config.get("state_embedding_size", 512)
 
 
 
@@ -51,7 +51,7 @@ class PokemonDisagreementMModel(TFModelV2):
                 strides=stride
                 if isinstance(stride, (list, tuple))
                 else (stride, stride),
-                activation="relu",
+                activation="elu",
                 padding=padding,
                 data_format="channels_last",
                 name="conv{}".format(i),
@@ -67,13 +67,13 @@ class PokemonDisagreementMModel(TFModelV2):
         fc1 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc1",
-            activation="relu",
+            activation="elu",
         )(concat_features)
 
         fc2 = tf.keras.layers.Dense(
             self.fcnet_size,
             name="fc2",
-            activation="relu",
+            activation="elu",
         )(fc1)
 
         action_logits = tf.keras.layers.Dense(
@@ -120,7 +120,7 @@ class PokemonDisagreementMModel(TFModelV2):
                     strides=stride
                     if isinstance(stride, (list, tuple))
                     else (stride, stride),
-                    activation="tanh",
+                    activation="elu",
                     padding=padding,
                     data_format="channels_last",
                     name="ICM_conv{}".format(i),
@@ -129,11 +129,11 @@ class PokemonDisagreementMModel(TFModelV2):
 
             state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
-            state_pre_embedding_fc = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_state_pre_embedding_fc",
-                activation="elu",
-            )
+            # state_pre_embedding_fc = tf.keras.layers.Dense(
+            #     self.fcnet_size,
+            #     name="ICM_state_pre_embedding_fc",
+            #     activation="elu",
+            # )
 
             state_embedding_fc = tf.keras.layers.Dense(
                 self.state_embedding_size,
@@ -141,21 +141,30 @@ class PokemonDisagreementMModel(TFModelV2):
                 activation="elu",
             )
 
-            last_layer_curr = curr_screen_input
-            last_layer_next = next_screen_input
+            stats_normalization_layer = tf.keras.layers.BatchNormalization(
+                momentum=0.05,
+                name="stats_normalization_layer"
+            )
+            screen_normalization_layer = tf.keras.layers.BatchNormalization(
+                momentum=0.05,
+                name="screen_normalization_layer"
+            )
+
+            last_layer_curr = screen_normalization_layer(curr_screen_input, training=True)
+            last_layer_next = screen_normalization_layer(next_screen_input, trainable=False)
 
             for cnn_layer in cnn_layers:
                 last_layer_curr = cnn_layer(last_layer_curr)
                 last_layer_next = cnn_layer(last_layer_next)
 
             curr_state_pre_f1 = state_embedding_concat(
-                [last_layer_curr, stats_input]
+                [last_layer_curr, stats_normalization_layer(stats_input, training=True)]
             )
             next_state_pre_f1 = state_embedding_concat(
-                [last_layer_next, next_stats_input]
+                [last_layer_next, stats_normalization_layer(next_stats_input, training=False)]
             )
-            curr_state_embedding = state_embedding_fc(state_pre_embedding_fc(curr_state_pre_f1))
-            next_state_embedding = state_embedding_fc(state_pre_embedding_fc(next_state_pre_f1))
+            curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
+            next_state_embedding = state_embedding_fc(next_state_pre_f1)
 
             self.state_embedding_model = tf.keras.Model(
                 [curr_screen_input, stats_input, next_screen_input, next_stats_input],
@@ -164,33 +173,28 @@ class PokemonDisagreementMModel(TFModelV2):
 
             self.disagreement_models = []
 
+            action_concat_layer = tf.keras.layers.Concatenate(axis=-1, name=f"embed_action_concat")
+
+            def concat_action(embed):
+                return action_concat_layer([embed, action_one_hot])
+
             for i in range(self.n_models):
 
-                state_prediction_input = tf.keras.layers.Concatenate(axis=-1, name=f"ICM_state_prediction_input_{i}")(
-                [curr_state_embedding_input, action_one_hot,
-                 ]
-                )
+                features = concat_action(curr_state_embedding_input)
+                def residual(x):
 
-                state_prediction_fc1 = tf.keras.layers.Dense(
-                    self.state_embedding_size,
-                    name=f"fICM_state_prediction_fc1_{i}",
-                    activation="relu",
-                    #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                )(state_prediction_input)
+                    res = tf.keras.layers.Dense(concat_action(x), self.state_embedding_size, activation=tf.nn.leaky_relu)
+                    res = tf.keras.layers.Dense(concat_action(res), self.state_embedding_size, activation=None)
+                    return x + res
 
-                state_prediction_fc2 = tf.keras.layers.Dense(
-                    self.state_embedding_size,
-                    name=f"ICM_state_prediction_fc2_{i}",
-                    activation="relu",
-                    # kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                )(state_prediction_fc1)
+                for j in range(4):
+                    features = residual(features)
 
                 state_prediction_out = tf.keras.layers.Dense(
                     self.state_embedding_size,
-                    name=f"ICM_state_prediction_out_{i}",
+                    name=f"prediction_out_{i}",
                     activation=None,
-                    #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                )(state_prediction_fc2)
+                )(features)
 
                 self.disagreement_models.append(tf.keras.Model(
                     [curr_state_embedding_input, action_input],
@@ -236,11 +240,11 @@ class PokemonDisagreementMModel(TFModelV2):
         sample_size = tf.cast(batch_size / 2, tf.int32)
 
         loss = sum([
-            tf.math.sqrt(tf.reduce_sum(tf.math.square(
-                tf.gather_nd(self.next_state_embedding - predicted_state_embedding,
-                             tf.random.uniform(shape=(sample_size, 1), minval=0, maxval=batch_size + 1, dtype=tf.int32)
+            tf.reduce_mean(tf.math.square(
+                tf.nn.dropout(self.next_state_embedding - predicted_state_embedding,
+                              rate=0.2
                              )
-            ), axis=-1))
+            ), axis=-1)
             for predicted_state_embedding
             in self.predicted_state_embeddings
         ])

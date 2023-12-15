@@ -85,9 +85,8 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_disagreement_model",
         "conv_filters": [
-            [32, [4, 4], 3, "same"],
-            [32, [3, 3], 2, "same"],
-            [32, [3, 3], 2, "same"],
+            [32, [8, 8], 4, "same"],
+            [32, [4, 4], 2, "same"],
             [32, [3, 3], 1, "same"],
         ],
         "fcnet_size": 512,
