@@ -375,6 +375,8 @@ class VmpoPolicy(
 
             self.most_curious_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
+            self.max_embedding_distance = self.model.embedding_distance()[tf.argmax(intrinsic_rewards)]
+
         else:
 
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
@@ -597,9 +599,10 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
-            "tmp": self.most_curious_state,
+            "most_curious_state": self.most_curious_state,
             "visited_maps": self.visited_maps,
             "curiosity_per_maps": self.curiosity_per_map,
+            "most_curious_state_embedding_distance": self.max_embedding_distance
         }
 
     @override(DynamicTFPolicyV2)

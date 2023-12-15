@@ -40,6 +40,7 @@ from pkmn_rllib.rllib.vmpo.NoCopyWorkerSet import LightWorkerSet
 from pkmn_rllib.rllib.vmpo.VmpoPolicy import VmpoPolicy
 
 import tensorflow as tf
+from PIL.PngImagePlugin import PngInfo
 
 logger = logging.getLogger(__name__)
 
@@ -698,13 +699,16 @@ class VmpoLearnerThread(LearnerThread):
 
                 curiosity_per_maps = stats.pop("curiosity_per_maps", None)
                 visited_maps = stats.pop("visited_maps", None)
-                curious_state = stats.pop("tmp", None)
+                curious_state = stats.pop("most_curious_state", None)
+                max_embedding_distance = stats.pop("max_embedding_distance", None)
                 if curious_state is not None:
                     idx = self.batch_counts[pid] % 15
                     pil_img = tf.keras.preprocessing.image.array_to_img(curious_state)
                     path = Path(f"debug/curiosity")
                     path.mkdir(parents=True, exist_ok=True)
-                    pil_img.save(path / f"curious_state_{idx}.png")
+                    metadata = PngInfo()
+                    metadata.add_text("EmbeddingDistance", f"{max_embedding_distance:.3f}")
+                    pil_img.save(path / f"curious_state_{idx}.png", pnfinfo=f"{max_embedding_distance:.3f}")
                 if curiosity_per_maps is not None:
 
                     rewards_per_map = {
