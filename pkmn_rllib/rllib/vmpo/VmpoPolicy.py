@@ -538,9 +538,12 @@ class VmpoPolicy(
             self.model.value_function(),
         )
 
-        cur_per_map = {
-            key: value for key, value in self.surprise_per_map.table_ref().items()
-        }
+        if self.surprise_per_map :
+            cur_per_map = {
+                key: value for key, value in self.surprise_per_map.table_ref().items()
+            }
+        else:
+            cur_per_map = {}
 
         return {
             "cur_lr"               : tf.cast(self.cur_lr, tf.float64),
