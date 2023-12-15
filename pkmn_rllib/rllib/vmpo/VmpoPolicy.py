@@ -332,6 +332,9 @@ class VmpoPolicy(
         dones = train_batch[SampleBatch.TERMINATEDS]
         rewards = train_batch[SampleBatch.REWARDS]
 
+        self.batch_reward_std = tf.math.reduce_std(rewards)
+        self.batch_reward_mean = tf.math.reduce_mean(rewards)
+
         # ICM ####################################
 
         if self.learner_bound:
@@ -362,7 +365,8 @@ class VmpoPolicy(
 
             # Make intrinsic rewards of same norm as rewards:
             intrinsic_rewards = (((intrinsic_rewards - tf.reduce_mean(intrinsic_rewards)) /
-                                 tf.math.reduce_std(intrinsic_rewards)) * popart_std + popart_mean)
+                                  tf.maximum(tf.math.reduce_std(intrinsic_rewards), 1e-2))
+                                 * self.batch_reward_std + self.batch_reward_mean)
 
             rewards = rewards * (1. - self.model.intrinsic_reward_scale) + intrinsic_rewards * self.model.intrinsic_reward_scale
 
@@ -403,9 +407,6 @@ class VmpoPolicy(
 
 
         ##########################################
-
-        self.batch_reward_std = tf.math.reduce_std(rewards)
-        self.batch_reward_mean = tf.math.reduce_mean(rewards)
 
         behaviour_logits = train_batch[SampleBatch.ACTION_DIST_INPUTS]
 

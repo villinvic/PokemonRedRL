@@ -255,8 +255,8 @@ class PokemonDisagreementMModel(TFModelV2):
         return loss
 
     def compute_intrinsic_rewards(self):
-        embedding_distance = self.embedding_distance()
-        normalized_embedding_distance = embedding_distance / tf.reduce_mean(embedding_distance + 1e-1)
+        embedding_distance = tf.maximum(self.embedding_distance(), 0.2)
+        normalized_embedding_distance = embedding_distance / tf.reduce_mean(embedding_distance)
         return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1) / (
             normalized_embedding_distance
         )
