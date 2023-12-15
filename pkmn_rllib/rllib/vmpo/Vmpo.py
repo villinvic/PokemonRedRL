@@ -700,7 +700,7 @@ class VmpoLearnerThread(LearnerThread):
                 curiosity_per_maps = stats.pop("curiosity_per_maps", None)
                 visited_maps = stats.pop("visited_maps", None)
                 curious_state = stats.pop("most_curious_state", None)
-                max_embedding_distance = stats.pop("max_embedding_distance", None)
+                max_embedding_distance = stats.pop("most_curious_state_embedding_distance", None)
                 if curious_state is not None:
                     idx = self.batch_counts[pid] % 15
                     pil_img = tf.keras.preprocessing.image.array_to_img(curious_state)
