@@ -708,7 +708,7 @@ class VmpoLearnerThread(LearnerThread):
                 if curiosity_per_maps is not None:
 
                     rewards_per_map = {
-                        f"curiosity/rewards_on_map_{map_name}": 0. for map_name in PKMN_RB_MAPS
+                        f"curiosity/rewards_on_map_{map_name}": 0. for map_name in PKMN_RB_MAPS.values()
                     }
                     rewards_per_map.update(**{
                         f"curiosity/rewards_on_map_{PKMN_RB_MAPS[visited_map]}": curiosity_per_maps[i] for
