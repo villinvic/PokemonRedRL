@@ -585,11 +585,13 @@ class VmpoPolicy(
             "curiosity_per_maps": self.curiosity_per_map,
         }
 
-    @override(Policy)
+    @override(DynamicTFPolicyV2)
     def learn_on_batch(self, postprocessed_batch: SampleBatch) -> Dict[str, TensorType]:
         stats = super().learn_on_batch(postprocessed_batch)
 
-        print(stats)
+        print(list(stats.keys()))
+
+        raise Exception
 
         curiosity_per_maps = stats.pop("curiosity_per_maps", None)
         visited_maps = stats.pop("visited_maps", None)
