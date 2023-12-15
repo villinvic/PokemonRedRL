@@ -230,6 +230,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
             self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
             self.next_state_embedding = tf.stop_gradient(next_state_embedding)
+            self.delta_image = tf.reduce_mean(tf.math.square(self.screen_input - next_screen_input), axis=-1)
 
             self.predicted_state_embeddings = [
                 model([self.curr_state_embedding, self.actions]) for model in self.disagreement_models
@@ -255,14 +256,12 @@ class PokemonDisagreementMModel(TFModelV2):
         return loss
 
     def compute_intrinsic_rewards(self):
-        embedding_distance = tf.maximum(self.embedding_distance(), 0.5)
-        normalized_embedding_distance = embedding_distance / tf.reduce_mean(embedding_distance)
-        return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1) / (
-            normalized_embedding_distance
-        )
+        delta_image_clipped = tf.maximum(self.delta_image, 5e-2)
+        normalized_delta_image = delta_image_clipped / tf.reduce_mean(delta_image_clipped)
+        return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1) / normalized_delta_image
 
     def embedding_distance(self):
-        return tf.reduce_mean(tf.square(self.curr_state_embedding - self.next_state_embedding), axis=-1)
+        return self.delta_image
 
     def metrics(self) -> Dict[str, TensorType]:
 
