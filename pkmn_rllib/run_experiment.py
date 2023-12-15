@@ -112,7 +112,7 @@ stopping_config = {
         }
 
 run_config = air.RunConfig(
-    name="v1_3",
+    name="v1_4",
     local_dir="rllib_runs",
     stop=stopping_config,
     checkpoint_config=ckpt_config,
