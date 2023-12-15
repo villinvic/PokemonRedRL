@@ -599,7 +599,7 @@ class VmpoPolicy(
             pil_img.save(path)
         if table is not None:
             stats.update(**{
-                f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i in enumerate(visited_maps)
+                f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in enumerate(visited_maps)
             })
 
         return stats
