@@ -172,25 +172,25 @@ class PokemonDisagreementMModel(TFModelV2):
                 )
 
                 state_prediction_fc1 = tf.keras.layers.Dense(
-                    self.fcnet_size,
+                    self.state_embedding_size,
                     name=f"fICM_state_prediction_fc1_{i}",
                     activation="relu",
                     #kernel_initializer=tf.random_normal_initializer(0, 0.01)
                 )(state_prediction_input)
 
-                state_prediction_fc2 = tf.keras.layers.Dense(
-                    self.fcnet_size,
-                    name=f"ICM_state_prediction_fc2_{i}",
-                    activation="relu",
-                    # kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                )(state_prediction_fc1)
+                # state_prediction_fc2 = tf.keras.layers.Dense(
+                #     self.state_embedding_size,
+                #     name=f"ICM_state_prediction_fc2_{i}",
+                #     activation="relu",
+                #     # kernel_initializer=tf.random_normal_initializer(0, 0.01)
+                # )(state_prediction_fc1)
 
                 state_prediction_out = tf.keras.layers.Dense(
                     self.state_embedding_size,
                     name=f"ICM_state_prediction_out_{i}",
                     activation=None,
                     #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                )(state_prediction_fc2)
+                )(state_prediction_fc1)
 
                 self.disagreement_models.append(tf.keras.Model(
                     [curr_state_embedding_input, action_input],
