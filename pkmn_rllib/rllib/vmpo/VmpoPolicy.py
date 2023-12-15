@@ -357,6 +357,12 @@ class VmpoPolicy(
 
             self.surprising_state = train_batch[SampleBatch.OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
+            idx = self.global_timestep % 10
+            pil_img = tf.keras.preprocessing.image.array_to_img(self.get_session().run(self.surprising_state))
+            path = Path(f"debug/surprise/surprising_image_{idx}.png")
+            path.mkdir(parents=True, exist_ok=True)
+            pil_img.save(path)
+
         else:
 
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
@@ -603,13 +609,6 @@ class VmpoPolicy(
     def update_statistics(self, policy_id, results):
 
         if results:
-
-            idx = self.global_timestep % 10
-            pil_img = tf.keras.preprocessing.image.array_to_img(self.get_session().run(self.surprising_state))
-            path = Path(f"debug/surprise/surprising_image_{idx}.png")
-            path.mkdir(parents=True, exist_ok=True)
-            pil_img.save(path)
-
 
             # Get the weights of the value layer
             w = super().get_weights()
