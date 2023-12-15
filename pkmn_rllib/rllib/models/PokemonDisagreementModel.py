@@ -21,7 +21,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
         self.n_models = model_config.get("n_disagreement_models", 5)
         self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 1e-1)
-        self.state_embedding_size = model_config.get("state_embedding_size", 64)
+        self.state_embedding_size = model_config.get("state_embedding_size", 128)
 
 
 

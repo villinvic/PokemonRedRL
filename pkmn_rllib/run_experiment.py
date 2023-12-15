@@ -87,8 +87,8 @@ config = VmpoConfig().training(
         "conv_filters": [
             [32, [4, 4], 3, "same"],
             [32, [3, 3], 2, "same"],
-            [64, [3, 3], 2, "same"],
-            [64, [3, 3], 1, "same"],
+            [32, [3, 3], 2, "same"],
+            [32, [3, 3], 1, "same"],
         ],
         "fcnet_size": 512,
     }
