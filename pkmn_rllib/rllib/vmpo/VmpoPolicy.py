@@ -335,26 +335,40 @@ class VmpoPolicy(
         # ICM ####################################
 
         if self.learner_bound:
+            # state_prediction_loss = self.model.state_prediction_loss()
+            # action_prediction_loss = self.model.action_prediction_loss()
+            #
+            # self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
+            # self.max_action_prediction_loss = tf.reduce_max(action_prediction_loss)
+            # self.min_action_prediction_loss = tf.reduce_min(action_prediction_loss)
+            # self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
+            #
+            # intrinsic_rewards = state_prediction_loss * self.model.curiosity_reward_scale
+            # rewards = rewards + tf.stop_gradient(intrinsic_rewards)
+            #
+            # self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
+            # self.min_intrinsic_rewards = tf.reduce_min(intrinsic_rewards)
+            # self.max_intrinsic_rewards = tf.reduce_max(intrinsic_rewards)
+            #
+            # icm_loss = (self.mean_action_prediction_loss * (1. - self.model.icm_beta)
+            #              + self.mean_state_prediction_loss * self.model.icm_beta)
+            #
+            # self.mean_icm_loss = icm_loss / self.model.icm_lambda
+
+            # Disagreement
+
             state_prediction_loss = self.model.state_prediction_loss()
-            action_prediction_loss = self.model.action_prediction_loss()
+            intrinsic_rewards = self.model.compute_intrinsic_rewards()
 
+            rewards = rewards + tf.stop_gradient(intrinsic_rewards) * self.model.intrinsic_reward_scale
+
+            self.max_state_prediction_loss = tf.reduce_max(state_prediction_loss)
+            self.min_state_prediction_loss = tf.reduce_min(state_prediction_loss)
             self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
-            self.max_action_prediction_loss = tf.reduce_max(action_prediction_loss)
-            self.min_action_prediction_loss = tf.reduce_min(action_prediction_loss)
-            self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
-
-            intrinsic_rewards = state_prediction_loss * self.model.curiosity_reward_scale
-            rewards = rewards + tf.stop_gradient(intrinsic_rewards)
 
             self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
             self.min_intrinsic_rewards = tf.reduce_min(intrinsic_rewards)
             self.max_intrinsic_rewards = tf.reduce_max(intrinsic_rewards)
-
-            icm_loss = (self.mean_action_prediction_loss * (1. - self.model.icm_beta)
-                         + self.mean_state_prediction_loss * self.model.icm_beta)
-
-            self.mean_icm_loss = icm_loss / self.model.icm_lambda
-
 
             self.visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
             self.curiosity_per_map = tf.math.unsorted_segment_mean(intrinsic_rewards, classes, tf.shape(self.visited_maps)[0])

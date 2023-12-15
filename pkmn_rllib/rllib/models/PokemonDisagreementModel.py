@@ -11,23 +11,22 @@ from ray.rllib.models.modelv2 import restore_original_dimensions
 from ray.rllib.models.tf.tf_action_dist import Categorical
 
 
-class PokemonICMModel(TFModelV2):
+class PokemonDisagreementMModel(TFModelV2):
 
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
 
         self.num_outputs = action_space.n
         self.fcnet_size = model_config.get("fcnet_size")
-        
-        self.icm_beta = model_config.get("icm_beta", 0.8)
-        self.curiosity_reward_scale = model_config.get("icm_eta", 0.0003)
-        self.icm_lambda = model_config.get("icm_lambda", 0.1)
         self.learner_bound = model_config["learner_bound"]
+
+        self.n_models = model_config.get("n_disagreement_models", 5)
+        self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 1e-2)
 
 
 
         #self.flag_embedding_size = model_config.get("flag_embedding_size")
 
-        super(PokemonICMModel, self).__init__(
+        super(PokemonDisagreementMModel, self).__init__(
             obs_space, action_space, self.num_outputs, model_config, name
         )
 
@@ -121,7 +120,7 @@ class PokemonICMModel(TFModelV2):
                     strides=stride
                     if isinstance(stride, (list, tuple))
                     else (stride, stride),
-                    activation="relu",
+                    activation="tanh",
                     padding=padding,
                     data_format="channels_last",
                     name="ICM_conv{}".format(i),
@@ -131,9 +130,9 @@ class PokemonICMModel(TFModelV2):
             state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
             state_embedding_fc = tf.keras.layers.Dense(
-                256,
+                512,
                 name="ICM_state_embedding_fc",
-                activation="relu",
+                activation="elu",
             )
 
             last_layer_curr = curr_screen_input
@@ -152,61 +151,45 @@ class PokemonICMModel(TFModelV2):
             curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
             next_state_embedding = state_embedding_fc(next_state_pre_f1)
 
-
-            action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_action_prediction_input")(
+            self.state_embedding_model = tf.keras.Model(
+                [curr_screen_input, curr_state_embedding, next_screen_input, next_stats_input],
                 [curr_state_embedding, next_state_embedding]
             )
 
-            action_prediction_fc1 = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_action_prediction_fc1",
-                activation="relu",
-                #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(action_prediction_input)
+            self.disagreement_models = []
 
-            action_prediction_logits = tf.keras.layers.Dense(
-                self.num_outputs,
-                name="ICM_action_logits",
-                activation=None,
-                #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(action_prediction_fc1)
+            for i in range(self.n_models):
 
-            state_prediction_input = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_prediction_input")(
-            [curr_state_embedding_input, action_one_hot,
-             ]
-            )
+                state_prediction_input = tf.keras.layers.Concatenate(axis=-1, name=f"ICM_state_prediction_input_{i}")(
+                [curr_state_embedding_input, action_one_hot,
+                 ]
+                )
 
-            state_prediction_fc1 = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_state_prediction_fc1",
-                activation="relu",
-                #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(state_prediction_input)
+                state_prediction_fc1 = tf.keras.layers.Dense(
+                    self.fcnet_size,
+                    name="fICM_state_prediction_fc1_{i}",
+                    activation="relu",
+                    #kernel_initializer=tf.random_normal_initializer(0, 0.01)
+                )(state_prediction_input)
 
-            state_prediction_fc2 = tf.keras.layers.Dense(
-                self.fcnet_size,
-                name="ICM_state_prediction_fc2",
-                activation="relu",
-                # kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(state_prediction_fc1)
+                state_prediction_fc2 = tf.keras.layers.Dense(
+                    self.fcnet_size,
+                    name=f"ICM_state_prediction_fc2_{i}",
+                    activation="relu",
+                    # kernel_initializer=tf.random_normal_initializer(0, 0.01)
+                )(state_prediction_fc1)
 
-            state_prediction_out = tf.keras.layers.Dense(
-                256,
-                name="ICM_state_prediction_out",
-                activation=None,
-                #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-            )(state_prediction_fc2)
+                state_prediction_out = tf.keras.layers.Dense(
+                    512,
+                    name=f"ICM_state_prediction_out_{i}",
+                    activation=None,
+                    #kernel_initializer=tf.random_normal_initializer(0, 0.01)
+                )(state_prediction_fc2)
 
-            self.icm_forward_model = tf.keras.Model(
-                [curr_state_embedding_input, action_input],
-                [state_prediction_out]
-            )
-
-            self.icm_prediction_model = tf.keras.Model(
-            [curr_screen_input, next_screen_input, stats_input, next_stats_input],
-            [action_prediction_logits, curr_state_embedding, next_state_embedding]
-
-            )
+                self.disagreement_models.append(tf.keras.Model(
+                    [curr_state_embedding, action_input],
+                    [state_prediction_out]
+                ))
 
     def forward(self, input_dict, state, seq_lens):
 
@@ -223,23 +206,18 @@ class PokemonICMModel(TFModelV2):
         )
         allowed_action_logits = action_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
 
-
-        self.delta_screen = tf.reduce_sum(tf.math.square(next_screen_input - self.screen_input))
-
-
         if self.learner_bound:
 
-            action_prediction_logits, curr_state_embedding, icm_next_state_embedding = self.icm_prediction_model(
-                [self.screen_input, next_screen_input, self.stats_inputs, next_stats_inputs]
+            curr_state_embedding, next_state_embedding = self.state_embedding_model(
+                [self.screen_input, self.stats_inputs, next_stats_inputs, next_screen_input]
             )
 
-            #allowed_action_prediction_logits = action_prediction_logits + tf.maximum(tf.math.log(allowed_actions), tf.float32.min)
+            self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
+            self.next_state_embedding = tf.stop_gradient(next_state_embedding)
 
-            self.icm_next_state_embedding = tf.stop_gradient(icm_next_state_embedding)
-            self.icm_state_predictions = self.icm_forward_model(
-                [tf.stop_gradient(curr_state_embedding), self.actions]
-            )
-            self.icm_action_predictions = action_prediction_logits
+            self.predicted_state_embeddings = [
+                model([self.curr_state_embedding, self.actions]) for model in self.disagreement_models
+            ]
 
         return allowed_action_logits, state
 
@@ -247,23 +225,30 @@ class PokemonICMModel(TFModelV2):
         return tf.reshape(self._value_out, [-1])
 
     def state_prediction_loss(self):
-        return tf.reduce_sum(tf.math.square(self.icm_next_state_embedding - self.icm_state_predictions), axis=-1) * 0.5
 
-    def action_prediction_loss(self):
+        batch_size = tf.shape(self.screen_input[0])
+        sample_size = tf.cast(batch_size / 4, tf.int32)
 
-        action_dist = (
-            Categorical(self.icm_action_predictions, self)
-        )
-        # Neg log(p); p=probability of observed action given the inverse-NN
-        # predicted action distribution.
-        return -action_dist.logp(tf.convert_to_tensor(self.actions))
-        #return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.squeeze(self.actions), logits=self.icm_action_predictions)
+        loss = sum([
+            tf.math.sqrt(tf.reduce_sum(tf.math.square(
+                tf.gather_nd(self.next_state_embedding - predicted_state_embedding,
+                             tf.random.uniform(shape=(sample_size,), minval=0, maxval=batch_size + 1, dtype=tf.int32)
+                             )
+            ), axis=-1))
+            for predicted_state_embedding
+            in self.predicted_state_embeddings
+        ])
 
+        return loss
+
+    def compute_intrinsic_rewards(self):
+
+        return tf.reduce_sum(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1, keepdims=True)
 
     def metrics(self) -> Dict[str, TensorType]:
 
         return {
-            "delta_screen": self.delta_screen
+            #"delta_screen": self.delta_screen
         }
 
 

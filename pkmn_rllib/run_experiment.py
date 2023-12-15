@@ -9,6 +9,8 @@ from pkmn_env.red import PkmnRedEnv
 from pkmn_rllib.rllib.models.PokemonBaseModel import PokemonBaseModel
 from pkmn_rllib.rllib.models.PokemonLstmModel import PokemonLstmModel
 from pkmn_rllib.rllib.models.PokemonICMModel import PokemonICMModel
+from pkmn_rllib.rllib.models.PokemonDisagreementModel import PokemonDisagreementMModel
+
 
 from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
@@ -52,6 +54,11 @@ ModelCatalog.register_custom_model(
         PokemonICMModel,
     )
 
+ModelCatalog.register_custom_model(
+        "pokemon_disagreement_model",
+        PokemonDisagreementMModel,
+    )
+
 num_workers = 124
 num_envs_per_worker = 1
 rollout_fragment_length = 256
@@ -76,7 +83,7 @@ config = VmpoConfig().training(
     # minibatch_buffer_size=128,
     gamma=0.997,
     model={
-        "custom_model": "pokemon_icm_model",
+        "custom_model": "pokemon_disagreement_model",
         "conv_filters": [
             [32, [4, 4], 3, "same"],
             [32, [3, 3], 2, "same"],

@@ -283,14 +283,8 @@ class PokemonLstmModel(TFModelV2):
 
         prediction_loss = self.moved_loss_mean + self.map_loss_mean + self.reward_loss_mean
 
-        # train ICM here
 
-        self.icm_inverse_loss = ...
-        self.icm_forward_loss = ...
-
-        self.curiosty_loss = (1.-self.icm_beta) * self.icm_inverse_loss + self.icm_beta * self.icm_forward_loss
-
-        return policy_loss + prediction_loss * 0.33 + self.curiosty_loss / self.icm_lambda
+        return policy_loss + prediction_loss * 0.33
 
     def metrics(self):
 
