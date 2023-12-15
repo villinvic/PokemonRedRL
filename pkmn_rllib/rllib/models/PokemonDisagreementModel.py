@@ -187,7 +187,7 @@ class PokemonDisagreementMModel(TFModelV2):
                 )(state_prediction_fc1)
 
                 state_prediction_out = tf.keras.layers.Dense(
-                    512,
+                    self.state_embedding_size,
                     name=f"ICM_state_prediction_out_{i}",
                     activation=None,
                     #kernel_initializer=tf.random_normal_initializer(0, 0.01)
