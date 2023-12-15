@@ -356,15 +356,9 @@ class VmpoPolicy(
             self.mean_icm_loss = icm_loss / self.model.icm_lambda
 
 
-            visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
+            self.visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
 
-            mean_surprise_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
-
-            self.surprise_per_map = tf.lookup.StaticHashTable(
-                tf.lookup.KeyValueTensorInitializer(tf.cast(visited_maps, tf.int32), mean_surprise_per_map),
-                default_value=0.0  # Set a default value if a key is not found (you can customize this)
-            )
-            self.most_surprising_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards)]
+            self.curiosity_per_map = tf.math.segment_mean(intrinsic_rewards, classes)
 
         else:
 
@@ -378,8 +372,9 @@ class VmpoPolicy(
             self.max_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
             self.min_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
 
-            self.surprise_per_map = None
-            self.most_surprising_state = None
+            self.visited_maps = None
+            self.curiosity_per_map = None
+            self.most_curious_state = None
 
 
 
@@ -584,25 +579,27 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
-            "tmp": self.most_surprising_state,
-            "surprise_map_table": self.surprise_per_map
+            "tmp": self.most_curious_state,
+            "visited_maps": self.visited_maps,
+            "curiosity_per_maps": self.curiosity_per_map,
         }
 
     @override(Policy)
     def learn_on_batch(self, postprocessed_batch: SampleBatch) -> Dict[str, TensorType]:
         stats = super().learn_on_batch(postprocessed_batch)
 
-        table = stats.pop("surprise_map_table", None)
-        surprising_state = stats.pop("tmp", None)
-        if surprising_state is not None:
+        curiosity_per_maps = stats.pop("curiosity_per_maps", None)
+        visited_maps = stats.pop("visited_maps", None)
+        curious_state = stats.pop("tmp", None)
+        if curious_state is not None:
             idx = self.global_timestep % 10
-            pil_img = tf.keras.preprocessing.image.array_to_img(surprising_state)
-            path = Path(f"debug/surprise/surprising_state_{idx}.png")
+            pil_img = tf.keras.preprocessing.image.array_to_img(curious_state)
+            path = Path(f"debug/curiosity/curious_state_{idx}.png")
             path.mkdir(parents=True, exist_ok=True)
             pil_img.save(path)
         if table is not None:
             stats.update(**{
-                "curiosity/rewards_on_map_{i}": table.lookup([i]) for i in range(255)
+                f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i in enumerate(visited_maps)
             })
 
         return stats
