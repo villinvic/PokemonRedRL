@@ -1,5 +1,6 @@
 import collections
 import copy
+from pathlib import Path
 from time import time
 from typing import Union, Type, List, Dict, Tuple
 import logging
@@ -23,6 +24,7 @@ from ray.rllib.utils.tf_utils import explained_variance, make_tf_callable
 
 import ray
 import gymnasium as gym
+from PIL import Image
 from ray.rllib.utils.typing import TensorType, PolicyState, AgentID, PolicyID, LocalOptimizer, ModelGradients
 
 from pkmn_rllib.rllib.vmpo.VmpoInterface import VmpoInterface
@@ -353,6 +355,8 @@ class VmpoPolicy(
 
             self.mean_icm_loss = icm_loss / self.model.icm_lambda
 
+            self.surprising_state = train_batch[SampleBatch.OBS]["screen"][tf.argmax(intrinsic_rewards)]
+
         else:
 
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
@@ -599,7 +603,13 @@ class VmpoPolicy(
     def update_statistics(self, policy_id, results):
 
         if results:
-            # Apply the gradients
+
+            idx = self.global_timestep % 10
+            pil_img = tf.keras.preprocessing.image.array_to_img(self.surprising_state)
+            path = Path(f"debug/surprise/surprising_image_{idx}.png")
+            path.mkdir(parents=True, exist_ok=True)
+            pil_img.save(path)
+
 
             # Get the weights of the value layer
             w = super().get_weights()
