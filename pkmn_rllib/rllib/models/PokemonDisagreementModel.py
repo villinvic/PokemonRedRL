@@ -233,7 +233,7 @@ class PokemonDisagreementMModel(TFModelV2):
         loss = sum([
             tf.math.sqrt(tf.reduce_sum(tf.math.square(
                 tf.gather_nd(self.next_state_embedding - predicted_state_embedding,
-                             tf.random.uniform(shape=(sample_size,), minval=0, maxval=batch_size + 1, dtype=tf.int32)
+                             tf.random.uniform(shape=(sample_size, 1), minval=0, maxval=batch_size + 1, dtype=tf.int32)
                              )
             ), axis=-1))
             for predicted_state_embedding
