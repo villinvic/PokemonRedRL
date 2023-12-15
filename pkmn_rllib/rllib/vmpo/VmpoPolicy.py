@@ -373,8 +373,6 @@ class VmpoPolicy(
             self.visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
             self.curiosity_per_map = tf.math.unsorted_segment_mean(intrinsic_rewards, classes, tf.shape(self.visited_maps)[0])
 
-            print(rewards.shape)
-
             self.most_curious_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
         else:
@@ -382,6 +380,8 @@ class VmpoPolicy(
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
             self.mean_icm_loss = tf.zeros((1,), dtype=tf.float32)
             self.mean_state_prediction_loss = tf.zeros((1,), dtype=tf.float32)
+            self.max_state_prediction_loss = tf.zeros((1,), dtype=tf.float32)
+            self.min_state_prediction_loss = tf.zeros((1,), dtype=tf.float32)
             self.mean_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
             self.min_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
@@ -528,18 +528,16 @@ class VmpoPolicy(
         self.temperate_loss = temp_loss(top_half_advantages, model.eta, model.eps_eta, top_half_rhos, top_half_mask)
         self.trust_region_loss = trust_region_loss(model.alpha, model.eps_alpha, self.kl)
 
-        # self.auxiliary_value_loss = self.model.policy_value_function_loss()
         self.total_loss = (
                 self.vf_loss + self.policy_loss - self.entropy_loss
                 + self.trust_region_loss + self.temperate_loss
-            # + self.auxiliary_value_loss
         )
 
         self.new_mean = vtrace_returns.new_mean
         self.new_moment = vtrace_returns.new_moment
 
         if self.learner_bound:
-            return self.total_loss, self.mean_icm_loss
+            return self.total_loss, self.mean_state_prediction_loss
         else:
             return self.total_loss
 
@@ -587,11 +585,14 @@ class VmpoPolicy(
             "normalization_scale"  : self.normalization_scale,
 
             # ICM
-            "curiosity/state_prediction_loss": self.mean_state_prediction_loss,
-            "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
-            "curiosity/action_prediction_loss_min": self.min_action_prediction_loss,
-            "curiosity/action_prediction_loss_max": self.max_action_prediction_loss,
-            "curiosity/total_loss": self.mean_icm_loss,
+            "curiosity/state_prediction_loss_mean": self.mean_state_prediction_loss,
+            "curiosity/state_prediction_loss_max": self.max_state_prediction_loss,
+            "curiosity/state_prediction_loss_min": self.min_action_prediction_loss,
+
+            # "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
+            # "curiosity/action_prediction_loss_min": self.min_action_prediction_loss,
+            # "curiosity/action_prediction_loss_max": self.max_action_prediction_loss,
+            # "curiosity/total_loss": self.mean_icm_loss,
             "curiosity/intrinsic_rewards_mean": self.mean_intrinsic_rewards,
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
