@@ -373,7 +373,7 @@ class VmpoPolicy(
             self.visited_maps, classes = tf.unique(tf.squeeze(train_batch[SampleBatch.OBS]["coordinates"]))
             self.curiosity_per_map = tf.math.unsorted_segment_mean(intrinsic_rewards, classes, tf.shape(self.visited_maps)[0])
 
-            self.most_curious_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards)]
+            self.most_curious_state = train_batch[SampleBatch.NEXT_OBS]["screen"][tf.argmax(intrinsic_rewards[:, 0])]
 
         else:
 
