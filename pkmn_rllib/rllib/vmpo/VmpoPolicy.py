@@ -357,13 +357,6 @@ class VmpoPolicy(
 
             self.surprising_state = train_batch[SampleBatch.OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
-            with tf1.Session() as sess:
-                pil_img = tf.keras.preprocessing.image.array_to_img(sess.run(self.surprising_state, feed_dict=train_batch))
-            idx = self.global_timestep % 10
-            path = Path(f"debug/surprise/surprising_image_{idx}.png")
-            path.mkdir(parents=True, exist_ok=True)
-            pil_img.save(path)
-
         else:
 
             self.mean_intrinsic_rewards = tf.zeros((1,), dtype=tf.float32)
@@ -578,7 +571,6 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_mean": self.mean_intrinsic_rewards,
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
-
         }
 
     @override(DynamicTFPolicyV2)
