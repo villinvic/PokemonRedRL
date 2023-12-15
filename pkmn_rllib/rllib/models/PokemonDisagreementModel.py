@@ -92,7 +92,6 @@ class PokemonDisagreementMModel(TFModelV2):
             bias_initializer=tf.zeros_initializer(),
         )(fc2)
 
-        # ICM
 
         self.base_model = tf.keras.Model(
             [screen_input, stats_input],
@@ -219,7 +218,7 @@ class PokemonDisagreementMModel(TFModelV2):
                 [self.screen_input, self.stats_inputs, next_screen_input, next_stats_inputs]
             )
 
-            self.curr_state_embedding = curr_state_embedding # tf.stop_gradient(curr_state_embedding)
+            self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
             self.next_state_embedding = tf.stop_gradient(next_state_embedding)
 
             self.predicted_state_embeddings = [
