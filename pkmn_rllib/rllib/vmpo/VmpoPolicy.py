@@ -332,7 +332,7 @@ class VmpoPolicy(
         dones = train_batch[SampleBatch.TERMINATEDS]
         rewards = train_batch[SampleBatch.REWARDS]
 
-        self.batch_reward_std = tf.math.reduce_std(rewards)
+        self.batch_reward_std = tf.maximum(tf.math.reduce_std(rewards), 1e-2)
         self.batch_reward_mean = tf.math.reduce_mean(rewards)
 
         # ICM ####################################
