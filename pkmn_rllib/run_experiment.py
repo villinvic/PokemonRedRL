@@ -61,13 +61,13 @@ ModelCatalog.register_custom_model(
 
 num_workers = 124
 num_envs_per_worker = 1
-rollout_fragment_length = 256
+rollout_fragment_length = 64
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
     eps_alpha=2e-3,
     alpha=5.,
-    target_network_update_freq=500, #1536,
+    target_network_update_freq=1000, #1536,
     replay_proportion=0.0,
     entropy_coeff=1e-4,
     learner_queue_size=128,
@@ -78,7 +78,7 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=1.,
     opt_type="rmsprop",
-    train_batch_size=4096,
+    train_batch_size=1024,
     # num_sgd_iter=12,
     # minibatch_buffer_size=128,
     gamma=0.997,

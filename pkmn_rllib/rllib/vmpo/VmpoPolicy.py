@@ -170,7 +170,7 @@ class ICMOptimizer:
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
                 if self.learner_bound:
-                    icm_optimizer = tf.keras.optimizers.Adam(1e-3, name="ICM_optim")
+                    icm_optimizer = tf.keras.optimizers.Adam(1e-4, name="ICM_optim")
                     return optim, icm_optimizer
 
             else:
@@ -178,7 +178,7 @@ class ICMOptimizer:
                     self.cur_lr, config["decay"], config["momentum"], config["epsilon"]
                 )
                 if self.learner_bound:
-                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3, name="ICM_optim")
+                    icm_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4, name="ICM_optim")
                     return optim, icm_optimizer
 
         return optim
