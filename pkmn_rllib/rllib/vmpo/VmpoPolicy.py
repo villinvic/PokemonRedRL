@@ -540,7 +540,7 @@ class VmpoPolicy(
 
         if self.surprise_per_map :
             cur_per_map = {
-                f"curiosity/curiosity_on_map_{i}": self.surprise_per_map.lookup([i]) for i in range(255)
+                f"curiosity/curiosity_on_map_{i}": self.surprise_per_map.lookup(tf.constant([i], dtype=tf.uint8)) for i in range(255)
             }
         else:
             cur_per_map = {}
