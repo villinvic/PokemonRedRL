@@ -187,7 +187,7 @@ class PokemonDisagreementMModel(TFModelV2):
                 )(state_prediction_fc2)
 
                 self.disagreement_models.append(tf.keras.Model(
-                    [curr_state_embedding, action_input],
+                    [curr_state_embedding_input, action_input],
                     [state_prediction_out]
                 ))
 
