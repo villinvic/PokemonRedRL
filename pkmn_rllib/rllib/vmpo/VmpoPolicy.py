@@ -378,7 +378,7 @@ class VmpoPolicy(
             self.max_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
             self.min_action_prediction_loss = tf.zeros((1,), dtype=tf.float32)
 
-            self.surprise_per_map = {}
+            self.surprise_per_map = None
             self.most_surprising_state = None
 
 
@@ -540,13 +540,6 @@ class VmpoPolicy(
             self.model.value_function(),
         )
 
-        if self.surprise_per_map :
-            cur_per_map = {
-                "curiosity_map_table": self.curiosity_per_map
-            }
-        else:
-            cur_per_map = {}
-
         return {
             "cur_lr"               : tf.cast(self.cur_lr, tf.float64),
             "policy_loss"          : self.policy_loss,
@@ -592,14 +585,14 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
             "tmp": self.most_surprising_state,
-            ** cur_per_map
+            "surprise_map_table": self.surprise_per_map
         }
 
     @override(Policy)
     def learn_on_batch(self, postprocessed_batch: SampleBatch) -> Dict[str, TensorType]:
         stats = super().learn_on_batch(postprocessed_batch)
 
-        table = stats.pop("curiosity_map_table", None)
+        table = stats.pop("surprise_map_table", None)
         surprising_state = stats.pop("tmp", None)
         if surprising_state is not None:
             idx = self.global_timestep % 10
