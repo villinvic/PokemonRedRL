@@ -705,6 +705,7 @@ class VmpoLearnerThread(LearnerThread):
                     path.mkdir(parents=True, exist_ok=True)
                     pil_img.save(path / f"curious_state_{idx}.png")
                 if curiosity_per_maps is not None:
+                    print(curiosity_per_maps, visited_maps)
                     stats.update(**{
                         f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in
                         enumerate(visited_maps)
