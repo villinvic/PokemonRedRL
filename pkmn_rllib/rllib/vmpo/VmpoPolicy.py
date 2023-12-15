@@ -357,7 +357,7 @@ class VmpoPolicy(
 
             self.surprising_state = train_batch[SampleBatch.OBS]["screen"][tf.argmax(intrinsic_rewards)]
 
-            with tf.Session() as sess:
+            with tf1.Session() as sess:
                 pil_img = tf.keras.preprocessing.image.array_to_img(sess.run(self.surprising_state))
             idx = self.global_timestep % 10
             path = Path(f"debug/surprise/surprising_image_{idx}.png")
