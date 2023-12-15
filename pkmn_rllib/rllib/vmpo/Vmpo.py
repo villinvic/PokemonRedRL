@@ -706,11 +706,16 @@ class VmpoLearnerThread(LearnerThread):
                     path.mkdir(parents=True, exist_ok=True)
                     pil_img.save(path / f"curious_state_{idx}.png")
                 if curiosity_per_maps is not None:
-                    print(curiosity_per_maps, visited_maps)
-                    stats.update(**{
-                        f"curiosity/rewards_on_map_{PKMN_RB_MAPS[visited_map]}": curiosity_per_maps[i] for i, visited_map in
+
+                    rewards_per_map = {
+                        f"curiosity/rewards_on_map_{map_name}": 0. for map_name in PKMN_RB_MAPS
+                    }
+                    rewards_per_map.update(**{
+                        f"curiosity/rewards_on_map_{PKMN_RB_MAPS[visited_map]}": curiosity_per_maps[i] for
+                        i, visited_map in
                         enumerate(visited_maps)
                     })
+                    stats.update(**rewards_per_map)
 
                 results["batch_count"] = self.batch_counts[pid]
                 learner_info_builder.add_learn_on_batch_results(results, pid)
