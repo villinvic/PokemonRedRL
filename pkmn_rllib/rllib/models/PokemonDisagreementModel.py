@@ -21,7 +21,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
         self.n_models = model_config.get("n_disagreement_models", 5)
         self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 1e-2)
-        self.state_embedding_size = model_config.get("state_embedding_size", 512)
+        self.state_embedding_size = model_config.get("state_embedding_size", 64)
 
 
 
@@ -130,6 +130,12 @@ class PokemonDisagreementMModel(TFModelV2):
 
             state_embedding_concat = tf.keras.layers.Concatenate(axis=-1, name="ICM_state_embedding_concat")
 
+            state_pre_embedding_fc = tf.keras.layers.Dense(
+                self.fcnet_size,
+                name="ICM_state_pre_embedding_fc",
+                activation="elu",
+            )
+
             state_embedding_fc = tf.keras.layers.Dense(
                 self.state_embedding_size,
                 name="ICM_state_embedding_fc",
@@ -149,8 +155,8 @@ class PokemonDisagreementMModel(TFModelV2):
             next_state_pre_f1 = state_embedding_concat(
                 [last_layer_next, next_stats_input]
             )
-            curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
-            next_state_embedding = state_embedding_fc(next_state_pre_f1)
+            curr_state_embedding = state_embedding_fc(state_pre_embedding_fc(curr_state_pre_f1))
+            next_state_embedding = state_embedding_fc(state_pre_embedding_fc(next_state_pre_f1))
 
             self.state_embedding_model = tf.keras.Model(
                 [curr_screen_input, stats_input, next_screen_input, next_stats_input],
@@ -213,7 +219,7 @@ class PokemonDisagreementMModel(TFModelV2):
                 [self.screen_input, self.stats_inputs, next_screen_input, next_stats_inputs]
             )
 
-            self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
+            self.curr_state_embedding = curr_state_embedding # tf.stop_gradient(curr_state_embedding)
             self.next_state_embedding = tf.stop_gradient(next_state_embedding)
 
             self.predicted_state_embeddings = [
