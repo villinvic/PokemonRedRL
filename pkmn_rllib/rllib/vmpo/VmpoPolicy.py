@@ -362,7 +362,7 @@ class VmpoPolicy(
 
             self.surprise_per_map = tf.lookup.StaticHashTable(
                 tf.lookup.KeyValueTensorInitializer(visited_maps, mean_curiosity_per_map),
-                default_value=-1.0  # Set a default value if a key is not found (you can customize this)
+                default_value=0.0  # Set a default value if a key is not found (you can customize this)
             )
 
         else:
@@ -540,7 +540,7 @@ class VmpoPolicy(
 
         if self.surprise_per_map :
             cur_per_map = {
-                key: value for key, value in self.surprise_per_map.table_ref().items()
+                f"curiosity/curiosity_on_map_{i}": self.surprise_per_map.lookup([i]) for i in range(255)
             }
         else:
             cur_per_map = {}
