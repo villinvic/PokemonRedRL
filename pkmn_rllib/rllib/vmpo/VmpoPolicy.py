@@ -538,6 +538,10 @@ class VmpoPolicy(
             self.model.value_function(),
         )
 
+        cur_per_map = {
+            key: value for key, value in self.surprise_per_map.table_ref().items()
+        }
+
         return {
             "cur_lr"               : tf.cast(self.cur_lr, tf.float64),
             "policy_loss"          : self.policy_loss,
@@ -582,7 +586,7 @@ class VmpoPolicy(
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
             "curiosity/intrinsic_rewards_min": self.min_intrinsic_rewards,
 
-            ** self.surprise_per_map
+            ** cur_per_map
         }
 
     @override(DynamicTFPolicyV2)
