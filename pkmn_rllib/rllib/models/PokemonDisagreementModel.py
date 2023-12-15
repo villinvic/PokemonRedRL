@@ -244,7 +244,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
     def compute_intrinsic_rewards(self):
 
-        return tf.reduce_sum(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1, keepdims=True)
+        return tf.reduce_sum(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1, keepdims=False)
 
     def metrics(self) -> Dict[str, TensorType]:
 
