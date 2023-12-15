@@ -586,30 +586,6 @@ class VmpoPolicy(
         }
 
     @override(DynamicTFPolicyV2)
-    def learn_on_batch(self, postprocessed_batch: SampleBatch) -> Dict[str, TensorType]:
-        stats = super().learn_on_batch(postprocessed_batch)
-
-        print(list(stats.keys()))
-
-        raise Exception
-
-        curiosity_per_maps = stats.pop("curiosity_per_maps", None)
-        visited_maps = stats.pop("visited_maps", None)
-        curious_state = stats.pop("tmp", None)
-        if curious_state is not None:
-            idx = self.global_timestep % 10
-            pil_img = tf.keras.preprocessing.image.array_to_img(curious_state)
-            path = Path(f"debug/curiosity/curious_state_{idx}.png")
-            path.mkdir(parents=True, exist_ok=True)
-            pil_img.save(path)
-        if curiosity_per_maps is not None:
-            stats.update(**{
-                f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in enumerate(visited_maps)
-            })
-
-        return stats
-
-    @override(DynamicTFPolicyV2)
     def get_batch_divisibility_req(self) -> int:
         return self.config["rollout_fragment_length"]
 

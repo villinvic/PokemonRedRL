@@ -3,6 +3,7 @@ import logging
 import platform
 import queue
 from collections import defaultdict
+from pathlib import Path
 from typing import Optional, Type, DefaultDict, Set, Dict, List
 
 import ray
@@ -36,6 +37,8 @@ from ray.util.iter import _NextValueNotReady
 
 from pkmn_rllib.rllib.vmpo.NoCopyWorkerSet import LightWorkerSet
 from pkmn_rllib.rllib.vmpo.VmpoPolicy import VmpoPolicy
+
+import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
@@ -690,8 +693,27 @@ class VmpoLearnerThread(LearnerThread):
                 if self.batch_counts[pid] % self.target_network_update_freq == 0:
                     self.local_worker.get_policy(pid).update_target()
 
+                stats = results["learner_stats"]
+
+                curiosity_per_maps = stats.pop("curiosity_per_maps", None)
+                visited_maps = stats.pop("visited_maps", None)
+                curious_state = stats.pop("tmp", None)
+                if curious_state is not None:
+                    idx = self.batch_counts[pid] % 15
+                    pil_img = tf.keras.preprocessing.image.array_to_img(curious_state)
+                    path = Path(f"debug/curiosity/curious_state_{idx}.png")
+                    path.mkdir(parents=True, exist_ok=True)
+                    pil_img.save(path)
+                if curiosity_per_maps is not None:
+                    stats.update(**{
+                        f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in
+                        enumerate(visited_maps)
+                    })
+
                 results["batch_count"] = self.batch_counts[pid]
                 learner_info_builder.add_learn_on_batch_results(results, pid)
+
+
 
             self.learner_info = learner_info_builder.finalize()
 
