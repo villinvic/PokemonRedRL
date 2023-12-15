@@ -152,7 +152,7 @@ class PokemonDisagreementMModel(TFModelV2):
             next_state_embedding = state_embedding_fc(next_state_pre_f1)
 
             self.state_embedding_model = tf.keras.Model(
-                [curr_screen_input, curr_state_embedding, next_screen_input, next_stats_input],
+                [curr_screen_input, stats_input, next_screen_input, next_stats_input],
                 [curr_state_embedding, next_state_embedding]
             )
 
@@ -167,7 +167,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
                 state_prediction_fc1 = tf.keras.layers.Dense(
                     self.fcnet_size,
-                    name="fICM_state_prediction_fc1_{i}",
+                    name=f"fICM_state_prediction_fc1_{i}",
                     activation="relu",
                     #kernel_initializer=tf.random_normal_initializer(0, 0.01)
                 )(state_prediction_input)
