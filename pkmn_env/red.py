@@ -286,7 +286,7 @@ class PkmnRedEnv(Env):
         self.reward_function_config = {
             BLACKOUT                 :   - 0.10,
             SEEN_POKEMONS            :   0.1,
-            TOTAL_EXPERIENCE         :   4.,  # 0.5
+            TOTAL_EXPERIENCE         :   6.,  # 0.5
             BADGE_SUM                :   100.,
             MAPS_VISITED             :   0.05, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.03, # TODO : bugged
