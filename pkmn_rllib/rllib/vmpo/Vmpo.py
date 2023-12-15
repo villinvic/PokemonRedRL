@@ -35,6 +35,7 @@ from ray.rllib.utils.replay_buffers import ReplayMode
 from ray.rllib.utils.typing import AlgorithmConfigDict, PartialAlgorithmConfigDict, ResultDict
 from ray.util.iter import _NextValueNotReady
 
+from pkmn_env.enums import PKMN_RB_MAPS
 from pkmn_rllib.rllib.vmpo.NoCopyWorkerSet import LightWorkerSet
 from pkmn_rllib.rllib.vmpo.VmpoPolicy import VmpoPolicy
 
@@ -707,7 +708,7 @@ class VmpoLearnerThread(LearnerThread):
                 if curiosity_per_maps is not None:
                     print(curiosity_per_maps, visited_maps)
                     stats.update(**{
-                        f"curiosity/rewards_on_map_{visited_map}": curiosity_per_maps[i] for i, visited_map in
+                        f"curiosity/rewards_on_map_{PKMN_RB_MAPS[visited_map]}": curiosity_per_maps[i] for i, visited_map in
                         enumerate(visited_maps)
                     })
 
