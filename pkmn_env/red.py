@@ -457,6 +457,9 @@ class PkmnRedEnv(Env):
                 )
         )
 
+    def skippable_black_screen(self):
+        return (np.sum(np.float32(self.screen.screen_ndarray() <= 8)) / np.prod(self.screen_shape)) > 0.8
+
     def skip_battle_frames(self):
         c = 0
         for i in range(18 * 32):
