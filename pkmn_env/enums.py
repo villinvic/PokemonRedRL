@@ -35,15 +35,6 @@ NUM_BALLS_BOUGHT = "num_balls_bought"
 NUM_HEALING_ITEMS_BOUGHT = "num_healing_items_bought"
 
 
-poke_dict = {}
-with open("maps.csv", 'r') as csvfile:
-    reader = csv.DictReader(csvfile, delimiter='\t')
-    for row in reader:
-        hex_value = row['Hex']
-        location = row['Location']
-        poke_dict[hex_value] = location
-
-
 PKMN_RB_MAPS = {
     0x00 : "Pallet Town",
     0x01 : "Viridian City",
