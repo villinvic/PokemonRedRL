@@ -708,7 +708,7 @@ class VmpoLearnerThread(LearnerThread):
                     path.mkdir(parents=True, exist_ok=True)
                     metadata = PngInfo()
                     metadata.add_text("EmbeddingDistance", f"{max_embedding_distance:.3f}")
-                    pil_img.save(path / f"curious_state_{idx}.png", pnfinfo=f"{max_embedding_distance:.3f}")
+                    pil_img.save(path / f"curious_state_{idx}.png", pnfinfo=metadata)
                 if curiosity_per_maps is not None:
 
                     rewards_per_map = {
