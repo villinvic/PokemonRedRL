@@ -394,6 +394,7 @@ class VmpoPolicy(
             self.visited_maps = tf.zeros((1,), dtype=tf.float32)
             self.curiosity_per_map = tf.zeros((1,), dtype=tf.float32)
             self.most_curious_state = tf.zeros((1,), dtype=tf.float32)
+            self.max_embedding_distance = tf.zeros((1,), dtype=tf.float32)
 
 
 
