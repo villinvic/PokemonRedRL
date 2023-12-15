@@ -20,7 +20,7 @@ class PokemonDisagreementMModel(TFModelV2):
         self.learner_bound = model_config["learner_bound"]
 
         self.n_models = model_config.get("n_disagreement_models", 5)
-        self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 0.25)
+        self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 0.33)
         self.state_embedding_size = model_config.get("state_embedding_size", 512)
 
 
@@ -256,7 +256,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
     def compute_intrinsic_rewards(self):
         embedding_distance = self.embedding_distance()
-        normalized_embedding_distance = embedding_distance / tf.reduce_mean(embedding_distance + 1e-8)
+        normalized_embedding_distance = embedding_distance / tf.reduce_mean(embedding_distance + 1e-1)
         return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1) / (
             normalized_embedding_distance
         )
