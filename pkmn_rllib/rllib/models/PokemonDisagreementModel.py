@@ -21,7 +21,7 @@ class PokemonDisagreementMModel(TFModelV2):
 
         self.n_models = model_config.get("n_disagreement_models", 5)
         self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 1e-1)
-        self.state_embedding_size = model_config.get("state_embedding_size", 128)
+        self.state_embedding_size = model_config.get("state_embedding_size", 64)
 
 
 
@@ -178,19 +178,19 @@ class PokemonDisagreementMModel(TFModelV2):
                     #kernel_initializer=tf.random_normal_initializer(0, 0.01)
                 )(state_prediction_input)
 
-                # state_prediction_fc2 = tf.keras.layers.Dense(
-                #     self.state_embedding_size,
-                #     name=f"ICM_state_prediction_fc2_{i}",
-                #     activation="relu",
-                #     # kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                # )(state_prediction_fc1)
+                state_prediction_fc2 = tf.keras.layers.Dense(
+                    self.state_embedding_size,
+                    name=f"ICM_state_prediction_fc2_{i}",
+                    activation="relu",
+                    # kernel_initializer=tf.random_normal_initializer(0, 0.01)
+                )(state_prediction_fc1)
 
                 state_prediction_out = tf.keras.layers.Dense(
                     self.state_embedding_size,
                     name=f"ICM_state_prediction_out_{i}",
                     activation=None,
                     #kernel_initializer=tf.random_normal_initializer(0, 0.01)
-                )(state_prediction_fc1)
+                )(state_prediction_fc2)
 
                 self.disagreement_models.append(tf.keras.Model(
                     [curr_state_embedding_input, action_input],
