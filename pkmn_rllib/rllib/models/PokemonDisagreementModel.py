@@ -138,15 +138,19 @@ class PokemonDisagreementMModel(TFModelV2):
             state_embedding_fc = tf.keras.layers.Dense(
                 self.state_embedding_size,
                 name="ICM_state_embedding_fc",
-                activation="elu",
+                activation=None,
             )
 
+            def layernorm(x):
+                m, v = tf.nn.moments(x, -1, keep_dims=True)
+                return (x - m) / (tf.math.sqrt(v) + 1e-8)
+
             stats_normalization_layer = tf.keras.layers.BatchNormalization(
-                momentum=0.99,
+                momentum=0.98,
                 name="ICM_stats_normalization_layer"
             )
             screen_normalization_layer = tf.keras.layers.BatchNormalization(
-                momentum=0.99,
+                momentum=0.98,
                 name="ICM_screen_normalization_layer"
             )
 
@@ -163,8 +167,8 @@ class PokemonDisagreementMModel(TFModelV2):
             next_state_pre_f1 = state_embedding_concat(
                 [last_layer_next, stats_normalization_layer(next_stats_input, training=False)]
             )
-            curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
-            next_state_embedding = state_embedding_fc(next_state_pre_f1)
+            curr_state_embedding = layernorm(state_embedding_fc(curr_state_pre_f1))
+            next_state_embedding = layernorm(state_embedding_fc(next_state_pre_f1))
 
             self.state_embedding_model = tf.keras.Model(
                 [curr_screen_input, stats_input, next_screen_input, next_stats_input],

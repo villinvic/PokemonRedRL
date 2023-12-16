@@ -16,7 +16,7 @@ from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
 
-run_steps = 2048*4
+run_steps = 2048*8
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -101,7 +101,7 @@ config = VmpoConfig().training(
 ).environment(
     env="PokemonRed",
     env_config=env_config
-).reporting(min_sample_timesteps_per_iteration=run_steps * num_workers, metrics_episode_collection_timeout_s=10*60
+).reporting(min_sample_timesteps_per_iteration=run_steps * num_workers, metrics_episode_collection_timeout_s=14*60
 ).experimental(_disable_preprocessor_api=True, _tf_policy_handles_more_than_one_loss=True
 ).resources(num_gpus=1
 ).framework(framework="tf")
@@ -110,7 +110,7 @@ config = VmpoConfig().training(
 
 ckpt_config = air.CheckpointConfig(
     num_to_keep=3,
-    checkpoint_frequency=50,
+    checkpoint_frequency=10,
     checkpoint_at_end=True)
 
 stopping_config = {
