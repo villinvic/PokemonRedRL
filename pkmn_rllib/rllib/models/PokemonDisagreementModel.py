@@ -230,7 +230,8 @@ class PokemonDisagreementMModel(TFModelV2):
 
             self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
             self.next_state_embedding = tf.stop_gradient(next_state_embedding)
-            self.delta_image = tf.reduce_mean(tf.math.square(self.screen_input - next_screen_input), axis=-1)
+            self.delta_image = tf.reduce_mean(tf.reduce_mean(tf.squeeze(tf.math.square(self.screen_input - next_screen_input)), axis=-1),
+                                              axis=-1)
 
             self.predicted_state_embeddings = [
                 model([self.curr_state_embedding, self.actions]) for model in self.disagreement_models
