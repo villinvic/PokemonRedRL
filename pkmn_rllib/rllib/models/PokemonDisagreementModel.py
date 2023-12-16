@@ -273,7 +273,7 @@ class PokemonDisagreementMModel(TFModelV2):
     def state_prediction_loss(self):
 
         loss = sum([
-            tf.reduce_mean(tf.math.square(
+            tf.reduce_sum(tf.math.square(
                 tf.nn.dropout(self.next_state_embedding - predicted_state_embedding,
                               rate=0.2
                              )
