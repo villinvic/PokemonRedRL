@@ -65,12 +65,12 @@ rollout_fragment_length = 256
 
 config = VmpoConfig().training(
     eps_eta=2e-2,
-    eps_alpha=5e-5,
+    eps_alpha=1e-3,
     alpha=5.,
-    target_network_update_freq=10, #1536,
+    target_network_update_freq=124, #1536,
     replay_proportion=0.0,
     entropy_coeff=1e-4,
-    learner_queue_size=128,
+    learner_queue_size=256,
     lr=1e-4,
     statistics_lr=3e-1,
     momentum=0.,
@@ -78,7 +78,7 @@ config = VmpoConfig().training(
     decay=0.99,
     grad_clip=1.,
     opt_type="rmsprop",
-    train_batch_size=8192,
+    train_batch_size=2048*8,
     # num_sgd_iter=12,
     # minibatch_buffer_size=128,
     gamma=0.999,
@@ -86,8 +86,8 @@ config = VmpoConfig().training(
         "custom_model": "pokemon_disagreement_model",
         "conv_filters": [
             [32, [8, 8], 4, "same"],
-            [32, [4, 4], 2, "same"],
-            [32, [3, 3], 1, "same"],
+            [64, [4, 4], 2, "same"],
+            [64, [3, 3], 1, "same"],
         ],
         "fcnet_size": 512,
     }
@@ -96,7 +96,7 @@ config = VmpoConfig().training(
     sample_async=True,
     create_env_on_local_worker=False,
     rollout_fragment_length=rollout_fragment_length,
-    batch_mode="truncate_episodes"
+    batch_mode="complete_episodes"
 ).callbacks(PokemonCallbacks
 ).environment(
     env="PokemonRed",
