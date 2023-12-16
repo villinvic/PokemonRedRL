@@ -261,9 +261,7 @@ class PokemonDisagreementMModel(TFModelV2):
         return loss
 
     def compute_intrinsic_rewards(self):
-        delta_image_clipped = tf.maximum(self.delta_image, 0.05)
-        normalized_delta_image = delta_image_clipped / tf.reduce_mean(delta_image_clipped)
-        return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1) / normalized_delta_image
+        return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1)
 
     def embedding_distance(self):
         return self.delta_image
