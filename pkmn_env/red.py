@@ -532,15 +532,17 @@ class PkmnRedEnv(Env):
             self.full_frame_writer = media.VideoWriter(base_dir / full_name, (144, 160), fps=60)
             self.full_frame_writer.__enter__()
 
-        noise = int(0.1 * self.max_steps)
-        if self.inited > 2:
-            self.max_steps_noised = self.max_steps# + (
-            #(int(0.2 * (self.worker_index / 124) * self.max_steps) // 2048) * 2048
-            #) # np.random.randint(-noise, noise)
-        else:
-            self.inited += 1
+        #noise = int(0.1 * self.max_steps)
+        # if self.inited > 2:
+        #     self.max_steps_noised = self.max_steps# + (
+        #     #(int(0.2 * (self.worker_index / 124) * self.max_steps) // 2048) * 2048
+        #     #) # np.random.randint(-noise, noise)
+        # else:
+        #     self.inited += 1
+        #
+        #     self.max_steps_noised = 2048 + (2048 * self.worker_index % self.max_steps)
 
-            self.max_steps_noised = 2048 + (2048 * self.worker_index % self.max_steps)
+        self.max_steps_noised = self.max_steps
 
         return self._get_obs(), {}
 
