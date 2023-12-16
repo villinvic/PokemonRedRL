@@ -142,7 +142,7 @@ class PokemonDisagreementMModel(TFModelV2):
             )
 
             def layernorm(x):
-                m, v = tf.nn.moments(x, -1, keep_dims=True)
+                m, v = tf.nn.moments(x, -1, keepdims=True)
                 return (x - m) / (tf.math.sqrt(v) + 1e-8)
 
             stats_normalization_layer = tf.keras.layers.BatchNormalization(
