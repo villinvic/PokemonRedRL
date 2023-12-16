@@ -225,7 +225,7 @@ class PokemonDisagreementMModel(TFModelV2):
         if self.learner_bound:
 
             self.clipped_curr_screen = self.screen_input[:, :36]
-            self.clipped_next_screen = self.screen_input[:, :36]
+            self.clipped_next_screen = next_screen_input[:, :36]
 
 
             curr_state_embedding, next_state_embedding = self.state_embedding_model(
