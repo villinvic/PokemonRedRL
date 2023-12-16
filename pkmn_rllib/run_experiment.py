@@ -96,12 +96,12 @@ config = VmpoConfig().training(
     sample_async=False,
     create_env_on_local_worker=False,
     rollout_fragment_length=rollout_fragment_length,
-    batch_mode="complete_episodes"
+    batch_mode="truncate_episodes"
 ).callbacks(PokemonCallbacks
 ).environment(
     env="PokemonRed",
     env_config=env_config
-).reporting(min_sample_timesteps_per_iteration=run_steps * num_workers, metrics_episode_collection_timeout_s=33
+).reporting(min_sample_timesteps_per_iteration=run_steps * num_workers, metrics_episode_collection_timeout_s=10*60
 ).experimental(_disable_preprocessor_api=True, _tf_policy_handles_more_than_one_loss=True
 ).resources(num_gpus=1
 ).framework(framework="tf")
