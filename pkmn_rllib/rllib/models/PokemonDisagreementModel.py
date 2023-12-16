@@ -103,9 +103,9 @@ class PokemonDisagreementMModel(TFModelV2):
 
             action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
             action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
-            curr_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="curr_screen_input",
+            curr_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="curr_screen_input",
                                                       dtype=tf.float32)
-            next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
+            next_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="next_screen_input",
                                                       dtype=tf.float32)
             next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
                                                      dtype=tf.float32)
@@ -224,13 +224,17 @@ class PokemonDisagreementMModel(TFModelV2):
 
         if self.learner_bound:
 
+            self.clipped_curr_screen = self.screen_input[:, :36]
+            self.clipped_next_screen = self.screen_input[:, :36]
+
+
             curr_state_embedding, next_state_embedding = self.state_embedding_model(
-                [self.screen_input, self.stats_inputs, next_screen_input, next_stats_inputs]
+                [self.clipped_curr_screen, self.stats_inputs, self.clipped_next_screen, next_stats_inputs]
             )
 
             self.curr_state_embedding = tf.stop_gradient(curr_state_embedding)
             self.next_state_embedding = tf.stop_gradient(next_state_embedding)
-            self.delta_image = tf.reduce_mean(tf.reduce_mean(tf.math.square(self.screen_input - next_screen_input)[:, :, :, 0], axis=-1),
+            self.delta_image = tf.reduce_mean(tf.reduce_mean(tf.math.square(self.clipped_curr_screen - self.clipped_next_screen)[:, :, :, 0], axis=-1),
                                               axis=-1)
 
             self.predicted_state_embeddings = [
@@ -257,7 +261,7 @@ class PokemonDisagreementMModel(TFModelV2):
         return loss
 
     def compute_intrinsic_rewards(self):
-        delta_image_clipped = tf.maximum(self.delta_image, 5e-2)
+        delta_image_clipped = tf.maximum(self.delta_image, 0.05)
         normalized_delta_image = delta_image_clipped / tf.reduce_mean(delta_image_clipped)
         return tf.reduce_mean(tf.math.reduce_variance(self.predicted_state_embeddings, axis=0), axis=-1) / normalized_delta_image
 
