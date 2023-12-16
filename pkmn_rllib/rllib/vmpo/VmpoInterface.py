@@ -55,7 +55,7 @@ class VmpoInterface(TFModelV2):
 
         self.popart_mean = tf.Variable(0., dtype=tf.float32, name="popart_mean", trainable=False)
         self.popart_moment = tf.Variable(1., dtype=tf.float32, name="popart_moment", trainable=False)
-        self.popart_std = tf.Variable(1., dtype=tf.float32, name="popart_std", trainable=False)
+        self.popart_std = tf.Variable(0.5, dtype=tf.float32, name="popart_std", trainable=False)
 
         self.reward_std = tf.Variable(1., dtype=tf.float32, name="reward_std", trainable=False)
         self.reward_mean = tf.Variable(0., dtype=tf.float32, name="reward_mean", trainable=False)

@@ -363,10 +363,8 @@ class VmpoPolicy(
             state_prediction_loss = self.model.state_prediction_loss()
             intrinsic_rewards = tf.stop_gradient(self.model.compute_intrinsic_rewards())
 
-            # Make intrinsic rewards of same norm as rewards:
-            intrinsic_rewards = (((intrinsic_rewards - tf.reduce_mean(intrinsic_rewards)) /
-                                  tf.maximum(tf.math.reduce_std(intrinsic_rewards), 1e-2))
-                                 * popart_std + popart_mean)
+            # Make intrinsic rewards of same norm as rewards ?
+            intrinsic_rewards = intrinsic_rewards * tf.maximum(self.batch_reward_mean / tf.reduce_mean(intrinsic_rewards), 1.)
 
             rewards = rewards * (1. - self.model.intrinsic_reward_scale) + intrinsic_rewards * self.model.intrinsic_reward_scale
 
