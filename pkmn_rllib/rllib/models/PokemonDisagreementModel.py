@@ -107,9 +107,9 @@ class PokemonDisagreementMModel(TFModelV2):
 
             action_input = tf.keras.layers.Input(shape=(1,), name="actions", dtype=tf.int32)
             action_one_hot = tf.one_hot(action_input, depth=self.num_outputs, dtype=tf.float32)[:, 0]
-            curr_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="curr_screen_input", # (36,) + obs_space["screen"].shape[1:]
+            curr_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="curr_screen_input", #(36,) + obs_space["screen"].shape[1:]
                                                       dtype=tf.float32)
-            next_screen_input = tf.keras.layers.Input(shape=obs_space["screen"].shape, name="next_screen_input",
+            next_screen_input = tf.keras.layers.Input(shape=(36,) + obs_space["screen"].shape[1:], name="next_screen_input",
                                                       dtype=tf.float32)
             next_stats_input = tf.keras.layers.Input(shape=obs_space["stats"].shape, name="next_stats_input",
                                                      dtype=tf.float32)
@@ -248,8 +248,8 @@ class PokemonDisagreementMModel(TFModelV2):
 
         if self.learner_bound:
 
-            self.clipped_curr_screen = self.screen_input #[:, :36]
-            self.clipped_next_screen = next_screen_input #[:, :36]
+            self.clipped_curr_screen = self.screen_input[:, :36]
+            self.clipped_next_screen = next_screen_input[:, :36]
 
 
             self.action_prediction_logits, curr_state_embedding, next_state_embedding = self.state_embedding_model(
