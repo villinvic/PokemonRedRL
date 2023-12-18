@@ -195,7 +195,7 @@ def step(console, action):
     # press button then release after some steps
     console.send_input(valid_actions[action])
     walked = False
-    for i in range(19):
+    for i in range(22):
         # release action, so they are stateless
         if not walked:
             walked = read_walking_animation(console) > 0
@@ -247,7 +247,7 @@ def skip_empty_screen(console):
             print("what")
 
     if skipped > 0:
-        for k in range(10):
+        for k in range(14):
             console.tick()
 
 if __name__ == '__main__':
@@ -283,18 +283,18 @@ if __name__ == '__main__':
         if past_walked_locations[-1] != loc:
             past_walked_locations.append(loc)
 
-        if not combat:
-            curr_x, curr_y, _ = past_walked_locations[-1]
-            past_x, past_y, _ = past_walked_locations[-2]
-
-            if curr_y - past_y == 1:
-                allowed_actions[3] = 0
-            elif curr_y - past_y == -1:
-                allowed_actions[0] = 0
-            elif curr_x - past_x == 1:
-                allowed_actions[1] = 0
-            elif curr_x - past_x == -1:
-                allowed_actions[2] = 0
+        # if not combat:
+        #     curr_x, curr_y, _ = past_walked_locations[-1]
+        #     past_x, past_y, _ = past_walked_locations[-2]
+        #
+        #     if curr_y - past_y == 1:
+        #         allowed_actions[3] = 0
+        #     elif curr_y - past_y == -1:
+        #         allowed_actions[0] = 0
+        #     elif curr_x - past_x == 1:
+        #         allowed_actions[1] = 0
+        #     elif curr_x - past_x == -1:
+        #         allowed_actions[2] = 0
         return allowed_actions
 
     while True:

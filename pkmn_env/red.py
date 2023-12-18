@@ -361,11 +361,11 @@ class PkmnRedEnv(Env):
 
         if config["headless"]:
             # we are not rendering the game live
-            self.act_freq = 19
+            self.act_freq = 22#19
 
         else:
 
-            self.act_freq = 19
+            self.act_freq = 22#19
 
         self.go_explore = GoExplorePokemon(
             environment=self,
@@ -416,6 +416,7 @@ class PkmnRedEnv(Env):
         # press button then release after some steps
         console_input = self.valid_actions[action]
         self.pyboy.send_input(console_input)
+        was_skippable_frame = False
         for i in range(self.act_freq):
             # release action, so they are stateless
 
@@ -441,7 +442,10 @@ class PkmnRedEnv(Env):
                     # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
                     self.skip_battle_frames()
 
-                self.skip_empty_screen()
+                self.skip_empty_screen(was_skippable_frame)
+            else:
+                if self.skip_empty_screen():
+                    was_skippable_frame = True
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
@@ -473,8 +477,8 @@ class PkmnRedEnv(Env):
                 (np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)) >= 0.99
                 )
 
-    def skip_empty_screen(self):
-        skipped = 0
+    def skip_empty_screen(self, was_skippable=False):
+        skipped = int(was_skippable)
         while self.skippable_screen():
             skipped += 1
             self.pyboy.tick()
@@ -484,7 +488,7 @@ class PkmnRedEnv(Env):
                 raise Exception
 
         if skipped > 0:
-            for i in range(10):
+            for i in range(14):
                 self.pyboy.tick()
 
     def skip_battle_frames(self):
