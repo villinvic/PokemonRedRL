@@ -284,11 +284,11 @@ class PkmnRedEnv(Env):
         ]
 
         self.reward_function_config = {
-            BLACKOUT                 :   - 0.15,
-            SEEN_POKEMONS            :   0.2,
+            BLACKOUT                 :   - 0.2,
+            SEEN_POKEMONS            :   0.3,
             TOTAL_EXPERIENCE         :   10.,  # 0.5
             BADGE_SUM                :   100.,
-            MAPS_VISITED             :   0.1, # 3.
+            MAPS_VISITED             :   0.2, # 3.
             TOTAL_EVENTS_TRIGGERED   :   0.06, # TODO : bugged
             MONEY                    :   10.,
             #COORDINATES              :   - 5e-4,
@@ -890,7 +890,7 @@ class PkmnRedEnv(Env):
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
             level_fraq = self.latest_opp_level / highest_party_level
-            if level_fraq < 0.43:
+            if level_fraq < 0.5:
                 overleveled_penaly = 0.
             else:
                 overleveled_penaly = np.minimum(level_fraq, 1)
