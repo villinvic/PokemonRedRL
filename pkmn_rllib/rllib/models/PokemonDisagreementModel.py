@@ -19,7 +19,7 @@ class PokemonDisagreementMModel(TFModelV2):
         self.fcnet_size = model_config.get("fcnet_size")
         self.learner_bound = model_config["learner_bound"]
 
-        self.n_models = model_config.get("n_disagreement_models", 5)
+        self.n_models = model_config.get("n_disagreement_models", 4)
         self.intrinsic_reward_scale = model_config.get("intrinsic_reward_scale", 0.01)
         self.intrinsic_reward_ratio = model_config.get("intrinsic_reward_scale", 0.5)
         self.forward_loss_ratio = model_config.get("forward_loss_ratio", 0.8)
