@@ -436,11 +436,12 @@ class PkmnRedEnv(Env):
             if self.save_video and not self.fast_video:
                 self.add_video_frame()
 
-        if self.skippable_battle_frame():
-            # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
-            self.skip_battle_frames()
+            if i >= 8:
+                if self.skippable_battle_frame():
+                    # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
+                    self.skip_battle_frames()
 
-        self.skip_empty_screen()
+                self.skip_empty_screen()
 
         if self.save_video and self.fast_video:
             self.add_video_frame()
@@ -467,7 +468,7 @@ class PkmnRedEnv(Env):
             + 0.114 * screen[:, :, 2]
         )
         return (
-                (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.8
+                (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.75
                 or
                 (np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)) >= 0.99
                 )
@@ -482,7 +483,7 @@ class PkmnRedEnv(Env):
                 print("what")
 
         if skipped > 0:
-            for i in range(19*5):
+            for i in range(8):
                 self.pyboy.tick()
 
     def skip_battle_frames(self):

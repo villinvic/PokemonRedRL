@@ -210,23 +210,31 @@ def step(console, action):
                 console.send_input(release_button[action - 4])
             if valid_actions[action] == WindowEvent.PRESS_BUTTON_START:
                 console.send_input(WindowEvent.RELEASE_BUTTON_START)
+        if i >= 8:
+                skip_battle_frame(console)
+                skip_empty_screen(console)
+
         console.tick()
-    skip_battle_frame(console)
+
 
     return walked
 
 
 def skippable_screen(console):
-    screen = console.botsupport_manager().screen()
+    screen = console.botsupport_manager().screen().screen_ndarray()
     grayscale_screen = np.uint8(
         0.299 * screen[:, :, 0]
         + 0.587 * screen[:, :, 1]
         + 0.114 * screen[:, :, 2]
     )
+    blackness = np.sum(np.int32(grayscale_screen <= 12)) / (144*160)
+    whiteness = np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)
+
+    print(blackness, whiteness)
     return (
-            (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.8
+            blackness > 0.75
             or
-            (np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)) >= 0.99
+            whiteness >= 0.99
             )
 
 def skip_empty_screen(console):
@@ -239,7 +247,7 @@ def skip_empty_screen(console):
             print("what")
 
     if skipped > 0:
-        for k in range(19*5):
+        for k in range(8):
             console.tick()
 
 if __name__ == '__main__':
