@@ -361,11 +361,11 @@ class PkmnRedEnv(Env):
 
         if config["headless"]:
             # we are not rendering the game live
-            self.act_freq = 22#19
+            self.act_freq = 24#19
 
         else:
 
-            self.act_freq = 22#19
+            self.act_freq = 24#19
 
         self.go_explore = GoExplorePokemon(
             environment=self,
@@ -432,19 +432,22 @@ class PkmnRedEnv(Env):
 
                 if console_input == WindowEvent.PRESS_BUTTON_START:
                     self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_START)
+
             self.pyboy.tick()
 
             if self.save_video and not self.fast_video:
                 self.add_video_frame()
 
             if i >= 8:
+                skipped = self.skip_dialog()
                 if self.skippable_battle_frame():
                     # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
                     self.skip_battle_frames()
-
-                self.skip_empty_screen(was_skippable_frame)
-            else:
-                if self.skip_empty_screen():
+                    skipped = True
+                skipped = self.skip_empty_screen(was_skippable_frame) or skipped
+                if skipped:
+                    break
+            elif self.skippable_screen():
                     was_skippable_frame = True
 
         if self.save_video and self.fast_video:
@@ -465,16 +468,13 @@ class PkmnRedEnv(Env):
         )
 
     def skippable_screen(self):
-        screen = self.screen.screen_ndarray()
-        grayscale_screen = np.uint8(
-            0.299 * screen[:, :, 0]
-            + 0.587 * screen[:, :, 1]
-            + 0.114 * screen[:, :, 2]
-        )
+        grayscale_screen = np.uint8(self.screen.screen_ndarray()[:, :, 0])
+        blackness = np.sum(np.int32(grayscale_screen <= 16)) / (144 * 160)
+        whiteness = np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)
         return (
-                (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.85
+                blackness > 0.85
                 or
-                (np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)) >= 0.99
+                whiteness >= 0.99
                 )
 
     def skip_empty_screen(self, was_skippable=False):
@@ -484,12 +484,43 @@ class PkmnRedEnv(Env):
             self.pyboy.tick()
 
             if skipped > 1000:
-                self.save_screenshot("debug", f"stuck_{self.game_stats[COORDINATES][-1]}")
+                self.save_screenshot("debug", f"stuck_empty_screen{self.game_stats[COORDINATES][-1]}")
                 raise Exception
 
         if skipped > 0:
-            for i in range(14):
+            for i in range(18):
                 self.pyboy.tick()
+
+        return skipped > 0
+
+    def is_dialog_frame(self):
+        grayscale_screen = np.uint8(self.screen.screen_ndarray()[:, :, 0])
+
+        pattern = (255, 255, 0, 255, 0, 0, 255, 0, 0)
+        pattern_2 = (0, 0, 255, 0, 255, 0, 0, 255, 255)
+        return (
+                not self.read_in_battle()
+                and np.all(grayscale_screen[98, :9] == pattern)
+                and np.all(grayscale_screen[98, -9:] == pattern_2)
+                and np.any(grayscale_screen[2, :9] != pattern)
+                and not self.read_textbox_id() in {11, 12, 13, 14, 20}
+        )
+
+    def skip_dialog(self):
+        c = 0
+
+        while self.is_dialog_frame():
+            self.pyboy.tick()
+            c += 1
+            if c > 1000:
+                self.save_screenshot("debug", f"stuck_skip_dialog_{self.game_stats[COORDINATES][-1]}")
+                raise Exception
+
+        if c > 0:
+            for i in range(24):
+                self.pyboy.tick()
+
+        return c > 0
 
     def skip_battle_frames(self):
         c = 0
@@ -557,11 +588,7 @@ class PkmnRedEnv(Env):
 
     def preprocess_screen(self, screen):
         # don't care about order, image is already in gray
-        grayscale_screen = np.uint8(
-                         0.299 * screen[:, :, 0]
-                         + 0.587 * screen[:, :, 1]
-                         + 0.114 * screen[:, :, 2]
-                 )
+        grayscale_screen = np.uint8(screen[:, :, 0])
 
         grayscale_downsampled_screen = cv2.resize(
             grayscale_screen,
@@ -896,7 +923,7 @@ class PkmnRedEnv(Env):
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
             level_fraq = self.latest_opp_level / highest_party_level
-            if level_fraq < 0.5:
+            if level_fraq <= 0.5:
                 overleveled_penaly = 0.
             else:
                 overleveled_penaly = np.minimum(level_fraq, 1)

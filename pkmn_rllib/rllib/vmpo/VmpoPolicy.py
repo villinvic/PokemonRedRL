@@ -679,13 +679,16 @@ class VmpoPolicy(
 
     def get_weights(self, online=False) -> Union[Dict[str, TensorType], List[TensorType]]:
         # TODO : care with how we restore policies
-        if online:
-            return super().get_weights()
-        else:
-            return {
-                k: v for k, v in zip(super().get_weights().keys(), self._target_variables.get_weights().values())
-                #if ("value" not in k or "ICM" not in k)
-            }
+        # TODO : VICTOR : send in online always (already too off policy)
+
+        return super().get_weights()
+        # if online:
+        #     return super().get_weights()
+        # else:
+        #     return {
+        #         k: v for k, v in zip(super().get_weights().keys(), self._target_variables.get_weights().values())
+        #         #if ("value" not in k or "ICM" not in k)
+        #     }
 
 
     @override(TFPolicy)

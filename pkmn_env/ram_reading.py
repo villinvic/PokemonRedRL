@@ -170,7 +170,7 @@ action_dict = {
 }
 
 def skip_battle_frame(console):
-
+    c = 0
     if read_combat(console) and not (
             read_textbox_id(console) in {11, 12, 13, 20}
         or
@@ -189,16 +189,50 @@ def skip_battle_frame(console):
                 if c == 5:
                     # Needs one more action when battle ends
                     break
+    return c > 0
+
+
+def is_dialog_frame(console):
+    screen = console.botsupport_manager().screen().screen_ndarray()
+    grayscale_screen = np.uint8(screen[:, :, 0])
+    pattern = (255, 255, 0, 255, 0, 0, 255, 0, 0)
+    pattern_2 = (0, 0, 255, 0, 255, 0, 0, 255, 255)
+    dialog_frame = (
+        not read_combat(console)
+        and np.all(grayscale_screen[98, :9] == pattern)
+        and np.all(grayscale_screen[98, -9:] == pattern_2)
+        and np.any(grayscale_screen[2, :9] != pattern)
+        and not read_textbox_id(console) in {11, 12, 13, 14, 20}
+            )
+    print("dialog frame ?", dialog_frame)
+    return dialog_frame
+
+
+def detect_dialog(console):
+    c = 0
+    while is_dialog_frame(console):
+
+        console.tick()
+        c += 1
+
+        if c > 1000:
+            break
+            print("WHAT")
+
+    if c > 0:
+        for i in range(24):
+            console.tick()
+
+    return c > 0
+
 
 def step(console, action):
 
     # press button then release after some steps
     console.send_input(valid_actions[action])
-    walked = False
-    for i in range(22):
+    was_skippable = False
+    for i in range(24):
         # release action, so they are stateless
-        if not walked:
-            walked = read_walking_animation(console) > 0
         if i == 8:
 
             if action < 4:
@@ -210,14 +244,20 @@ def step(console, action):
                 console.send_input(release_button[action - 4])
             if valid_actions[action] == WindowEvent.PRESS_BUTTON_START:
                 console.send_input(WindowEvent.RELEASE_BUTTON_START)
-        if i >= 8:
-                skip_battle_frame(console)
-                skip_empty_screen(console)
 
         console.tick()
 
+        if i >= 8:
+                skipped = detect_dialog(console)
+                skipped = skip_battle_frame(console) or skipped
+                skipped = skip_empty_screen(console, was_skippable) or skipped
+                if skipped:
+                    break
 
-    return walked
+        elif not was_skippable and skippable_screen(console):
+            was_skippable = True
+
+
 
 
 def skippable_screen(console):
@@ -227,19 +267,20 @@ def skippable_screen(console):
         + 0.587 * screen[:, :, 1]
         + 0.114 * screen[:, :, 2]
     )
-    blackness = np.sum(np.int32(grayscale_screen <= 12)) / (144*160)
+    blackness = np.sum(np.int32(grayscale_screen <= 16)) / (144*160)
     whiteness = np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)
 
-    print(blackness, whiteness)
-    return (
-            blackness > 0.75
+    skippable = (
+            blackness > 0.85
             or
             whiteness >= 0.99
             )
-
-def skip_empty_screen(console):
-    skipped = 0
+    #print(blackness, whiteness, skippable)
+    return skippable
+def skip_empty_screen(console, was_skipped):
+    skipped = int(was_skipped)
     while skippable_screen(console):
+
         skipped += 1
         console.tick()
 
@@ -247,8 +288,10 @@ def skip_empty_screen(console):
             print("what")
 
     if skipped > 0:
-        for k in range(14):
+        for k in range(18):
             console.tick()
+
+    return skipped > 0
 
 if __name__ == '__main__':
     console = PyBoy(
@@ -298,7 +341,7 @@ if __name__ == '__main__':
         return allowed_actions
 
     while True:
-        #print(screen.screen_ndarray())
+        print(np.mean(screen.screen_ndarray()))
         print(
             (read_pos(console), read_map(console)),
             read_opp_level(console),
@@ -317,7 +360,7 @@ if __name__ == '__main__':
             if allowed_actions[action_dict[i]] == 0:
                 i = ""
 
-            walked = step(console, action_dict[i])
+            step(console, action_dict[i])
         else:
             for i in inputs[1:]:
                 if i not in action_dict:
@@ -327,5 +370,5 @@ if __name__ == '__main__':
                 if allowed_actions[action_dict[i]] == 0:
                     i = ""
 
-                walked = step(console, action_dict[i])
+                step(console, action_dict[i])
 
