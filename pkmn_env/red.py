@@ -482,7 +482,7 @@ class PkmnRedEnv(Env):
                 print("what")
 
         if skipped > 0:
-            for i in range(16):
+            for i in range(24*2):
                 self.pyboy.tick()
 
     def skip_battle_frames(self):
