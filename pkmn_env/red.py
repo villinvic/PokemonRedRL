@@ -468,7 +468,7 @@ class PkmnRedEnv(Env):
             + 0.114 * screen[:, :, 2]
         )
         return (
-                (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.75
+                (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.85
                 or
                 (np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)) >= 0.99
                 )
@@ -480,7 +480,7 @@ class PkmnRedEnv(Env):
             self.pyboy.tick()
 
             if skipped > 1000:
-                print("what")
+                self.save_screenshot("debug", f"stuck_{self.game_stats[COORDINATES][-1]}")
 
         if skipped > 0:
             for i in range(8):
