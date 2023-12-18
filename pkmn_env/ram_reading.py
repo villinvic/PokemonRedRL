@@ -215,6 +215,33 @@ def step(console, action):
 
     return walked
 
+
+def skippable_screen(console):
+    screen = console.botsupport_manager().screen()
+    grayscale_screen = np.uint8(
+        0.299 * screen[:, :, 0]
+        + 0.587 * screen[:, :, 1]
+        + 0.114 * screen[:, :, 2]
+    )
+    return (
+            (np.sum(np.int32(grayscale_screen <= 8)) / (144*160)) > 0.8
+            or
+            (np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)) >= 0.99
+            )
+
+def skip_empty_screen(console):
+    skipped = 0
+    while skippable_screen(console):
+        skipped += 1
+        console.tick()
+
+        if skipped > 1000:
+            print("what")
+
+    if skipped > 0:
+        for k in range(19*5):
+            console.tick()
+
 if __name__ == '__main__':
     console = PyBoy(
         "pokered.gbc",
