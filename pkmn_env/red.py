@@ -481,7 +481,7 @@ class PkmnRedEnv(Env):
 
             if skipped > 1000:
                 self.save_screenshot("debug", f"stuck_{self.game_stats[COORDINATES][-1]}")
-                raise
+                raise Exception
 
         if skipped > 0:
             for i in range(8):
