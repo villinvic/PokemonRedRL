@@ -247,7 +247,7 @@ def skip_empty_screen(console):
             print("what")
 
     if skipped > 0:
-        for k in range(8):
+        for k in range(10):
             console.tick()
 
 if __name__ == '__main__':

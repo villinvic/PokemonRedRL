@@ -484,7 +484,7 @@ class PkmnRedEnv(Env):
                 raise Exception
 
         if skipped > 0:
-            for i in range(8):
+            for i in range(10):
                 self.pyboy.tick()
 
     def skip_battle_frames(self):
@@ -727,20 +727,20 @@ class PkmnRedEnv(Env):
     def get_allowed_actions(self):
         allowed_actions = np.ones(self.action_space.n, dtype=np.uint8)
         
-        if self.stuck_count < 8 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
-            # Does not handle map changes
-            curr_x, curr_y, map_id = self.last_walked_coordinates[-1]
-            forbidden_locations = self.last_walked_coordinates[-2: -1]
-            #past_x, past_y, past_map = self.last_walked_coordinates[-2]
-
-            if [curr_x, curr_y - 1, map_id] in forbidden_locations:
-                allowed_actions[3] = 0
-            if [curr_x, curr_y + 1, map_id] in forbidden_locations:
-                allowed_actions[0] = 0
-            if [curr_x - 1, curr_y, map_id] in forbidden_locations:
-                allowed_actions[1] = 0
-            if [curr_x + 1, curr_y, map_id] in forbidden_locations:
-                allowed_actions[2] = 0
+        # if self.stuck_count < 8 and len(self.last_walked_coordinates) > 1 and not self.game_stats[IN_BATTLE][-1]:
+        #     # Does not handle map changes
+        #     curr_x, curr_y, map_id = self.last_walked_coordinates[-1]
+        #     forbidden_locations = self.last_walked_coordinates[-2: -1]
+        #     #past_x, past_y, past_map = self.last_walked_coordinates[-2]
+        #
+        #     if [curr_x, curr_y - 1, map_id] in forbidden_locations:
+        #         allowed_actions[3] = 0
+        #     if [curr_x, curr_y + 1, map_id] in forbidden_locations:
+        #         allowed_actions[0] = 0
+        #     if [curr_x - 1, curr_y, map_id] in forbidden_locations:
+        #         allowed_actions[1] = 0
+        #     if [curr_x + 1, curr_y, map_id] in forbidden_locations:
+        #         allowed_actions[2] = 0
 
             # if curr_y - past_y == 1:
             #     allowed_actions[3] = 0
