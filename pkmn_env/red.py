@@ -502,7 +502,10 @@ class PkmnRedEnv(Env):
                 not self.read_in_battle()
                 and np.all(grayscale_screen[98, :9] == pattern)
                 and np.all(grayscale_screen[98, -9:] == pattern_2)
+                # Special dialogs, such as pc
+                # Needs more tuning with PC
                 and np.any(grayscale_screen[2, :9] != pattern)
+                # Player required to take action there
                 and not self.read_textbox_id() in {11, 12, 13, 14, 20}
         )
 
@@ -512,9 +515,10 @@ class PkmnRedEnv(Env):
         while self.is_dialog_frame():
             self.pyboy.tick()
             c += 1
-            if c > 1000:
-                self.save_screenshot("debug", f"stuck_skip_dialog_{self.game_stats[COORDINATES][-1]}")
-                raise Exception
+
+            if c > 10_000:
+                self.save_screenshot("debug", f"stuck_skip_dialog_{self.game_stats[COORDINATES][-1]}_{self.worker_index}")
+                #raise Exception
 
         if c > 0:
             for i in range(24):

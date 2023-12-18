@@ -6,6 +6,9 @@ from pyboy.pyboy import PyBoy
 from pyboy.utils import WindowEvent
 
 
+TICKS = 2
+
+
 def read_m(console, addr):
     return console.get_memory_value(addr)
 
@@ -170,6 +173,8 @@ action_dict = {
 }
 
 def skip_battle_frame(console):
+    global TICKS
+
     c = 0
     if read_combat(console) and not (
             read_textbox_id(console) in {11, 12, 13, 20}
@@ -180,6 +185,7 @@ def skip_battle_frame(console):
         for i in range(18 * 32):
             # Skip battle animations
             console.tick()
+            TICKS += 1
             if not read_combat(console) or (
             read_textbox_id(console) in {11, 12, 13, 20}
         or
@@ -209,10 +215,12 @@ def is_dialog_frame(console):
 
 
 def detect_dialog(console):
+    global TICKS
     c = 0
     while is_dialog_frame(console):
 
         console.tick()
+        TICKS += 1
         c += 1
 
         if c > 1000:
@@ -222,16 +230,19 @@ def detect_dialog(console):
     if c > 0:
         for i in range(24):
             console.tick()
+            TICKS += 1
 
     return c > 0
 
 
 def step(console, action):
+    global TICKS
 
     # press button then release after some steps
     console.send_input(valid_actions[action])
     was_skippable = False
     for i in range(24):
+        print(TICKS % 8)
         # release action, so they are stateless
         if i == 8:
 
@@ -246,6 +257,8 @@ def step(console, action):
                 console.send_input(WindowEvent.RELEASE_BUTTON_START)
 
         console.tick()
+        TICKS += 1
+
 
         if i >= 8:
                 skipped = detect_dialog(console)
@@ -278,11 +291,13 @@ def skippable_screen(console):
     #print(blackness, whiteness, skippable)
     return skippable
 def skip_empty_screen(console, was_skipped):
+    global TICKS
     skipped = int(was_skipped)
     while skippable_screen(console):
 
         skipped += 1
         console.tick()
+        TICKS += 1
 
         if skipped > 1000:
             print("what")
@@ -290,6 +305,7 @@ def skip_empty_screen(console, was_skipped):
     if skipped > 0:
         for k in range(18):
             console.tick()
+            TICKS += 1
 
     return skipped > 0
 
