@@ -603,9 +603,9 @@ class VmpoPolicy(
             "curiosity/state_prediction_loss_max": self.max_state_prediction_loss,
             "curiosity/state_prediction_loss_min": self.min_state_prediction_loss,
 
-            # "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
-            # "curiosity/action_prediction_loss_min": self.min_action_prediction_loss,
-            # "curiosity/action_prediction_loss_max": self.max_action_prediction_loss,
+            "curiosity/action_prediction_loss": self.mean_action_prediction_loss,
+            "curiosity/action_prediction_loss_min": self.min_action_prediction_loss,
+            "curiosity/action_prediction_loss_max": self.max_action_prediction_loss,
             # "curiosity/total_loss": self.mean_icm_loss,
             "curiosity/intrinsic_rewards_mean": self.mean_intrinsic_rewards,
             "curiosity/intrinsic_rewards_max": self.max_intrinsic_rewards,
