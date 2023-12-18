@@ -277,21 +277,24 @@ if __name__ == '__main__':
         allowed_actions = [1] * len(valid_actions)
         x, y = read_pos(console)
         map_id = read_map(console)
+        combat = read_combat(console)
+
         loc = x, y, map_id
         if past_walked_locations[-1] != loc:
             past_walked_locations.append(loc)
 
-        curr_x, curr_y, _ = past_walked_locations[-1]
-        past_x, past_y, _ = past_walked_locations[-2]
+        if not combat:
+            curr_x, curr_y, _ = past_walked_locations[-1]
+            past_x, past_y, _ = past_walked_locations[-2]
 
-        if curr_y - past_y == 1:
-            allowed_actions[3] = 0
-        elif curr_y - past_y == -1:
-            allowed_actions[0] = 0
-        elif curr_x - past_x == 1:
-            allowed_actions[1] = 0
-        elif curr_x - past_x == -1:
-            allowed_actions[2] = 0
+            if curr_y - past_y == 1:
+                allowed_actions[3] = 0
+            elif curr_y - past_y == -1:
+                allowed_actions[0] = 0
+            elif curr_x - past_x == 1:
+                allowed_actions[1] = 0
+            elif curr_x - past_x == -1:
+                allowed_actions[2] = 0
         return allowed_actions
 
     while True:
