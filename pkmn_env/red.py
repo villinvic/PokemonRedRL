@@ -516,7 +516,7 @@ class PkmnRedEnv(Env):
             self.pyboy.tick()
             c += 1
 
-            if c > 10_000:
+            if c > 2_000:
                 self.save_screenshot("debug", f"stuck_skip_dialog_{self.game_stats[COORDINATES][-1]}_{self.worker_index}")
                 #raise Exception
 
