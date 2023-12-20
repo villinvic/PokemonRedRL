@@ -85,7 +85,7 @@ config = VmpoConfig().training(
     model={
         "custom_model": "pokemon_disagreement_model",
         "conv_filters": [
-            [32, [4, 4], 2, "same"],
+            [32, [4, 4], 2, "valid"],
             [64, [3, 3], 1, "same"],
             [64, [3, 3], 1, "same"],
         ],
