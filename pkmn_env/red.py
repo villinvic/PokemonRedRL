@@ -443,14 +443,17 @@ class PkmnRedEnv(Env):
                 self.add_video_frame()
 
             if i >= 8:
-                skipped = self.skip_dialog()
-                if self.skippable_battle_frame():
-                    # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
-                    self.skip_battle_frames()
-                    skipped = True
-                if was_skippable_frame or self.skippable_screen():
-                    self.skip_empty_screen()
-                    skipped = True
+                for j in range(2):
+                    skipped = self.skip_dialog()
+                    if self.skippable_battle_frame():
+                        # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
+                        self.skip_battle_frames()
+                        skipped = True
+                    if was_skippable_frame or self.skippable_screen():
+                        self.skip_empty_screen()
+                        skipped = True
+                    if not skipped:
+                        break
                 if skipped:
                     break
             elif not was_skippable_frame and self.skippable_screen():
