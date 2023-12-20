@@ -174,25 +174,27 @@ class PokemonDisagreementMModel(TFModelV2):
             curr_state_embedding = state_embedding_fc(curr_state_pre_f1)
             next_state_embedding = state_embedding_fc(next_state_pre_f1)
 
-            action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name=f"ICM_action_prediction_input")(
-                [curr_state_embedding, next_state_embedding]
-            )
+            # action_prediction_input = tf.keras.layers.Concatenate(axis=-1, name=f"ICM_action_prediction_input")(
+            #     [curr_state_embedding, next_state_embedding]
+            # )
 
-            action_prediction_fc = tf.keras.layers.Dense(
-                self.state_embedding_size,
-                name="ICM_action_prediction_fc",
-                activation="elu",
-            )(action_prediction_input)
-
-            action_prediction_logits = tf.keras.layers.Dense(
-                self.num_outputs,
-                name="ICM_action_prediction_logits",
-                activation=None,
-            )(action_prediction_fc)
+            # action_prediction_fc = tf.keras.layers.Dense(
+            #     self.state_embedding_size,
+            #     name="ICM_action_prediction_fc",
+            #     activation="elu",
+            # )(action_prediction_input)
+            #
+            # action_prediction_logits = tf.keras.layers.Dense(
+            #     self.num_outputs,
+            #     name="ICM_action_prediction_logits",
+            #     activation=None,
+            # )(action_prediction_fc)
 
             self.state_embedding_model = tf.keras.Model(
                 [curr_screen_input, stats_input, next_screen_input, next_stats_input],
-                [action_prediction_logits, curr_state_embedding, next_state_embedding]
+                [
+                    #action_prediction_logits,
+                    curr_state_embedding, next_state_embedding]
             )
 
             self.disagreement_models = []
@@ -252,7 +254,7 @@ class PokemonDisagreementMModel(TFModelV2):
             self.clipped_next_screen = next_screen_input[:, :36*3]
 
 
-            self.action_prediction_logits, curr_state_embedding, next_state_embedding = self.state_embedding_model(
+            curr_state_embedding, next_state_embedding = self.state_embedding_model(
                 [self.clipped_curr_screen, self.stats_inputs, self.clipped_next_screen, next_stats_inputs]
             )
 
@@ -290,14 +292,14 @@ class PokemonDisagreementMModel(TFModelV2):
     def embedding_distance(self):
         return self.delta_image
 
-    def action_prediction_loss(self):
-
-        action_dist = (
-            Categorical(self.action_prediction_logits, self)
-        )
-        # Neg log(p); p=probability of observed action given the inverse-NN
-        # predicted action distribution.
-        return -action_dist.logp(tf.convert_to_tensor(self.actions))
+    # def action_prediction_loss(self):
+    #
+    #     action_dist = (
+    #         Categorical(self.action_prediction_logits, self)
+    #     )
+    #     # Neg log(p); p=probability of observed action given the inverse-NN
+    #     # predicted action distribution.
+    #     return -action_dist.logp(tf.convert_to_tensor(self.actions))
 
     def metrics(self) -> Dict[str, TensorType]:
 

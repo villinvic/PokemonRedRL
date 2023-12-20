@@ -358,7 +358,7 @@ class VmpoPolicy(
             # Disagreement
 
             state_prediction_loss = self.model.state_prediction_loss()
-            action_prediction_loss = self.model.action_prediction_loss()
+            #action_prediction_loss = self.model.action_prediction_loss()
             intrinsic_rewards = tf.stop_gradient(self.model.compute_intrinsic_rewards()) * self.model.intrinsic_reward_scale
 
             # Make intrinsic rewards of same norm as rewards ?
@@ -370,9 +370,9 @@ class VmpoPolicy(
             self.min_state_prediction_loss = tf.reduce_min(state_prediction_loss)
             self.mean_state_prediction_loss = tf.reduce_mean(state_prediction_loss)
 
-            self.max_action_prediction_loss = tf.reduce_max(action_prediction_loss)
-            self.min_action_prediction_loss = tf.reduce_min(action_prediction_loss)
-            self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
+            # self.max_action_prediction_loss = tf.reduce_max(action_prediction_loss)
+            # self.min_action_prediction_loss = tf.reduce_min(action_prediction_loss)
+            # self.mean_action_prediction_loss = tf.reduce_mean(action_prediction_loss)
 
             self.mean_intrinsic_rewards = tf.reduce_mean(intrinsic_rewards)
             self.min_intrinsic_rewards = tf.reduce_min(intrinsic_rewards)
@@ -550,7 +550,7 @@ class VmpoPolicy(
         if self.learner_bound:
             return self.total_loss, (
                     self.mean_state_prediction_loss * (1. - self.model.forward_loss_ratio)
-                    + self.mean_action_prediction_loss * self.model.forward_loss_ratio
+                    #+ self.mean_action_prediction_loss * self.model.forward_loss_ratio
             )
         else:
             return self.total_loss
