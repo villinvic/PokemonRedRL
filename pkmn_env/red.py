@@ -117,7 +117,6 @@ class PkmnRedEnv(Env):
         self.debug = config['debug']
         self.s_path = config['session_path']
         self.headless = config['headless']
-        self.num_elements = config['knn_elements']
         self.init_state = config['init_state']
         self.max_steps = config['max_steps']
         self.save_video = config['save_video'] and self.worker_index == 1
@@ -129,7 +128,6 @@ class PkmnRedEnv(Env):
         self.screen_shape = (36, 40)  # (48, 56) # (72, 80)
         self.stacked_frames = 3
         self.screen_observation = np.zeros((self.screen_shape[0]*self.stacked_frames, self.screen_shape[1], 1), dtype=np.uint8)
-        self.similar_frame_dist = config['sim_frame_dist']
         self.reset_count = 0
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
         self.s_path.mkdir(exist_ok=True)
@@ -324,12 +322,12 @@ class PkmnRedEnv(Env):
             config['gb_path'],
             debugging=False,
             disable_input=True,
+            hide_window=config['headless'],
             window_type='headless' if config['headless'] else 'SDL2',
-            hide_window='--quiet' in sys.argv,
         )
 
         self.screen = self.pyboy.botsupport_manager().screen()
-        self.pyboy.set_emulation_speed(0 if config['headless'] else 6)
+        self.pyboy.set_emulation_speed(0 if config['headless'] else 1)
 
         self.knn_index = None
         self.game_stats: DefaultOrderedDict = None
@@ -352,6 +350,7 @@ class PkmnRedEnv(Env):
         self.target_symbol_mask[1 : -1, 1 : -1] = 1
         self.target_symbol_mask_debug = np.zeros((16, 16, 3), dtype=np.uint8)
         self.target_symbol_mask_debug[2 : -2, 2 : -2] = 1
+        self.previous_screens = [self.screen.screen_ndarray()[:, :, 0] for _ in range(2)]
 
         self.base_state_info = PokemonStateInfo(
             save_path=Path(self.init_state),
@@ -379,6 +378,11 @@ class PkmnRedEnv(Env):
         #self.init_knn()
 
         self.inited = 0
+
+    def tick(self):
+        self.pyboy.tick()
+        self.previous_screens.pop(0)
+        self.previous_screens.append(np.uint8(self.screen.screen_ndarray()[:, :, 0]))
 
     def _get_obs(self):
 
@@ -433,7 +437,7 @@ class PkmnRedEnv(Env):
                 if console_input == WindowEvent.PRESS_BUTTON_START:
                     self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_START)
 
-            self.pyboy.tick()
+            self.tick()
 
             if self.save_video and not self.fast_video:
                 self.add_video_frame()
@@ -444,10 +448,12 @@ class PkmnRedEnv(Env):
                     # Without speedup rom and skipping the frames, agent has to take 14-20 meaningless actions per turn.
                     self.skip_battle_frames()
                     skipped = True
-                skipped = self.skip_empty_screen(was_skippable_frame) or skipped
+                if was_skippable_frame or self.skippable_screen():
+                    self.skip_empty_screen()
+                    skipped = True
                 if skipped:
                     break
-            elif self.skippable_screen():
+            elif not was_skippable_frame and self.skippable_screen():
                     was_skippable_frame = True
 
         if self.save_video and self.fast_video:
@@ -468,61 +474,74 @@ class PkmnRedEnv(Env):
         )
 
     def skippable_screen(self):
-        grayscale_screen = np.uint8(self.screen.screen_ndarray()[:, :, 0])
-        blackness = np.sum(np.int32(grayscale_screen <= 16)) / (144 * 160)
-        whiteness = np.sum(np.int32(grayscale_screen >= 254)) / (144 * 160)
+        curr_screen = self.previous_screens[-1]
+        prev_screen = self.previous_screens[-2]
+        delta_blackness = np.sum(np.int32(prev_screen - curr_screen > 20)) / (144 * 160)
+        blackness = np.sum(np.int32(curr_screen <= 16)) / (144 * 160)
+        whiteness = np.sum(np.int32(curr_screen >= 254)) / (144 * 160)
         return (
                 blackness > 0.85
                 or
                 whiteness >= 0.99
+                or
+                delta_blackness > 0.7
                 )
 
-    def skip_empty_screen(self, was_skippable=False):
-        skipped = int(was_skippable)
-        while self.skippable_screen():
+    def skip_empty_screen(self):
+        non_skippable_frames = 0
+        skipped = 0
+        while non_skippable_frames < 19:
             skipped += 1
-            self.pyboy.tick()
+            self.tick()
+
+            if not self.skippable_screen():
+                non_skippable_frames += 1
+            else:
+                non_skippable_frames = 0
 
             if skipped > 1000:
                 self.save_screenshot("debug", f"stuck_empty_screen{self.game_stats[COORDINATES][-1]}")
                 raise Exception
 
-        if skipped > 0:
-            for i in range(18):
-                self.pyboy.tick()
-
         return skipped > 0
 
     def is_dialog_frame(self):
-        grayscale_screen = np.uint8(self.screen.screen_ndarray()[:, :, 0])
+        screen = self.previous_screens[-1]
 
         pattern = (255, 255, 0, 255, 0, 0, 255, 0, 0)
         pattern_2 = (0, 0, 255, 0, 255, 0, 0, 255, 255)
         return (
                 not self.read_in_battle()
-                and np.all(grayscale_screen[98, :9] == pattern)
-                and np.all(grayscale_screen[98, -9:] == pattern_2)
+                and np.all(screen[98, :9] == pattern)
+                and np.all(screen[98, -9:] == pattern_2)
                 # Special dialogs, such as pc
                 # Needs more tuning with PC
-                and np.any(grayscale_screen[2, :9] != pattern)
+                and np.any(screen[2, :9] != pattern)
                 # Player required to take action there
                 and not self.read_textbox_id() in {11, 12, 13, 14, 20}
         )
 
     def skip_dialog(self):
         c = 0
-
+        was_stuck = False
         while self.is_dialog_frame():
-            self.pyboy.tick()
+            self.tick()
             c += 1
 
-            if c > 2_000:
+            if c % 16 < 8:
+                self.pyboy.send_input(WindowEvent.PRESS_BUTTON_A)
+            else:
+                self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_A)
+
+            if c > 100:
                 self.save_screenshot("debug", f"stuck_skip_dialog_{self.game_stats[COORDINATES][-1]}_{self.worker_index}")
+                was_stuck = True
                 #raise Exception
 
         if c > 0:
+            self.pyboy.send_input(WindowEvent.RELEASE_BUTTON_A)
             for i in range(24):
-                self.pyboy.tick()
+                self.tick()
 
         return c > 0
 
@@ -530,7 +549,7 @@ class PkmnRedEnv(Env):
         c = 0
         for i in range(18 * 32):
             # Skip battle animations
-            self.pyboy.tick()
+            self.tick()
             if not self.skippable_battle_frame():
                 # Some message box have id 11 midturn, but they are automatically scrolled.
                 # So we just wait them out
@@ -551,7 +570,6 @@ class PkmnRedEnv(Env):
         #  We init only once now
         # self.init_knn()
         # self.distinct_frames_observed = 0
-
         self.step_count = 0
         self.maximum_experience_in_party_so_far = 0
         self.episode_reward = 0
@@ -568,6 +586,9 @@ class PkmnRedEnv(Env):
         # we restart the game at a random, relevant state
         self.go_explore.read_session_states()
         self.go_explore()
+
+        self.tick()
+        self.tick()
 
         if self.save_video:
             base_dir = self.s_path / Path('rollouts')
@@ -592,10 +613,9 @@ class PkmnRedEnv(Env):
 
     def preprocess_screen(self, screen):
         # don't care about order, image is already in gray
-        grayscale_screen = np.uint8(screen[:, :, 0])
 
         grayscale_downsampled_screen = cv2.resize(
-            grayscale_screen,
+            screen,
             tuple(reversed(self.screen_shape)),
             interpolation=cv2.INTER_AREA,
         )[:, :, np.newaxis]
@@ -621,9 +641,8 @@ class PkmnRedEnv(Env):
         return self.screen_observation.copy()
 
     def render(self):
-        screen = self.screen.screen_ndarray()  # (144, 160, 3)
 
-        return self.preprocess_screen(screen)
+        return self.preprocess_screen(self.previous_screens[-1])
 
     def get_observed_stats(self):
         """
@@ -810,7 +829,6 @@ class PkmnRedEnv(Env):
         return obs, reward, False, done, {}
 
     def add_video_frame(self):
-        screen = self.screen.screen_ndarray().copy()
         # if self.step_count > 1:
         #     x, y, goal_map_id = self.current_goal
         #     curr_x, curr_y, curr_map_id = self.game_stats[COORDINATES][-1]
@@ -825,7 +843,7 @@ class PkmnRedEnv(Env):
         #             loc_x = (origin_x + dy * 16)
         #             loc_y = (origin_y + dx * 16)
         #             screen[loc_x: loc_x + 16, loc_y: loc_y + 16] *= self.target_symbol_mask_debug
-        self.full_frame_writer.add_image(screen)
+        self.full_frame_writer.add_image(self.previous_screens[-1])
 
     def update_frame_knn_index(self, frame):
 
@@ -941,7 +959,7 @@ class PkmnRedEnv(Env):
                         (self.game_stats[PARTY_EXPERIENCE][-1][i]
                         - self.game_stats[PARTY_EXPERIENCE][-2][i]) * int(self.game_stats[PARTY_EXPERIENCE][-2][i] != 0.)
                         , 0.
-                    ) / highest_party_level**2 # **3 encourage going further
+                    ) / highest_party_level**2.5 # **3 encourage going further
 
             if not any(self.game_stats[BLACKOUT][-2:]) and curr_coords[-1] in self.pokemon_centers:
                 for i in range(6):
@@ -1051,10 +1069,11 @@ class PkmnRedEnv(Env):
         ss_dir = self.s_path / Path(folder)
         ss_dir.mkdir(exist_ok=True)
 
-        curr_screen = self.screen.screen_ndarray()
+        curr_screen = self.previous_screens[-1]
         plt.imsave(
             ss_dir / Path(f'{name}_original.jpeg'),
-            curr_screen
+            curr_screen,
+            cmap="gray"
         )
         observed = image if image is not None else self.screen_observation
         plt.imsave(
@@ -1206,5 +1225,60 @@ class PkmnRedEnv(Env):
     def read_party_menu(self) -> int:
         # Actually reads the sprite animation ids
         return self.read_m(0xD09B)
+
+
+if __name__ == '__main__':
+
+    conf = dict(
+        render=True,
+        debug=False,
+        session_path=Path("red_tests"),
+        headless=False,
+        init_state="deepred_post_parcel_pokeballs",
+        max_steps=1024,
+        fast_video=False,
+        save_video=False,
+        additional_steps_per_episode=1,
+        save_final_state=True,
+        gb_path="pokered.gbc",
+
+
+    )
+
+    env = PkmnRedEnv(conf)
+    action_dict = {
+    "[A": 3,
+    "[B": 0,
+    "[D": 1,
+    "[C": 2,
+    "": 4,
+    "0": 5,
+    "5": 6
+}
+
+    obs, _ = env.reset()
+    done = False
+    while not done:
+
+        inputs = input("input:").split("\x1b")
+        if len(inputs) == 1:
+            i = inputs[0]
+            if i not in action_dict:
+                i = ""
+
+            _, _, _, done, _ = env.step(action_dict[i])
+
+        else:
+            for i in inputs[1:]:
+                if i not in action_dict:
+                    i = ""
+
+                _, _, _, done, _ = env.step(action_dict[i])
+
+
+
+
+
+
 
 

@@ -135,12 +135,8 @@ class GoExplorePokemon:
             self.reset_console(self.sample_starting_point(scores))
 
     def reset_console(self, state: PokemonStateInfo):
-        # restart game at give save state, tick twice for proper init
         with open(state.get_save_path(), "rb") as f:
             self.console.load_state(f)
-
-            self.console.tick()
-            self.console.tick()
 
         if state.latest_opp_level is not None:
             # Base state
