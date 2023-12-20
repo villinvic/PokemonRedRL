@@ -16,7 +16,7 @@ from pkmn_rllib.rllib.vmpo.Vmpo import VmpoConfig, Vmpo
 from pkmn_rllib.rllib.vmpo.rllib_callbacks import PokemonCallbacks
 
 
-run_steps = 2048
+run_steps = 2048*2
 
 sess_path = f'sessions/session_{str(uuid.uuid4())[:8]}'
 
@@ -81,12 +81,12 @@ config = VmpoConfig().training(
     train_batch_size=run_steps,
     # num_sgd_iter=12,
     # minibatch_buffer_size=128,
-    gamma=0.999,
+    gamma=0.998,
     model={
         "custom_model": "pokemon_disagreement_model",
         "conv_filters": [
-            [32, [8, 8], 4, "same"],
-            [64, [4, 4], 2, "same"],
+            [32, [4, 4], 2, "same"],
+            [64, [3, 3], 1, "same"],
             [64, [3, 3], 1, "same"],
         ],
         "fcnet_size": 512,
