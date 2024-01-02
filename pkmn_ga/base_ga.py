@@ -182,6 +182,8 @@ class Individual:
         environment_instance = environment_cls(self.config["env_config"])
         environment_instance.reset()
 
+        print("GO", worker_id)
+
         # Run action sequence
         times = []
 
