@@ -93,6 +93,8 @@ class ActionSequence:
                 # copy a subsequence and insert it anywhere before or after that subsequence
                 length = np.random.randint(1, self.config["max_subsequence_length"])
 
+                if idx >= self.seq_len:
+                    break
                 subsequence_start = np.random.randint(idx, self.seq_len)
 
                 if np.random.random() < 0.5:
