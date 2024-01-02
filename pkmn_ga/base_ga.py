@@ -204,7 +204,7 @@ class Individual:
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
-        self.environments = environment_cls(config["env_config"])
+        self.environment = environment_cls(config["env_config"])
         self.config = config
 
 
