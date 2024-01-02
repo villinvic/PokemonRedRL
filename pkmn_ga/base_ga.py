@@ -570,7 +570,7 @@ if __name__ == '__main__':
         "max_subsequence_length"   : 16
     }
 
-    ray.init()
+    #ray.init()
 
     runner = GA(env_cls=PkmnRedEnvNoRender, config=config)
     runner.initialize_population()
