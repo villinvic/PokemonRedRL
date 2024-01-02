@@ -190,6 +190,7 @@ class Individual:
             t2 = time()
             times.append(t2 - t)
             t = t2
+            print(worker_id, times[-1])
 
             environment_instance.step(action)
 
