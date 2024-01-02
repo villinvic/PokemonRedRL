@@ -264,7 +264,7 @@ class PkmnRedEnvNoRender(Env):
         if self.step_count > 2 and (map_id not in self.visited_maps
             or
             self.game_stats[BADGE_SUM][-1] != self.game_stats[BADGE_SUM][-2]):
-
+            pass
             #self.go_explore.add_starting_point(self.game_stats)
         self.go_explore.update_stats(self.game_stats)
 
