@@ -513,15 +513,15 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (1024, 2048),
+        "action_sequence_limits"   : (1024, 4096),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
             "gb_path"     : "PokemonRed.gb",
             "render"      : False
         },
-        "population_size"          : 32,
-        "num_workers"              : 4,
+        "population_size"          : 124,
+        "num_workers"              : 124,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,
