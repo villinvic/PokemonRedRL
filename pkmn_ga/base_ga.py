@@ -71,7 +71,7 @@ class ActionSequence:
         return self
 
     def __next__(self) -> ActType:
-        if self.sequence[self.curr_action_idx] != self.ending_action and self.curr_action_idx < len(self.sequence):
+        if self.curr_action_idx < len(self.sequence) and self.sequence[self.curr_action_idx] != self.ending_action:
             action = self.sequence[self.curr_action_idx]
             self.curr_action_idx += 1
             return action
@@ -171,9 +171,7 @@ class Individual:
         self.ID = None
         self._action_sequence.update(sequence)
 
-    def eval(self, environment_cls: gymnasium.Env):
-
-        environment_instance = environment_cls(self.config["env_config"])
+    def eval(self, environment_instance: gymnasium.Env):
         environment_instance.reset()
 
         # Run action sequence
@@ -190,8 +188,6 @@ class Individual:
         print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
 
         self.evaluation_dict = environment_instance.get_stats()
-
-        environment_instance.pyboy.stop(save=False)
 
         # Identifies evaluation dicts
         self.evaluation_dict["GA/ID"] = self.ID
@@ -222,8 +218,9 @@ class Individual:
         return self.action_sequence.distance(other.action_sequence)
 
 class Worker:
-    def __init__(self, worker_id, config):
+    def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
+        self.environment = environment_cls(config["env_config"])
         self.config = config
 
     @classmethod
@@ -233,8 +230,8 @@ class Worker:
             num_gpus=0,
         )(cls)
 
-    def eval(self, individual: Individual, environment_cls):
-        return self.worker_id, individual.eval(environment_cls)
+    def eval(self, individual: Individual):
+        return self.worker_id, individual.eval(self.environment)
 
 
 class Population:
@@ -362,9 +359,8 @@ class Archive(Population):
 class GA:
     def __init__(self, env_cls, config):
         base_env = env_cls(config["env_config"])
-        self.env_cls = env_cls
         self.population = Population(base_env, config)
-        self.eval_workers = {w_id: Worker.as_remote().remote(w_id, config) for w_id in range(config["num_workers"])}
+        self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
 
         self.to_eval_queue = []
@@ -431,7 +427,7 @@ class GA:
 
             jobs.append(
                 self.eval_workers[w_id].eval.remote(
-                    self.population[next_individual_id], self.env_cls
+                    self.population[next_individual_id]
                 ))
 
             if len(jobs) == max_jobs:
@@ -525,7 +521,7 @@ if __name__ == '__main__':
             "render"      : False
         },
         "population_size"          : 32,
-        "num_workers"              : 32,
+        "num_workers"              : 4,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,
