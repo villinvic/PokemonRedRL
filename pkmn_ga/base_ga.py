@@ -58,7 +58,7 @@ class ActionSequence:
         self.seq_len = np.random.randint(*self.action_sequence_length_limits)
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
-        self.sequence[ self.seq_len] = self.ending_action
+        self.sequence[self.seq_len] = self.ending_action
 
     def validate_sequence(self):
         # TODO : speedup
@@ -71,7 +71,7 @@ class ActionSequence:
         return self
 
     def __next__(self) -> ActType:
-        if self.sequence[self.curr_action_idx] != self.ending_action:
+        if self.sequence[self.curr_action_idx] != self.ending_action or self.curr_action_idx < len(self.sequence):
             action = self.sequence[self.curr_action_idx]
             self.curr_action_idx += 1
             return action
