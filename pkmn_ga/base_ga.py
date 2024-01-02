@@ -71,7 +71,7 @@ class ActionSequence:
         return self
 
     def __next__(self) -> ActType:
-        if self.sequence[self.curr_action_idx] != self.ending_action or self.curr_action_idx < len(self.sequence):
+        if self.sequence[self.curr_action_idx] != self.ending_action and self.curr_action_idx < len(self.sequence):
             action = self.sequence[self.curr_action_idx]
             self.curr_action_idx += 1
             return action
