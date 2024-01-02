@@ -190,7 +190,7 @@ class Individual:
             t2 = time()
             times.append(t2 - t)
             t = t2
-            print(worker_id, times[-1])
+            #print(worker_id, times[-1])
 
             environment_instance.step(action)
 
@@ -403,11 +403,12 @@ class GA:
                 res = []
                 for job in jobs:
                     try:
-                        #if job.ready():
-                        r = job.get(100)
-                        res.append(r)
-                        jobs.remove(job)
-                        done_jobs.append(jobs)
+                        if job.ready():
+                            r = job.get()
+                            res.append(r)
+                            jobs.remove(job)
+                            done_jobs.append(jobs)
+                            print(r)
                     except mp.TimeoutError as e:
                         pass
 
