@@ -171,7 +171,9 @@ class Individual:
         self.ID = None
         self._action_sequence.update(sequence)
 
-    def eval(self, environment_instance: gymnasium.Env):
+    def eval(self, environment_cls: gymnasium.Env):
+
+        environment_instance = environment_cls(self.config["env_config"])
         environment_instance.reset()
 
         # Run action sequence
@@ -188,6 +190,8 @@ class Individual:
         print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
 
         self.evaluation_dict = environment_instance.get_stats()
+
+        environment_instance.pyboy.close(save=False)
 
         # Identifies evaluation dicts
         self.evaluation_dict["GA/ID"] = self.ID
@@ -220,7 +224,7 @@ class Individual:
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
-        self.environment = environment_cls(config["env_config"])
+        self.environment_cls = environment_cls
         self.config = config
 
     @classmethod
@@ -535,7 +539,6 @@ if __name__ == '__main__':
         "novelty_n_samples"        : 32,
         "crossover_n_points"       : 4,
         "mutation_rate"            : 0.05,
-        "max_subsequence_mutations": 4,
         "subsequence_mutation_rate": 1e-3,
         "max_subsequence_length"   : 16
     }
