@@ -231,7 +231,7 @@ class Worker:
     @classmethod
     def as_remote(cls):
         return ray.remote(
-            num_cpus=2,
+            num_cpus=4,
             num_gpus=0,
         )(cls)
 
@@ -525,8 +525,8 @@ if __name__ == '__main__':
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 62*4,
-        "num_workers"              : 62,
+        "population_size"          : 31*4,
+        "num_workers"              : 31,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,
