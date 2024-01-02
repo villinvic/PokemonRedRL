@@ -175,17 +175,17 @@ class Individual:
         environment_instance.reset()
 
         # Run action sequence
-        total_s = 0
+        times = []
 
         t = time()
         for action in self.action_sequence:
             t2 = time()
-            total_s += t2 - t
+            times.append(t2 - t)
             t = t2
 
             environment_instance.step(action)
 
-        print(self.ID, "mean action time:", total_s / self.action_sequence.seq_len)
+        print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
 
         self.evaluation_dict = environment_instance.get_stats()
 
