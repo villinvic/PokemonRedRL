@@ -401,11 +401,11 @@ class GA:
                 res = []
                 for job in jobs:
                     try:
-                        if job.ready():
-                            r = job.get()
-                            res.append(r)
-                            jobs.remove(job)
-                            done_jobs.append(jobs)
+                        #if job.ready():
+                        r = job.get(100)
+                        res.append(r)
+                        jobs.remove(job)
+                        done_jobs.append(jobs)
                     except mp.TimeoutError as e:
                         pass
 
