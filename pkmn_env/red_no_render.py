@@ -105,9 +105,9 @@ class PkmnRedEnvNoRender(Env):
 
         self.pyboy = PyBoy(
             config['gb_path'],
-            disable_input=False,
-            disable_renderer=True,#not config["render"],
-            hide_window=True,#not config["render"],
+            disable_input=True,
+            disable_renderer=False,#not config["render"],
+            hide_window=False,#not config["render"],
             window_type="headless",#"SDL2" if config["render"] else "headless",
         )
 
@@ -557,11 +557,19 @@ if __name__ == '__main__':
     obs, _ = env.reset()
     done = False
 
+    times = []
     with open(args.sequence_path, "rb") as f:
         actions = pickle.load(f)
 
+    t = time.time()
     for action in actions:
-        env.step(action)
+        if action < 7:
+            env.step(action)
+            t2 = time.time()
+            times.append(t2-t)
+            print(t2-t)
+            t = t2
+    print(np.max(times), np.mean(times), np.min(times))
 
 
 
