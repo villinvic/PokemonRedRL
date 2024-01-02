@@ -520,8 +520,8 @@ if __name__ == '__main__':
             "gb_path"     : "PokemonRed.gb",
             "render"      : False
         },
-        "population_size"          : 64,
-        "num_workers"              : 64,
+        "population_size"          : 32,
+        "num_workers"              : 1,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,

@@ -280,7 +280,7 @@ class PkmnRedEnvNoRender(Env):
         
     def step(self, action):
 
-        #self.run_action_on_emulator(action)
+        self.run_action_on_emulator(action)
         self.update_observed_stats()
         self.step_count += 1
 
