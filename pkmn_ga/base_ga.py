@@ -223,7 +223,7 @@ class Individual:
 
         return self.action_sequence.distance(other.action_sequence)
 
-@ray.remote(num_cpus=0.5, num_gpus=0)
+@ray.remote(num_cpus=1, num_gpus=0)
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
@@ -390,7 +390,8 @@ class GA:
                 latest_done_jobs, jobs = ray.wait(
                     jobs,
                     num_returns=1,
-                    timeout=None
+                    timeout=None,
+                    fetch_local=False
                 )
                 done_jobs.extend(latest_done_jobs)
                 print("done jobs:", len(done_jobs))
@@ -522,8 +523,8 @@ if __name__ == '__main__':
             "gb_path": "pokered.gbc",
             "render": False
         },
-        "population_size": 8,
-        "num_workers": 8,
+        "population_size": 124,
+        "num_workers": 124,
         "fitness_config": {
             "episode_reward": 10.,
             BADGE_SUM: 100.,
