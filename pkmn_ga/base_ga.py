@@ -492,7 +492,7 @@ if __name__ == '__main__':
             return {}
 
     config = {
-        "action_sequence_limits": (512, 1024),
+        "action_sequence_limits": (512, 2048),
         "env_config": {
             "init_state": "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
