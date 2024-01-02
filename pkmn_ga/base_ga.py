@@ -384,7 +384,7 @@ class GA:
         else:
             return self.to_eval_queue.pop(0)
 
-    def send_job_to_available_workers(self, max_jobs=128):
+    def send_job_to_available_workers(self, max_jobs=512):
         jobs = []
         while self.available_worker_ids:
 
