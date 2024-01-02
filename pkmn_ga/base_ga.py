@@ -10,7 +10,7 @@ import numpy as np
 import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
 
-from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS
+from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS
 from pkmn_env.red_no_render import PkmnRedEnvNoRender
 
 """
@@ -213,7 +213,7 @@ class Individual:
 
         return self.action_sequence.distance(other.action_sequence)
 
-@ray.remote(num_cpus=0.5, num_gpus=0)
+@ray.remote(num_cpus=0.25, num_gpus=0)
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
@@ -505,21 +505,23 @@ if __name__ == '__main__':
             return {}
 
     config = {
-        "action_sequence_limits": (512, 2048),
+        "action_sequence_limits": (2048, 4096),
         "env_config": {
             "init_state": "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
             "gb_path": "pokered.gbc",
             "render": False
         },
-        "population_size": 250,
-        "num_workers": 250,
+        "population_size": 500,
+        "num_workers": 500,
         "fitness_config": {
-            "episode_reward": 1.,
+            "episode_reward": 10.,
             BADGE_SUM: 100.,
-            CAUGHT_POKEMONS: 0.1,
+
+            CAUGHT_POKEMONS: 0.5,
+            SEEN_POKEMONS: 0.1,
             "novelty": 1e-5,
-            "length": 1e-4,
+            "length": -1e-4,
 
         },
         "novelty_n_samples": 32,
