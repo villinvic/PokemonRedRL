@@ -198,7 +198,7 @@ class Individual:
 
         self.evaluation_dict = environment_instance.get_stats()
 
-        environment_instance.stop(save=False)
+        environment_instance.pyboy.stop(save=False)
 
         # Identifies evaluation dicts
         self.evaluation_dict["GA/ID"] = self.ID
