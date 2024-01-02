@@ -84,34 +84,39 @@ class ActionSequence:
         self.curr_action_idx = 0
 
     def mutate(self):
-        mutation_indices = np.random.random(self.seq_len) < self.config["mutation_rate"]
-        self.sequence[:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
-        
+        old_sequence = self.sequence.copy()
         # random addition and removals of subsequences
+        idx_delta = 0
+        new_seq_len = self.seq_len
         for idx in range(self.seq_len):
             if np.random.random() < self.config["subsequence_mutation_rate"]:
                 # copy a subsequence and insert it anywhere before or after that subsequence
-                length = np.random.randint(1, self.config["max_subsequence_length"])
-
-                if idx >= self.seq_len:
-                    break
-
-                subsequence_start = idx
 
                 if np.random.random() < 0.5:
-                    length = np.minimum(length, self.action_sequence_length_limits[1]-self.seq_len)
-                    subsequence = self.sequence[subsequence_start:subsequence_start+length]
-                    if np.random.random() < 0.5:
-                        insertion_index = np.random.randint(0, subsequence_start+1)
-                    else:
-                        insertion_index = np.random.randint(np.minimum(subsequence_start+length, self.seq_len), self.seq_len+1)
+                    # Insertion
+                    length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
+                                                            1+self.action_sequence_length_limits[1]-new_seq_len))
 
-                    self.sequence[insertion_index:] = np.concatenate([subsequence, self.sequence[insertion_index:-length]])
-                    self.seq_len += length
+                    copy_idx_start = np.random.randint(0, self.seq_len-length)
+                    copy_idx_end = copy_idx_start + length
+
+                    self.sequence[:self.seq_len+length] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
+                                                       self.sequence[idx:self.seq_len]])
+                    new_seq_len += length
                 else:
-                    length = np.minimum(length, self.seq_len - self.action_sequence_length_limits[0])
-                    self.sequence[subsequence_start:] = np.concatenate([self.sequence[subsequence_start+length:], np.full((length,), fill_value=self.ending_action)])
-                    self.seq_len -= length
+                    # Removal
+                    length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
+                                                             1+new_seq_len-self.action_sequence_length_limits[0]))
+
+                    self.sequence[:self.seq_len] = np.concatenate([self.sequence[:idx], self.sequence[idx+length:],
+                                                                   np.full((length,), fill_value=self.ending_action)])
+
+                    new_seq_len -= length
+
+        self.seq_len = new_seq_len
+
+        mutation_indices = np.random.random(self.seq_len) < self.config["mutation_rate"]
+        self.sequence[:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
 
     def crossover(self, other: "ActionSequence"):
         points = np.sort(np.random.choice(np.maximum(self.seq_len, other.seq_len),
@@ -503,7 +508,7 @@ if __name__ == '__main__':
             "render": False
         },
         "population_size": 250,
-        "num_workers": 125,
+        "num_workers": 250,
         "fitness_config": {
             "episode_reward": 1.,
             BADGE_SUM: 100.,
