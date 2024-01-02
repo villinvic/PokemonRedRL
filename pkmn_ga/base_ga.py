@@ -100,15 +100,15 @@ class ActionSequence:
                     copy_idx_start = np.random.randint(0, self.seq_len-length)
                     copy_idx_end = copy_idx_start + length
 
-                    self.sequence[:self.seq_len+length] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
-                                                       self.sequence[idx:self.seq_len]])
+                    self.sequence[:] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
+                                                       self.sequence[idx:]])
                     new_seq_len += length
                 else:
                     # Removal
                     length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
                                                              1+new_seq_len-self.action_sequence_length_limits[0]))
 
-                    self.sequence[:self.seq_len] = np.concatenate([self.sequence[:idx], self.sequence[idx+length:],
+                    self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx+length:],
                                                                    np.full((length,), fill_value=self.ending_action)])
 
                     new_seq_len -= length
@@ -395,7 +395,7 @@ class GA:
         else:
             return self.to_eval_queue.pop(0)
 
-    def send_job_to_available_workers(self, max_jobs=128):
+    def send_job_to_available_workers(self, max_jobs=1024):
         jobs = []
         while self.available_worker_ids:
 
