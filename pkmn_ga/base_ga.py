@@ -178,7 +178,8 @@ class Individual:
         self.ID = None
         self._action_sequence.update(sequence)
 
-    def eval(self, environment_instance: gymnasium.Env):
+    def eval(self, environment_cls: gymnasium.Env, worker_id):
+        environment_instance = environment_cls(self.config["env_config"])
         environment_instance.reset()
 
         # Run action sequence
@@ -199,7 +200,7 @@ class Individual:
         # Identifies evaluation dicts
         self.evaluation_dict["GA/ID"] = self.ID
 
-        return self
+        return worker_id, self
 
     def initialize_randomly(self, ID):
         self.action_sequence.initialize_randomly()
@@ -399,14 +400,15 @@ class GA:
                 res = []
                 for job in jobs:
                     try:
-                        r = job.get(block=False)
-                        res.append(r)
-                    except queue.Empty as e:
+                        if job.ready():
+                            r = job.get(0.1)
+                            res.append(r)
+                            jobs.remove(job)
+                            done_jobs.append(jobs)
+                    except mp.TimeoutError as e:
                         pass
 
-                    jobs.remove(job)
 
-                    done_jobs.append(job)
 
                 # latest_done_jobs, jobs = ray.wait(
                 #     jobs,
@@ -417,6 +419,7 @@ class GA:
                 if len(res) > 0:
                     print("done jobs:", len(done_jobs))
                     done_workers = []
+                    print(res)
                     for w_id, eval_dict in res:
                         evaluated_individuals.append(eval_dict)
                         done_workers.append(w_id)
@@ -445,10 +448,10 @@ class GA:
             # print("job sent :", w_id, next_individual_id)
             # print("available workers:", self.available_worker_ids)
             # print("to eval:", self.to_eval_queue)
-            def eval_individual():
-                self.population[next_individual_id].eval(self.env_cls)
+            # def eval_individual():
+            #     self.population[next_individual_id].eval(self.env_cls)
 
-            jobs.append(self.eval_workers.apply_aync(eval_individual, ()))
+            jobs.append(self.eval_workers.apply_async(self.population[next_individual_id].eval, (self.env_cls, w_id)))
             # jobs.append(
             #     self.eval_workers[w_id].eval.remote(
             #         self.population[next_individual_id]
@@ -488,6 +491,7 @@ class GA:
 
         self.num_expected_evals = 1
         self.population.compute_fitnesses()
+        print(self.population.population.values())
 
 
 if __name__ == '__main__':
@@ -537,7 +541,7 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (256, 2048*4),
+        "action_sequence_limits"   : (2048, 2048*4),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
