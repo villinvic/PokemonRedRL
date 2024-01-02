@@ -1,4 +1,5 @@
 import pickle
+import queue
 import uuid
 from collections import defaultdict
 from pathlib import Path
@@ -10,6 +11,7 @@ import gymnasium
 import numpy as np
 import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
+import multiprocessing as mp
 
 from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS
 from pkmn_env.red_no_render import PkmnRedEnvNoRender
@@ -364,8 +366,10 @@ class Archive(Population):
 class GA:
     def __init__(self, env_cls, config):
         base_env = env_cls(config["env_config"])
+        self.env_cls = env_cls
         self.population = Population(base_env, config)
-        self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
+        #self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
+        self.eval_workers = mp.Pool(config["num_workers"])
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
 
         self.to_eval_queue = []
@@ -392,20 +396,32 @@ class GA:
                     jobs_sent.extend(new_jobs)
                     jobs.extend(new_jobs)
 
-                latest_done_jobs, jobs = ray.wait(
-                    jobs,
-                    num_returns=1,
-                    timeout=None,
-                    fetch_local=False
-                )
-                done_jobs.extend(latest_done_jobs)
-                print("done jobs:", len(done_jobs))
-                done_workers = []
-                for w_id, eval_dict in ray.get(latest_done_jobs):
-                    evaluated_individuals.append(eval_dict)
-                    done_workers.append(w_id)
+                res = []
+                for job in jobs:
+                    try:
+                        r = job.get(block=False)
+                        res.append(r)
+                    except queue.Empty as e:
+                        pass
 
-                self.available_worker_ids |= set(done_workers)
+                    jobs.remove(job)
+
+                    done_jobs.append(job)
+
+                # latest_done_jobs, jobs = ray.wait(
+                #     jobs,
+                #     num_returns=1,
+                #     timeout=None,
+                #     fetch_local=False
+                # )
+                if len(res) > 0:
+                    print("done jobs:", len(done_jobs))
+                    done_workers = []
+                    for w_id, eval_dict in res:
+                        evaluated_individuals.append(eval_dict)
+                        done_workers.append(w_id)
+
+                    self.available_worker_ids |= set(done_workers)
 
             yield evaluated_individuals
 
@@ -429,11 +445,14 @@ class GA:
             # print("job sent :", w_id, next_individual_id)
             # print("available workers:", self.available_worker_ids)
             # print("to eval:", self.to_eval_queue)
+            def eval_individual():
+                self.population[next_individual_id].eval(self.env_cls)
 
-            jobs.append(
-                self.eval_workers[w_id].eval.remote(
-                    self.population[next_individual_id]
-                ))
+            jobs.append(self.eval_workers.apply_aync(eval_individual, ()))
+            # jobs.append(
+            #     self.eval_workers[w_id].eval.remote(
+            #         self.population[next_individual_id]
+            #     ))
 
             if len(jobs) == max_jobs:
                 break
@@ -518,15 +537,15 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (2048, 2048*4),
+        "action_sequence_limits"   : (256, 2048*4),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 31*4,
-        "num_workers"              : 31,
+        "population_size"          : 6,
+        "num_workers"              : 6,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,
