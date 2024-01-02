@@ -101,7 +101,7 @@ class ActionSequence:
                     copy_idx_end = copy_idx_start + length
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
-                                                       self.sequence[idx:]])
+                                                       self.sequence[idx:-length]])
                     new_seq_len += length
                 else:
                     # Removal
