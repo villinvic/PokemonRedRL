@@ -9,7 +9,6 @@ from typing import Optional, Tuple, Union, List
 import Levenshtein
 import gymnasium
 import numpy as np
-import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
 import multiprocessing as mp
 
