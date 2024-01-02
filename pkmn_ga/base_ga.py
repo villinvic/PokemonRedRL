@@ -97,6 +97,9 @@ class ActionSequence:
                     length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
                                                             1+self.action_sequence_length_limits[1]-new_seq_len))
 
+                    if length == 0:
+                        continue
+
                     copy_idx_start = np.random.randint(0, self.seq_len-length)
                     copy_idx_end = copy_idx_start + length
 
@@ -107,6 +110,8 @@ class ActionSequence:
                     # Removal
                     length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
                                                              1+new_seq_len-self.action_sequence_length_limits[0]))
+                    if length == 0:
+                        continue
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx+length:],
                                                                    np.full((length,), fill_value=self.ending_action)])
