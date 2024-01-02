@@ -95,7 +95,8 @@ class ActionSequence:
 
                 if idx >= self.seq_len:
                     break
-                subsequence_start = np.random.randint(idx, self.seq_len)
+
+                subsequence_start = idx
 
                 if np.random.random() < 0.5:
                     length = np.minimum(length, self.action_sequence_length_limits[1]-self.seq_len)
@@ -103,7 +104,7 @@ class ActionSequence:
                     if np.random.random() < 0.5:
                         insertion_index = np.random.randint(0, subsequence_start+1)
                     else:
-                        insertion_index = np.random.randint(subsequence_start+length, self.seq_len+1)
+                        insertion_index = np.random.randint(np.minimum(subsequence_start+length, self.seq_len), self.seq_len+1)
 
                     self.sequence[insertion_index:] = np.concatenate([subsequence, self.sequence[insertion_index:-length]])
                     self.seq_len += length
@@ -202,7 +203,7 @@ class Individual:
 
         return self.action_sequence.distance(other.action_sequence)
 
-@ray.remote(num_cpus=1, num_gpus=0)
+@ray.remote(num_cpus=0.5, num_gpus=0)
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
