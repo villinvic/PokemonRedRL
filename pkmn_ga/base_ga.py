@@ -200,7 +200,7 @@ class Individual:
 
         return self.action_sequence.distance(other.action_sequence)
 
-@ray.remote
+@ray.remote(num_cpus=1, num_gpus=0)
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
