@@ -402,7 +402,7 @@ class GA:
                 for job in jobs:
                     try:
                         if job.ready():
-                            r = job.get(0.1)
+                            r = job.get()
                             res.append(r)
                             jobs.remove(job)
                             done_jobs.append(jobs)

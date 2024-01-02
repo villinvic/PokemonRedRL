@@ -112,7 +112,7 @@ class PkmnRedEnvNoRender(Env):
             randomize=True
         )
 
-        self.pyboy.set_emulation_speed(0)
+        #self.pyboy.set_emulation_speed(0)
 
         self.game_stats: DefaultOrderedDict = None
         self.step_count = 0
