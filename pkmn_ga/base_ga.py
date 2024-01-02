@@ -2,6 +2,7 @@ import pickle
 import uuid
 from collections import defaultdict
 from pathlib import Path
+from time import time
 from typing import Optional, Tuple, Union, List
 
 import Levenshtein
@@ -178,8 +179,17 @@ class Individual:
         environment_instance.reset()
 
         # Run action sequence
+        total_s = 0
+
+        t = time()
         for action in self.action_sequence:
+            t2 = time()
+            total_s += t2 -t
+            t = t2
+
             environment_instance.step(action)
+
+        print(self.ID, "mean action time:", total_s / self.action_sequence.seq_len)
 
         self.evaluation_dict = environment_instance.get_stats()
 
@@ -213,7 +223,7 @@ class Individual:
 
         return self.action_sequence.distance(other.action_sequence)
 
-@ray.remote(num_cpus=0.25, num_gpus=0)
+@ray.remote(num_cpus=0.5, num_gpus=0)
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
@@ -411,9 +421,9 @@ class GA:
 
             w_id = self.available_worker_ids.pop()
 
-            print("job sent :", w_id, next_individual_id)
-            print("available workers:", self.available_worker_ids)
-            print("to eval:", self.to_eval_queue)
+            # print("job sent :", w_id, next_individual_id)
+            # print("available workers:", self.available_worker_ids)
+            # print("to eval:", self.to_eval_queue)
 
             jobs.append(
                 self.eval_workers[w_id].eval.remote(
@@ -512,8 +522,8 @@ if __name__ == '__main__':
             "gb_path": "pokered.gbc",
             "render": False
         },
-        "population_size": 500,
-        "num_workers": 500,
+        "population_size": 8,
+        "num_workers": 8,
         "fitness_config": {
             "episode_reward": 10.,
             BADGE_SUM: 100.,
