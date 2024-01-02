@@ -124,7 +124,7 @@ class PkmnRedEnvNoRender(Env):
             visited_maps={40}  # red (first and second floor) and blue houses
         )
 
-        self.act_freq = 24
+        self.act_freq = 18
 
         self.go_explore = GoExplorePokemon(
             environment=self,

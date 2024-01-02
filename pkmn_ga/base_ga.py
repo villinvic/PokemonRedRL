@@ -204,11 +204,14 @@ class Individual:
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
-        self.environment = environment_cls(config["env_config"])
+        self.environments = environment_cls(config["env_config"])
         self.config = config
 
+
     def eval(self, individual: Individual):
+
         return self.worker_id, individual.eval(self.environment)
+
 
 
 
@@ -384,7 +387,7 @@ class GA:
         else:
             return self.to_eval_queue.pop(0)
 
-    def send_job_to_available_workers(self, max_jobs=512):
+    def send_job_to_available_workers(self, max_jobs=128):
         jobs = []
         while self.available_worker_ids:
 
@@ -395,9 +398,9 @@ class GA:
 
             w_id = self.available_worker_ids.pop()
 
-            # print("job sent :", w_id, next_individual_id)
-            # print("available workers:", self.available_worker_ids)
-            # print("to eval:", self.to_eval_queue)
+            print("job sent :", w_id, next_individual_id)
+            print("available workers:", self.available_worker_ids)
+            print("to eval:", self.to_eval_queue)
 
             jobs.append(
                 self.eval_workers[w_id].eval.remote(
