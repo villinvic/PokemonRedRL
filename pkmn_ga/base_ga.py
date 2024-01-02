@@ -104,9 +104,7 @@ class ActionSequence:
 
                     length = np.random.randint(0, upper)
 
-
-
-                    copy_idx_start = np.random.randint(0, self.seq_len - length)
+                    copy_idx_start = np.random.randint(1, self.seq_len - length)
                     copy_idx_end = copy_idx_start + length
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
@@ -181,8 +179,6 @@ class Individual:
     def eval(self, environment_cls: gymnasium.Env, worker_id):
         environment_instance = environment_cls(self.config["env_config"])
         environment_instance.reset()
-
-        print("GO", worker_id)
 
         # Run action sequence
         times = []
@@ -502,6 +498,8 @@ class GA:
 
 if __name__ == '__main__':
 
+    mp.set_start_method("spawn")
+
     class TestEnv(gymnasium.Env):
 
         def __init__(self, config):
@@ -574,7 +572,6 @@ if __name__ == '__main__':
     }
 
     #ray.init()
-
     runner = GA(env_cls=PkmnRedEnvNoRender, config=config)
     runner.initialize_population()
     runner.init_eval()
