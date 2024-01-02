@@ -35,13 +35,12 @@ TODO :
           
 """
 
+
 class ActionSequence:
-
-
 
     def __init__(
             self,
-            action_space:gymnasium.Space,
+            action_space: gymnasium.Space,
             config,
     ):
         self.config = config
@@ -78,7 +77,7 @@ class ActionSequence:
             return action
         else:
             raise StopIteration
-        
+
     def update(self, other: "ActionSequence"):
         self.sequence[:] = other.sequence
         self.seq_len = other.seq_len
@@ -95,13 +94,13 @@ class ActionSequence:
 
                 if np.random.random() < 0.5:
                     # Insertion
-                    length = np.random.randint(0, np.minimum(1+self.config["max_subsequence_length"],
-                                                            1+self.action_sequence_length_limits[1]-new_seq_len))
+                    length = np.random.randint(0, np.minimum(1 + self.config["max_subsequence_length"],
+                                                             1 + self.action_sequence_length_limits[1] - new_seq_len))
 
                     if length == 0:
                         continue
 
-                    copy_idx_start = np.random.randint(0, self.seq_len-length)
+                    copy_idx_start = np.random.randint(0, self.seq_len - length)
                     copy_idx_end = copy_idx_start + length
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
@@ -109,13 +108,13 @@ class ActionSequence:
                     new_seq_len += length
                 else:
                     # Removal
-                    length = np.random.randint(0, np.minimum(1+self.config["max_subsequence_length"],
-                                                             new_seq_len-self.action_sequence_length_limits[0]))
+                    length = np.random.randint(0, np.minimum(1 + self.config["max_subsequence_length"],
+                                                             new_seq_len - self.action_sequence_length_limits[0]))
                     if length == 0:
                         continue
 
-                    self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx+length:],
-                                                                   np.full((length,), fill_value=self.ending_action)])
+                    self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx + length:],
+                                                       np.full((length,), fill_value=self.ending_action)])
 
                     new_seq_len -= length
 
@@ -127,27 +126,25 @@ class ActionSequence:
     def crossover(self, other: "ActionSequence"):
         points = np.sort(np.random.choice(np.maximum(self.seq_len, other.seq_len),
                                           self.config["crossover_n_points"], replace=False))
-        
+
         new_sequence = self.sequence.copy()
-        
+
         prev_point = 0
         parents = [self.sequence, other.sequence]
         np.random.shuffle(parents)
-        
+
         for i, next_point in enumerate(points):
             parent = parents[i % 2]
             new_sequence[prev_point: next_point] = parent[prev_point: next_point]
             prev_point = next_point
-        
-        parent = parents[(len(points)+1) % 2]
-        
-        new_sequence[prev_point:] = parent[prev_point:]
-        
-        self.sequence[:] = new_sequence
-        
-        self.seq_len = np.min(np.argwhere(self.sequence == self.ending_action))
-            
 
+        parent = parents[(len(points) + 1) % 2]
+
+        new_sequence[prev_point:] = parent[prev_point:]
+
+        self.sequence[:] = new_sequence
+
+        self.seq_len = np.min(np.argwhere(self.sequence == self.ending_action))
 
 
 class Individual:
@@ -157,7 +154,7 @@ class Individual:
             config,
             age,
     ):
-        self.ID = None # We should set it manually after
+        self.ID = None  # We should set it manually after
         self._action_sequence = ActionSequence(environment.action_space, config)
         self.config = config
         self.age = age
@@ -175,7 +172,6 @@ class Individual:
         self._action_sequence.update(sequence)
 
     def eval(self, environment_instance: gymnasium.Env):
-
         environment_instance.reset()
 
         # Run action sequence
@@ -184,7 +180,7 @@ class Individual:
         t = time()
         for action in self.action_sequence:
             t2 = time()
-            total_s += t2 -t
+            total_s += t2 - t
             t = t2
 
             environment_instance.step(action)
@@ -218,25 +214,24 @@ class Individual:
         self.evaluation_dict = {}
         self.ID = new_id
 
-
     def pairwise_novelty(self, other: "Individual"):
-
         return self.action_sequence.distance(other.action_sequence)
 
-@ray.remote(num_cpus=1, num_gpus=0)
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
         self.worker_id = worker_id
         self.environment = environment_cls(config["env_config"])
         self.config = config
 
+    @classmethod
+    def as_remote(cls):
+        return ray.remote(
+            num_cpus=1,
+            num_gpus=0,
+        )(cls)
 
     def eval(self, individual: Individual):
-
         return self.worker_id, individual.eval(self.environment)
-
-
-
 
 
 class Population:
@@ -250,7 +245,7 @@ class Population:
         self.age = 0
 
         self.population = defaultdict(
-            lambda : Individual(
+            lambda: Individual(
                 environment=environment,
                 config=config,
                 age=self.age
@@ -261,7 +256,6 @@ class Population:
         for _ in range(self.size):
             ID = str(uuid.uuid4())[:8]
             self.population[ID].initialize_randomly(ID=ID)
-
 
     def __getitem__(self, item):
         return self.population[item]
@@ -292,8 +286,9 @@ class Population:
             min_distance = min([
                 individual.pairwise_novelty(self.population[other_id])
                 for other_id in np.random.choice(other_ids,
-                                              np.minimum(self.config["novelty_n_samples"], len(evaluated_population)-1),
-                                                                                 replace=False)
+                                                 np.minimum(self.config["novelty_n_samples"],
+                                                            len(evaluated_population) - 1),
+                                                 replace=False)
             ])
             individual.evaluation_dict["novelty"] = min_distance
             individual.evaluation_dict["length"] = individual.action_sequence.seq_len
@@ -305,7 +300,8 @@ class Population:
 
     def ranking(self):
         rankable_individuals = self.compute_fitnesses()
-        ranking = sorted(list(rankable_individuals.keys()), key=lambda i_id: rankable_individuals[i_id].evaluation_dict["GA/FITNESS"])
+        ranking = sorted(list(rankable_individuals.keys()),
+                         key=lambda i_id: rankable_individuals[i_id].evaluation_dict["GA/FITNESS"])
         return ranking
 
     def select(self):
@@ -317,9 +313,11 @@ class Population:
                 self.population.pop(individual_id)
 
     def get_matting(self):
-        available_for_matting = [i_id for i_id, individual in self.population.items() if "GA/FITNESS" in individual.evaluation_dict]
+        available_for_matting = [i_id for i_id, individual in self.population.items() if
+                                 "GA/FITNESS" in individual.evaluation_dict]
 
-        fitnesses_exp = np.exp(np.array([self.population[i_id].evaluation_dict["GA/FITNESS"] for i_id in available_for_matting]))
+        fitnesses_exp = np.exp(
+            np.array([self.population[i_id].evaluation_dict["GA/FITNESS"] for i_id in available_for_matting]))
 
         probs = fitnesses_exp / fitnesses_exp.sum()
 
@@ -340,6 +338,7 @@ class Population:
     def __repr__(self):
         return str(list(self.population.keys()))
 
+
 class Archive(Population):
     def __init__(self, environment: gymnasium.Env, config: dict, max_size=2048):
         super().__init__(environment, config)
@@ -356,11 +355,12 @@ class Archive(Population):
     def __len__(self):
         return len(self.population)
 
+
 class GA:
     def __init__(self, env_cls, config):
         base_env = env_cls(config["env_config"])
         self.population = Population(base_env, config)
-        self.eval_workers = {w_id: Worker.remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
+        self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
 
         self.to_eval_queue = []
@@ -404,7 +404,6 @@ class GA:
 
             yield evaluated_individuals
 
-
     def get_next_individual_id(self) -> Union[str, None]:
         if len(self.to_eval_queue) == 0:
             return None
@@ -428,14 +427,13 @@ class GA:
 
             jobs.append(
                 self.eval_workers[w_id].eval.remote(
-                self.population[next_individual_id]
-            ))
+                    self.population[next_individual_id]
+                ))
 
             if len(jobs) == max_jobs:
                 break
 
         return jobs
-
 
     def __call__(self):
 
@@ -450,7 +448,7 @@ class GA:
 
                 evaluated = self.population.evaluated_population()
                 print("Best individual so far:")
-                best = sorted(evaluated, key= lambda i_id: -evaluated[i_id].evaluation_dict["GA/FITNESS"])[0]
+                best = sorted(evaluated, key=lambda i_id: -evaluated[i_id].evaluation_dict["GA/FITNESS"])[0]
                 self.population.save_individual(best, "best_individual.pkl")
                 print(self.population[best])
 
@@ -479,16 +477,15 @@ if __name__ == '__main__':
             self.observation_space = gymnasium.spaces.Discrete(100)
 
         def reset(
-        self,
-        *,
-        seed: Optional[int] = None,
-        options: Optional[dict] = None,
-    ) -> Tuple[ObsType, dict]:
+                self,
+                *,
+                seed: Optional[int] = None,
+                options: Optional[dict] = None,
+        ) -> Tuple[ObsType, dict]:
             self.state = 0
             return 0, {}
 
         def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
-
             self.state += action
 
             done = self.state >= 100
@@ -498,7 +495,6 @@ if __name__ == '__main__':
 
         def render(self) -> Optional[Union[RenderFrame, List[RenderFrame]]]:
             pass
-
 
         def emulate_action_sequence(self, action_sequence: ActionSequence):
             total_score = 0
@@ -515,32 +511,33 @@ if __name__ == '__main__':
         def get_episode_evaluation(self):
             return {}
 
+
     config = {
-        "action_sequence_limits": (2048, 4096),
-        "env_config": {
-            "init_state": "deepred_post_parcel_pokeballs",
+        "action_sequence_limits"   : (1024, 2048),
+        "env_config"               : {
+            "init_state"  : "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
-            "gb_path": "pokered.gbc",
-            "render": False
+            "gb_path"     : "PokemonRed.gb",
+            "render"      : False
         },
-        "population_size": 124,
-        "num_workers": 124,
-        "fitness_config": {
+        "population_size"          : 6,
+        "num_workers"              : 6,
+        "fitness_config"           : {
             "episode_reward": 10.,
-            BADGE_SUM: 100.,
+            BADGE_SUM       : 100.,
 
-            CAUGHT_POKEMONS: 0.5,
-            SEEN_POKEMONS: 0.1,
-            "novelty": 1e-5,
-            "length": -1e-4,
+            CAUGHT_POKEMONS : 0.5,
+            SEEN_POKEMONS   : 0.1,
+            "novelty"       : 1e-5,
+            "length"        : -1e-4,
 
         },
-        "novelty_n_samples": 32,
-        "crossover_n_points": 4,
-        "mutation_rate": 0.05,
+        "novelty_n_samples"        : 32,
+        "crossover_n_points"       : 4,
+        "mutation_rate"            : 0.05,
         "max_subsequence_mutations": 4,
         "subsequence_mutation_rate": 1e-3,
-        "max_subsequence_length": 16
+        "max_subsequence_length"   : 16
     }
 
     ray.init()
@@ -550,6 +547,3 @@ if __name__ == '__main__':
     runner.init_eval()
     print("init done")
     runner()
-
-
-
