@@ -105,7 +105,7 @@ class PkmnRedEnvNoRender(Env):
 
         self.pyboy = PyBoy(
             config['gb_path'],
-            disable_input=True,
+            disable_input=False,
             disable_renderer=not config["render"],
             hide_window=not config["render"],
             window_type="SDL2" if config["render"] else "headless",
