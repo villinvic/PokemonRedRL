@@ -367,6 +367,7 @@ class GA:
                     timeout=None
                 )
                 done_jobs.extend(latest_done_jobs)
+                print("done jobs:", len(done_jobs))
                 done_workers = []
                 for w_id, eval_dict in ray.get(latest_done_jobs):
                     evaluated_individuals.append(eval_dict)
@@ -411,7 +412,6 @@ class GA:
 
     def __call__(self):
 
-        loops = 0
         while True:
 
             for w_id in self.available_worker_ids:
@@ -439,6 +439,7 @@ class GA:
 
         self.num_expected_evals = 1
         self.population.compute_fitnesses()
+
 
 if __name__ == '__main__':
 
