@@ -222,9 +222,8 @@ class Individual:
         return self.action_sequence.distance(other.action_sequence)
 
 class Worker:
-    def __init__(self, worker_id, environment_cls, config):
+    def __init__(self, worker_id, config):
         self.worker_id = worker_id
-        self.environment_cls = environment_cls
         self.config = config
 
     @classmethod
@@ -234,8 +233,8 @@ class Worker:
             num_gpus=0,
         )(cls)
 
-    def eval(self, individual: Individual):
-        return self.worker_id, individual.eval(self.environment)
+    def eval(self, individual: Individual, environment_cls):
+        return self.worker_id, individual.eval(environment_cls)
 
 
 class Population:
@@ -363,6 +362,7 @@ class Archive(Population):
 class GA:
     def __init__(self, env_cls, config):
         base_env = env_cls(config["env_config"])
+        self.env_cls = env_cls
         self.population = Population(base_env, config)
         self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
@@ -431,7 +431,7 @@ class GA:
 
             jobs.append(
                 self.eval_workers[w_id].eval.remote(
-                    self.population[next_individual_id]
+                    self.population[next_individual_id], self.env_cls
                 ))
 
             if len(jobs) == max_jobs:
