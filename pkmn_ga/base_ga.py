@@ -9,6 +9,7 @@ from typing import Optional, Tuple, Union, List
 import Levenshtein
 import gymnasium
 import numpy as np
+import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
 import multiprocessing as mp
 
@@ -101,9 +102,9 @@ class ActionSequence:
                     if upper == 0:
                         continue
 
-                    length = np.random.randint(0, upper)
+                    length = np.random.randint(1, upper+1)
 
-                    copy_idx_start = np.random.randint(1, self.seq_len - length)
+                    copy_idx_start = np.random.randint(0, self.seq_len - length)
                     copy_idx_end = copy_idx_start + length
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
@@ -175,8 +176,8 @@ class Individual:
         self.ID = None
         self._action_sequence.update(sequence)
 
-    def eval(self, environment_cls: gymnasium.Env, worker_id):
-        environment_instance = environment_cls(self.config["env_config"])
+    def eval(self, environment_instance: gymnasium.Env,):
+
         environment_instance.reset()
 
         # Run action sequence
@@ -195,12 +196,11 @@ class Individual:
 
         self.evaluation_dict = environment_instance.get_stats()
 
-        environment_instance.pyboy.stop(save=False)
 
         # Identifies evaluation dicts
         self.evaluation_dict["GA/ID"] = self.ID
 
-        return worker_id, self
+        return self
 
     def initialize_randomly(self, ID):
         self.action_sequence.initialize_randomly()
@@ -234,7 +234,7 @@ class Worker:
     @classmethod
     def as_remote(cls):
         return ray.remote(
-            num_cpus=4,
+            num_cpus=0.5,
             num_gpus=0,
         )(cls)
 
@@ -369,8 +369,8 @@ class GA:
         base_env = env_cls(config["env_config"])
         self.env_cls = env_cls
         self.population = Population(base_env, config)
-        #self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
-        self.eval_workers = mp.Pool(config["num_workers"], maxtasksperchild=1)
+        self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
+        #self.eval_workers = mp.Pool(config["num_workers"], maxtasksperchild=1)
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
 
         self.to_eval_queue = []
@@ -397,33 +397,33 @@ class GA:
                     jobs_sent.extend(new_jobs)
                     jobs.extend(new_jobs)
 
-                res = []
-                for job in jobs:
-                    try:
-                        if job.ready():
-                            r = job.get()
-                            res.append(r)
-                            jobs.remove(job)
-                            done_jobs.append(jobs)
-                            print(r)
-                    except mp.TimeoutError as e:
-                        pass
+                # res = []
+                # for job in jobs:
+                #     try:
+                #         if job.ready():
+                #             r = job.get()
+                #             res.append(r)
+                #             jobs.remove(job)
+                #             done_jobs.append(jobs)
+                #             print(r)
+                #     except mp.TimeoutError as e:
+                #         pass
 
 
+                latest_done_jobs, jobs = ray.wait(
+                    jobs,
+                    num_returns=1,
+                    timeout=None,
+                    fetch_local=False
+                )
+                done_jobs.extend(latest_done_jobs)
 
-                # latest_done_jobs, jobs = ray.wait(
-                #     jobs,
-                #     num_returns=1,
-                #     timeout=None,
-                #     fetch_local=False
-                # )
-                if len(res) > 0:
-                    print("done jobs:", len(done_jobs))
-                    done_workers = []
-                    print(res)
-                    for w_id, eval_dict in res:
-                        evaluated_individuals.append(eval_dict)
-                        done_workers.append(w_id)
+                print("done jobs:", len(done_jobs))
+                done_workers = []
+
+                for w_id, eval_dict in ray.get(latest_done_jobs):
+                    evaluated_individuals.append(eval_dict)
+                    done_workers.append(w_id)
 
                     self.available_worker_ids |= set(done_workers)
 
@@ -452,11 +452,12 @@ class GA:
             # def eval_individual():
             #     self.population[next_individual_id].eval(self.env_cls)
 
-            jobs.append(self.eval_workers.apply_async(self.population[next_individual_id].eval, (self.env_cls, w_id)))
-            # jobs.append(
-            #     self.eval_workers[w_id].eval.remote(
-            #         self.population[next_individual_id]
-            #     ))
+            #jobs.append(self.eval_workers.apply_async(self.population[next_individual_id].eval, (self.env_cls, w_id)))
+
+            jobs.append(
+                self.eval_workers[w_id].eval.remote(
+                    self.population[next_individual_id]
+                ))
 
             if len(jobs) == max_jobs:
                 break
@@ -570,7 +571,7 @@ if __name__ == '__main__':
         "max_subsequence_length"   : 16
     }
 
-    #ray.init()
+    ray.init()
     runner = GA(env_cls=PkmnRedEnvNoRender, config=config)
     runner.initialize_population()
     runner.init_eval()
