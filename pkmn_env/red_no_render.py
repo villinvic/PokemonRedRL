@@ -265,7 +265,7 @@ class PkmnRedEnvNoRender(Env):
             or
             self.game_stats[BADGE_SUM][-1] != self.game_stats[BADGE_SUM][-2]):
 
-            self.go_explore.add_starting_point(self.game_stats)
+            #self.go_explore.add_starting_point(self.game_stats)
         self.go_explore.update_stats(self.game_stats)
 
         tmp = self.visited_maps | {map_id}
