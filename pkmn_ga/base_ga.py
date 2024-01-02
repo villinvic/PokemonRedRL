@@ -94,11 +94,15 @@ class ActionSequence:
 
                 if np.random.random() < 0.5:
                     # Insertion
-                    length = np.random.randint(0, np.minimum(1 + self.config["max_subsequence_length"],
-                                                             1 + self.action_sequence_length_limits[1] - new_seq_len))
+                    upper = np.minimum(1 + self.config["max_subsequence_length"],
+                                                             1 + self.action_sequence_length_limits[1] - new_seq_len)
 
-                    if length == 0:
+                    if upper == 0:
                         continue
+
+                    length = np.random.randint(0, upper)
+
+
 
                     copy_idx_start = np.random.randint(0, self.seq_len - length)
                     copy_idx_end = copy_idx_start + length
@@ -108,10 +112,11 @@ class ActionSequence:
                     new_seq_len += length
                 else:
                     # Removal
-                    length = np.random.randint(0, np.minimum(1 + self.config["max_subsequence_length"],
-                                                             new_seq_len - self.action_sequence_length_limits[0]))
-                    if length == 0:
+                    upper = np.minimum(1 + self.config["max_subsequence_length"],
+                                                             new_seq_len - self.action_sequence_length_limits[0])
+                    if upper == 0:
                         continue
+                    length = np.random.randint(0, upper)
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx + length:],
                                                        np.full((length,), fill_value=self.ending_action)])
@@ -226,7 +231,7 @@ class Worker:
     @classmethod
     def as_remote(cls):
         return ray.remote(
-            num_cpus=1,
+            num_cpus=2,
             num_gpus=0,
         )(cls)
 
@@ -520,8 +525,8 @@ if __name__ == '__main__':
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 124,
-        "num_workers"              : 124,
+        "population_size"          : 62*4,
+        "num_workers"              : 62,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,
@@ -532,7 +537,7 @@ if __name__ == '__main__':
             "length"        : -1e-4,
 
         },
-        "novelty_n_samples"        : 32,
+        "novelty_n_samples"        : 64,
         "crossover_n_points"       : 4,
         "mutation_rate"            : 0.05,
         "subsequence_mutation_rate": 1e-3,
