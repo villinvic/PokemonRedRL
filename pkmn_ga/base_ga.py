@@ -370,7 +370,7 @@ class GA:
         self.env_cls = env_cls
         self.population = Population(base_env, config)
         #self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
-        self.eval_workers = mp.Pool(config["num_workers"])
+        self.eval_workers = mp.Pool(config["num_workers"], maxtasksperchild=1)
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
 
         self.to_eval_queue = []
