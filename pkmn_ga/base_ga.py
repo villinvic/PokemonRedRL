@@ -548,8 +548,8 @@ if __name__ == '__main__':
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 64,
-        "num_workers"              : 64,
+        "population_size"          : 20,
+        "num_workers"              : 20,
         "fitness_config"           : {
             "episode_reward": 10.,
             BADGE_SUM       : 100.,
