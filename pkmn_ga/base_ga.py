@@ -116,7 +116,7 @@ class ActionSequence:
                                                              new_seq_len - self.action_sequence_length_limits[0])
                     if upper == 0:
                         continue
-                    length = np.random.randint(0, upper)
+                    length = np.random.randint(1, upper+1)
 
                     self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx + length:],
                                                        np.full((length,), fill_value=self.ending_action)])
