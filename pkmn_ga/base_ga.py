@@ -94,7 +94,7 @@ class ActionSequence:
 
                 if np.random.random() < 0.5:
                     # Insertion
-                    length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
+                    length = np.random.randint(0, np.minimum(1+self.config["max_subsequence_length"],
                                                             1+self.action_sequence_length_limits[1]-new_seq_len))
 
                     if length == 0:
@@ -108,8 +108,8 @@ class ActionSequence:
                     new_seq_len += length
                 else:
                     # Removal
-                    length = np.random.randint(0, 1+np.minimum(self.config["max_subsequence_length"],
-                                                             1+new_seq_len-self.action_sequence_length_limits[0]))
+                    length = np.random.randint(0, np.minimum(1+self.config["max_subsequence_length"],
+                                                             new_seq_len-self.action_sequence_length_limits[0]))
                     if length == 0:
                         continue
 
