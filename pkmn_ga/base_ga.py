@@ -198,16 +198,15 @@ class ActionSequence:
     def set_base(self, base):
         max_length = self.action_sequence_length_limits[1]
 
-        if self.mutable_start > len(base):
-            overriden = len(base)
+        self.sequence[:len(base)] = base
+
+        if self.mutable_start < len(base):
+            addition = np.minimum(np.random.randint(128), max_length-len(base))
+            self.sequence[len(base):len(base)+addition] = np.random.randint(self.n_actions, addition)
+            new_seq_len = len(base) + addition
         else:
-            overriden = 0
+            new_seq_len = self.seq_len
 
-        new_seq_len = np.minimum(len(base) + self.seq_len-overriden, max_length)
-
-        self.sequence[:] = np.concatenate([base, self.sequence[overriden:],
-                                           np.full((max_length-new_seq_len,), fill_value=self.ending_action)
-                                           ])[:max_length]
         self.seq_len = new_seq_len
         self.mutable_start = len(base)
 
@@ -395,7 +394,7 @@ class Population:
         for individual_id, individual in evaluated_population.items():
             other_ids = list(evaluated_population.keys())
             other_ids.remove(individual_id)
-            min_distance = min([
+            min_distance = 0 if self.config["novelty_n_samples"] == 0 else min([
                 individual.pairwise_novelty(self.population[other_id])
                 for other_id in np.random.choice(other_ids,
                                                  np.minimum(self.config["novelty_n_samples"],
@@ -441,11 +440,12 @@ class Population:
 
     def make_offspring(self, archive: "GoExploreArchive"):
         new_id = str(uuid.uuid4())[:8]
+
+        self.population[new_id].build_from_base(archive.sample_starting_point())
+
         self.population[new_id].evolve(new_id, parents=self.get_matting())
 
-        if np.random.random() < self.config["base_starting_point_sample_chance"]:
-            # Sample a parent from archive
-            self.population[new_id].build_from_base(archive.sample_starting_point())
+
 
         return new_id
 
@@ -534,8 +534,9 @@ class GoExploreArchive(Archive):
                 print(cost, elite_cost)
                 print(value, elite_value)
 
-                if ((value >= elite_value and cost < elite_cost)
-                or (value > elite_value and cost <= elite_cost)):
+                # if ((value >= elite_value and cost < elite_cost)
+                # or (value > elite_value and cost <= elite_cost)):
+                if cost < elite_cost:
 
                     self.population[identifier]["value"] = value
                     self.population[identifier]["cost"] = cost
@@ -820,7 +821,7 @@ if __name__ == '__main__':
 
         },
         "fitness_novelty_weight": 5e-4,
-        "novelty_n_samples"        : 2,
+        "novelty_n_samples"        : 0,
         "crossover_n_points"       : 1,
         "mutation_rate"            : 0.05,
         "subsequence_mutation_rate": 1e-3,
