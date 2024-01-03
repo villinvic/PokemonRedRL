@@ -501,6 +501,10 @@ class GoExploreArchive(Archive):
                 elite = self.population[identifier]
                 elite_value = elite["value"]
                 elite_cost = elite["cost"]
+                print(f"Better elite for {identifier} ?")
+                print(cost, elite_cost)
+                print(value, elite_value)
+
                 if ((value >= elite_value and cost < elite_cost)
                 or (value > elite_value and cost <= elite_cost)):
 
@@ -511,6 +515,9 @@ class GoExploreArchive(Archive):
 
                     self.entries_hist.remove(identifier)
                     self.entries_hist.append(identifier)
+                    print("Yes.")
+                else:
+                    print("No.")
 
             else:
                 self.population[identifier]["value"] = value
