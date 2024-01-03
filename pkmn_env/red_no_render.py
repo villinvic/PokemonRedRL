@@ -185,6 +185,8 @@ class PkmnRedEnvNoRender(Env):
             start_point = options.get("state", self.base_starting_point)
             start_point.seek(0)
             self.pyboy.load_state(start_point)
+            self.pyboy.tick()
+            self.pyboy.tick()
             self.game_stats = options.get("game_stats", defaultdict(list))
 
             self.episode_reward = options.get("episode_reward", 0.)

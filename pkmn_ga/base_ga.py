@@ -17,6 +17,7 @@ import multiprocessing as mp
 from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS, MAP_ID, TOTAL_EVENTS_TRIGGERED
 from pkmn_env.go_explore import GoExplorePokemon
 from pkmn_env.red_no_render import PkmnRedEnvNoRender
+from python_utils.collections import DefaultOrderedDict
 
 """
 Async algo
@@ -470,7 +471,7 @@ class GoExploreArchive(Archive):
         self.relevant_features = config["go_explore_relevant_features"]
         self.base_starting_point=base_starting_point
 
-        self.population = defaultdict(lambda :
+        self.population = DefaultOrderedDict(lambda :
                                       {"cost": np.inf,
                                        "value": -np.inf,
                                        "action_sequence": None})
