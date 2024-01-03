@@ -239,8 +239,8 @@ class Individual:
             "game_state": None
         })
 
-        if "game_state" in self.start_point:
-            print(self.action_sequence.mutable_start, self.start_point["game_state"]["step_count"])
+        if "step_count" in self.start_point:
+            print(self.action_sequence.mutable_start, self.start_point["step_count"])
         else:
             pass
             #print(self.start_point)
