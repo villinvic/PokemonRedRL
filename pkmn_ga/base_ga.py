@@ -60,7 +60,7 @@ class ActionSequence:
         return Levenshtein.distance(self.sequence, other.sequence)
 
     def initialize_randomly(self):
-        self.seq_len = np.random.randint(*self.action_sequence_length_limits)
+        self.seq_len = np.random.randint(1, 256)
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
         self.sequence[self.seq_len] = self.ending_action
@@ -89,48 +89,69 @@ class ActionSequence:
         self.curr_action_idx = 0
 
     def mutate(self):
-        old_sequence = self.sequence.copy()[self.mutable_start:]
-        # random addition and removals of subsequences
-        idx_delta = 0
+        # old_sequence = self.sequence.copy()[self.mutable_start:]
+        # # random addition and removals of subsequences
+        # idx_delta = 0
+        # new_seq_len = self.seq_len
+        # for idx in range(self.mutable_start, self.seq_len):
+        #     if np.random.random() < self.config["subsequence_mutation_rate"]:
+        #         # copy a subsequence and insert it anywhere before or after that subsequence
+        #
+        #         if np.random.random() < 0.5:
+        #             # Insertion
+        #             upper = np.minimum(1 + self.config["max_subsequence_length"],
+        #                                                      1 + self.action_sequence_length_limits[1] - new_seq_len)
+        #
+        #             if upper == 0:
+        #                 continue
+        #
+        #             length = np.random.randint(1, upper+1)
+        #
+        #             copy_idx_start = np.random.randint(0, self.seq_len - length)
+        #             copy_idx_end = copy_idx_start + length
+        #
+        #             self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], old_sequence[copy_idx_start:copy_idx_end],
+        #                                                self.sequence[idx:-length]])
+        #             new_seq_len += length
+        #         else:
+        #             # Removal
+        #             upper = np.minimum(1 + self.config["max_subsequence_length"],
+        #                                                      new_seq_len - self.action_sequence_length_limits[0])
+        #             if upper == 0:
+        #                 continue
+        #             length = np.random.randint(1, upper+1)
+        #
+        #             print(len(self.sequence[self.mutable_start:idx]), len(self.sequence[idx + length:]), length)
+        #             self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], self.sequence[idx + length:],
+        #                                                np.full((length,), fill_value=self.ending_action)])
+        #
+        #             new_seq_len -= length
+        #
+        # self.seq_len = new_seq_len
+
+        new_sequence = []
         new_seq_len = self.seq_len
-        for idx in range(self.mutable_start, self.seq_len):
-            if np.random.random() < self.config["subsequence_mutation_rate"]:
-                # copy a subsequence and insert it anywhere before or after that subsequence
-
-                if np.random.random() < 0.5:
-                    # Insertion
-                    upper = np.minimum(1 + self.config["max_subsequence_length"],
-                                                             1 + self.action_sequence_length_limits[1] - new_seq_len)
-
-                    if upper == 0:
-                        continue
-
-                    length = np.random.randint(1, upper+1)
-
-                    copy_idx_start = np.random.randint(0, self.seq_len - length)
-                    copy_idx_end = copy_idx_start + length
-
-                    self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], old_sequence[copy_idx_start:copy_idx_end],
-                                                       self.sequence[idx:-length]])
-                    new_seq_len += length
-                else:
-                    # Removal
-                    upper = np.minimum(1 + self.config["max_subsequence_length"],
-                                                             new_seq_len - self.action_sequence_length_limits[0])
-                    if upper == 0:
-                        continue
-                    length = np.random.randint(1, upper+1)
-
-                    print(len(self.sequence[self.mutable_start:idx]), len(self.sequence[idx + length:]), length)
-                    self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], self.sequence[idx + length:],
-                                                       np.full((length,), fill_value=self.ending_action)])
-
-                    new_seq_len -= length
-
+        for action in self.sequence[self.mutable_start:self.seq_len]:
+            mutation_type = np.random.randint(4)
+            if mutation_type == 1:
+                # mutate_action
+                new_sequence.append((action + 1) % self.ending_action)
+            elif mutation_type == 2 and new_seq_len < self.action_sequence_length_limits[1]:
+                # add action
+                new_sequence.append(np.random.randint(self.ending_action))
+                new_sequence.append(action)
+                new_seq_len += 1
+            elif new_seq_len > self.action_sequence_length_limits[0]:
+                # forget action
+                new_seq_len -= 1
+            else:
+                # do nothing:
+                new_sequence.append(action)
+        self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)] = new_sequence
         self.seq_len = new_seq_len
 
-        mutation_indices = np.random.random(self.seq_len-self.mutable_start) < self.config["mutation_rate"]
-        self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
+        # mutation_indices = np.random.random(self.seq_len-self.mutable_start) < self.config["mutation_rate"]
+        # self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
 
     def crossover(self, other: "ActionSequence"):
         if self.mutable_start == other.mutable_start:
@@ -702,7 +723,7 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (256, 512),
+        "action_sequence_limits"   : (1, 2048*8),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs.state",
             "session_path": Path("sessions/tests"),
