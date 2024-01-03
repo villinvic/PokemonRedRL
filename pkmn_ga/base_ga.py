@@ -770,7 +770,7 @@ if __name__ == '__main__':
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 512,
+        "population_size"          : 127,
         "num_workers"              : os.cpu_count()-1,
         "fitness_config"           : {
             "episode_reward": 5.,
