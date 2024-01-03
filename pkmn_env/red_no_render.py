@@ -372,8 +372,9 @@ class PkmnRedEnvNoRender(Env):
         file_like_object = io.BytesIO()
         file_like_object.seek(0)
         self.pyboy.save_state(file_like_object)
+
         state = {
-            "state": file_like_object.raw,
+            "state": file_like_object.read(),
             "visited_maps": self.visited_maps.copy(),
             "episode_reward": self.episode_reward,
             "game_stats": deepcopy(self.game_stats),
