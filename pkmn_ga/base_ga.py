@@ -153,6 +153,8 @@ class ActionSequence:
             else:
                 # do nothing:
                 new_sequence.append(action)
+
+        print(self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)], new_sequence)
         self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)] = new_sequence
         self.seq_len = new_seq_len
 
@@ -816,7 +818,7 @@ if __name__ == '__main__':
             BADGE_SUM
         ),
         "archive_size": 10_000,
-        "base_starting_point_sample_chance": 1e-2,
+        "base_starting_point_sample_chance": 0.5,
     }
 
     ray.init()
