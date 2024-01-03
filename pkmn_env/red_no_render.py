@@ -188,6 +188,10 @@ class PkmnRedEnvNoRender(Env):
             self.pyboy.tick()
             self.pyboy.tick()
             self.game_stats = options.get("game_stats", defaultdict(list))
+            read_map = self.read_map_id()
+            if COORDINATES in self.game_stats:
+                if self.game_stats[MAP_ID][-1] != read_map:
+                    print("NOT OK", self.game_stats[MAP_ID][-1], read_map)
 
             self.episode_reward = options.get("episode_reward", 0.)
             self.visited_maps = options.get("visited_maps", set())
