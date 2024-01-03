@@ -552,11 +552,13 @@ class GoExploreArchive(Archive):
                     self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
                     self.population[identifier]["start_point"] = d["game_state"]
                     self.population[identifier]["parent"] = prev_identifier
+                    d_cost = elite_cost - cost
 
                     def update_children(node):
                         for next_node in self.population:
                             if self.population[next_node]["parent"] == node:
                                 self.population[next_node]["action_sequence"][:self.population[node]["cost"]] = self.population[node]["action_sequence"]
+                                self.population[next_node]["cost"] -= d_cost
                                 update_children(next_node)
 
                     update_children(identifier)
