@@ -510,7 +510,7 @@ class GoExploreArchive(Archive):
 
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN                 : 1.,
-            GoExplorePokemon.TIMES_SEEN                   : 15.,
+            GoExplorePokemon.TIMES_SEEN                   : 0.,
         }
 
         self.state_stats = defaultdict(lambda: {
