@@ -544,7 +544,7 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (2048, 2048*4),
+        "action_sequence_limits"   : (2048*2, 2048*8),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs",
             "session_path": Path("sessions/tests"),
@@ -559,7 +559,7 @@ if __name__ == '__main__':
 
             CAUGHT_POKEMONS : 0.5,
             SEEN_POKEMONS   : 0.1,
-            "novelty"       : 1e-3,
+            "novelty"       : 5e-4,
             "length"        : -1e-4,
 
         },
