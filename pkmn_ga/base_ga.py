@@ -250,7 +250,8 @@ class Individual:
                                for feature in self.config["go_explore_relevant_features"])
             go_explore_seen_counts[identifier] += 1
             if identifier not in key_states:
-                print(identifier, idx)
+                if idx == 0:
+                    print(identifier, idx, self.start_point)
                 key_states[identifier]["cost"] = idx
                 key_states[identifier]["stats"] = environment_instance.get_stats()
                 key_states[identifier]["game_state"] = environment_instance.game_state()
