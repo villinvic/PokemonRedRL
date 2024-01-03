@@ -133,6 +133,7 @@ class ActionSequence:
 
         new_sequence = []
         new_seq_len = self.seq_len
+        print(new_seq_len)
         mutation_rate = self.config["mutation_rate"]
         mutation_prob = mutation_rate/3
         mutation_func = lambda : np.random.choice(4, p=[1-mutation_rate, mutation_prob, mutation_prob, mutation_prob])
@@ -202,7 +203,6 @@ class ActionSequence:
 
         if self.mutable_start < len(base):
             addition = np.minimum(np.random.randint(32, 1024), max_length-len(base))
-            print(addition)
             if addition == 0:
                 raise Exception
             self.sequence[len(base):len(base)+addition] = np.random.randint(0, self.n_actions, addition)
