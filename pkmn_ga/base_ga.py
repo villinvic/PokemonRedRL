@@ -14,7 +14,7 @@ import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
 import multiprocessing as mp
 
-from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS, MAP_ID, TOTAL_EVENTS_TRIGGERED
+from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS, MAP_ID, TOTAL_EVENTS_TRIGGERED, MAPS_VISITED
 from pkmn_env.go_explore import GoExplorePokemon
 from pkmn_env.red_no_render import PkmnRedEnvNoRender
 from python_utils.collections import DefaultOrderedDict
@@ -155,7 +155,7 @@ class ActionSequence:
                 new_sequence.append(action)
 
         self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)] = new_sequence
-        print(self.seq_len)
+
         self.seq_len = new_seq_len
         self.sequence[new_seq_len:] = self.ending_action
 
@@ -519,8 +519,6 @@ class GoExploreArchive(Archive):
         for state, count in state_stats.items():
             self.state_stats[state][GoExplorePokemon.TIMES_SEEN] += count
 
-        print(self.state_stats)
-
         for identifier, d in individual.evaluation_dict["GO_EXPLORE/key_states"].items():
 
             cost = d["cost"]
@@ -747,6 +745,7 @@ class GA:
             self.population[evaluated_individual.ID].evaluation_dict = evaluated_individual.evaluation_dict
 
         self.num_expected_evals = 1
+
         self.population.compute_fitnesses()
         for ID, individual in self.population:
             self.go_explore_archive[individual]
@@ -817,10 +816,11 @@ if __name__ == '__main__':
 
             CAUGHT_POKEMONS : 1.0,
             SEEN_POKEMONS   : 1.0,
+            MAPS_VISITED    : 0.1,
 
         },
         "fitness_novelty_weight": 5e-4,
-        "novelty_n_samples"        : 8,
+        "novelty_n_samples"        : 2,
         "crossover_n_points"       : 1,
         "mutation_rate"            : 0.05,
         "subsequence_mutation_rate": 1e-3,
