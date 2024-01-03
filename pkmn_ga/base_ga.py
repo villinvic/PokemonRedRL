@@ -557,7 +557,10 @@ class GoExploreArchive(Archive):
                     def update_children(node):
                         for next_node in self.population:
                             if self.population[next_node]["parent"] == node:
-                                self.population[next_node]["action_sequence"][:self.population[node]["cost"]] = self.population[node]["action_sequence"]
+                                prev_cost = self.population[node]["cost"] + d_cost
+                                improved_sequence = np.concatenate([self.population[node]["action_sequence"],
+                                                                    self.population[next_node]["action_sequence"][prev_cost:]])
+                                self.population[next_node]["action_sequence"] = improved_sequence
                                 self.population[next_node]["cost"] -= d_cost
                                 update_children(next_node)
 
