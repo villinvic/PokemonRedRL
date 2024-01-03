@@ -572,6 +572,7 @@ class GoExploreArchive(Archive):
     def __repr__(self):
 
         string = "------------ARCHIVE------------\n\n"
+        print(self.state_stats)
         for (identifier, elite), p in zip(self.population.items(), self.get_probs()):
             string += (f"{identifier}-> VALUE: {elite['value']}, COST: {elite['cost']}, SAMPLE CHANCE: {p}"
                        f"\n")
