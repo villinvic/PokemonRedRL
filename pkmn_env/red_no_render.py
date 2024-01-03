@@ -182,7 +182,7 @@ class PkmnRedEnvNoRender(Env):
             self.visited_maps = set()
         else:
 
-            start_point = options.get("start_point", self.base_starting_point)
+            start_point = options.get("state", self.base_starting_point)
             self.base_starting_point.seek(0)
             self.pyboy.load_state(start_point)
             self.game_stats = options.get("game_stats", defaultdict(list))
@@ -374,7 +374,7 @@ class PkmnRedEnvNoRender(Env):
         self.pyboy.save_state(file_like_object)
 
         state = {
-            "state": file_like_object.read(),
+            "state": file_like_object,
             "visited_maps": self.visited_maps.copy(),
             "episode_reward": self.episode_reward,
             "game_stats": deepcopy(self.game_stats),
