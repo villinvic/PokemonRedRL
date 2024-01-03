@@ -234,7 +234,7 @@ class Worker:
     @classmethod
     def as_remote(cls):
         return ray.remote(
-            num_cpus=0.5,
+            num_cpus=1,
             num_gpus=0,
         )(cls)
 
@@ -493,7 +493,6 @@ class GA:
 
         self.num_expected_evals = 1
         self.population.compute_fitnesses()
-        print(self.population.population.values())
 
 
 if __name__ == '__main__':
@@ -552,23 +551,23 @@ if __name__ == '__main__':
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 250,
-        "num_workers"              : 250,
+        "population_size"          : 124*4,
+        "num_workers"              : 124,
         "fitness_config"           : {
-            "episode_reward": 10.,
+            "episode_reward": 5.,
             BADGE_SUM       : 100.,
 
             CAUGHT_POKEMONS : 0.5,
             SEEN_POKEMONS   : 0.1,
-            "novelty"       : 1e-5,
+            "novelty"       : 1e-3,
             "length"        : -1e-4,
 
         },
         "novelty_n_samples"        : 64,
         "crossover_n_points"       : 4,
-        "mutation_rate"            : 0.05,
+        "mutation_rate"            : 0.01,
         "subsequence_mutation_rate": 1e-3,
-        "max_subsequence_length"   : 16
+        "max_subsequence_length"   : 64
     }
 
     ray.init()
