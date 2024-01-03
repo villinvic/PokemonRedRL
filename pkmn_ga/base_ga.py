@@ -481,7 +481,7 @@ class GoExploreArchive(Archive):
 
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN                 : 1.,
-            GoExplorePokemon.TIMES_SEEN                   : 2.,
+            GoExplorePokemon.TIMES_SEEN                   : 3.,
         }
 
         self.state_stats = defaultdict(lambda: {
@@ -515,6 +515,7 @@ class GoExploreArchive(Archive):
 
                     self.population[identifier]["value"] = value
                     self.population[identifier]["cost"] = cost
+                    print(individual.action_sequence.sequence[:cost])
                     self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
                     self.population[identifier]["start_point"] = d["game_state"]
 
@@ -576,7 +577,7 @@ class GoExploreArchive(Archive):
         string = "------------ARCHIVE------------\n\n"
         print(self.state_stats)
         for (identifier, elite), p in zip(self.population.items(), self.get_probs()):
-            string += (f"{identifier}-> VALUE: {elite['value']}, COST: {elite['cost']}, SAMPLE CHANCE: {p}"
+            string += (f"{identifier}-> VALUE: {elite['value']},\t COST: {elite['cost']},\t SAMPLE CHANCE: {p}"
                        f"\n")
         return string
 
