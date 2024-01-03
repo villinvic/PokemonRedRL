@@ -133,7 +133,7 @@ class ActionSequence:
 
         new_sequence = []
         new_seq_len = self.seq_len
-        print(new_seq_len)
+
         mutation_rate = self.config["mutation_rate"]
         mutation_prob = mutation_rate/3
         mutation_func = lambda : np.random.choice(4, p=[1-mutation_rate, mutation_prob, mutation_prob, mutation_prob])
@@ -504,12 +504,13 @@ class GoExploreArchive(Archive):
         self.population = DefaultOrderedDict(lambda :
                                       {"cost": np.inf,
                                        "value": -np.inf,
-                                       "action_sequence": None})
+                                       "action_sequence": None,
+                                       "parent": None})
 
 
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN                 : 1.,
-            GoExplorePokemon.TIMES_SEEN                   : 1.,
+            GoExplorePokemon.TIMES_SEEN                   : 15.,
         }
 
         self.state_stats = defaultdict(lambda: {
@@ -524,11 +525,14 @@ class GoExploreArchive(Archive):
         for state, count in state_stats.items():
             self.state_stats[state][GoExplorePokemon.TIMES_SEEN] += count
 
+        prev_identifier = None
+
         for identifier, d in individual.evaluation_dict["GO_EXPLORE/key_states"].items():
 
             cost = d["cost"]
             stats = d["stats"]
             value = self.compute_true_fitness(stats)
+
 
             if identifier in self.population:
                 elite = self.population[identifier]
@@ -547,10 +551,20 @@ class GoExploreArchive(Archive):
                     self.population[identifier]["cost"] = cost
                     self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
                     self.population[identifier]["start_point"] = d["game_state"]
+                    self.population[identifier]["parent"] = prev_identifier
+
+                    def update_children(node):
+                        for next_node in self.population:
+                            if self.population[next_node]["parent"] == node:
+                                self.population[next_node]["action_sequence"][:self.population[node]["cost"]] = self.population[node]["action_sequence"]
+                                update_children(next_node)
+
+                    update_children(identifier)
 
                     self.entries_hist.remove(identifier)
                     self.entries_hist.append(identifier)
                     print("Yes.")
+
                 else:
                     print("No.")
 
@@ -559,8 +573,11 @@ class GoExploreArchive(Archive):
                 self.population[identifier]["cost"] = cost
                 self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
                 self.population[identifier]["start_point"] = d["game_state"]
+                self.population[identifier]["parent"] = prev_identifier
 
                 self.entries_hist.append(identifier)
+
+            prev_identifier = identifier
 
         return identifier
 
