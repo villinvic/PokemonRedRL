@@ -61,7 +61,7 @@ class ActionSequence:
         return Levenshtein.distance(self.sequence, other.sequence)
 
     def initialize_randomly(self):
-        self.seq_len = np.random.randint(1, 256)
+        self.seq_len = np.random.randint(1, 128)
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
         self.sequence[self.seq_len] = self.ending_action
@@ -196,8 +196,11 @@ class ActionSequence:
 
     def set_base(self, base):
         max_length = self.action_sequence_length_limits[1]
-        new_seq_len = np.minimum(len(base) + self.seq_len-self.mutable_start, max_length)
-        self.sequence[:] = np.concatenate([base, self.sequence[self.mutable_start:],
+        overriden = np.minimum(len(base), self.mutable_start)
+
+        new_seq_len = np.minimum(overriden + self.seq_len-self.mutable_start, max_length)
+
+        self.sequence[:] = np.concatenate([base, self.sequence[overriden:],
                                            np.full((max_length-new_seq_len,), fill_value=self.ending_action)
                                            ])[:max_length]
         self.seq_len = new_seq_len
@@ -510,8 +513,6 @@ class GoExploreArchive(Archive):
 
         print(self.state_stats)
 
-        print(individual.evaluation_dict["GO_EXPLORE/key_states"].keys())
-
         for identifier, d in individual.evaluation_dict["GO_EXPLORE/key_states"].items():
 
             cost = d["cost"]
@@ -522,6 +523,7 @@ class GoExploreArchive(Archive):
                 elite = self.population[identifier]
                 elite_value = elite["value"]
                 elite_cost = elite["cost"]
+
                 print(f"Better elite for {identifier} ?")
                 print(cost, elite_cost)
                 print(value, elite_value)
@@ -584,7 +586,6 @@ class GoExploreArchive(Archive):
         starting_point_id = list(self.population.keys())[starting_point_idx]
 
         self.state_stats[starting_point_id][GoExplorePokemon.TIMES_CHOSEN] += 1
-        print("BAH", self.state_stats[starting_point_id])
 
         return self.population[starting_point_id]
 
@@ -793,14 +794,14 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (2, 2048),
+        "action_sequence_limits"   : (2, 2048*8),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs.state",
             "session_path": Path("sessions/tests"),
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 127,
+        "population_size"          : 500,
         "num_workers"              : os.cpu_count()-1,
         "fitness_config"           : {
             "episode_reward": 5.,
