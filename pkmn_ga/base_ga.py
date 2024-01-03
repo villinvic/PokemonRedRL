@@ -432,7 +432,7 @@ class Population:
         new_id = str(uuid.uuid4())[:8]
         self.population[new_id].evolve(new_id, parents=self.get_matting())
 
-        if np.random.random() > self.config["base_starting_point_sample_chance"]:
+        if np.random.random() < self.config["base_starting_point_sample_chance"]:
             # Sample a parent from archive
             self.population[new_id].build_from_base(archive.sample_starting_point())
 
