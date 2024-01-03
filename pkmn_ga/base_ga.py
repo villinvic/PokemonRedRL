@@ -141,7 +141,7 @@ class ActionSequence:
             mutation_type = mutation_func()
             if mutation_type == 1:
                 # mutate_action
-                new_sequence.append((action + 1) % self.ending_action)
+                new_sequence.append(np.random.randint(self.ending_action))
             elif mutation_type == 2 and new_seq_len < self.action_sequence_length_limits[1]:
                 # add action
                 new_sequence.append(np.random.randint(self.ending_action))
@@ -155,6 +155,7 @@ class ActionSequence:
                 new_sequence.append(action)
 
         self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)] = new_sequence
+        print(self.seq_len)
         self.seq_len = new_seq_len
         self.sequence[new_seq_len:] = self.ending_action
 
