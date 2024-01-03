@@ -154,9 +154,10 @@ class ActionSequence:
                 # do nothing:
                 new_sequence.append(action)
 
-        print(self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)], new_sequence)
+
         self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)] = new_sequence
         self.seq_len = new_seq_len
+        self.sequence[new_seq_len:] = self.ending_action
 
         # mutation_indices = np.random.random(self.seq_len-self.mutable_start) < self.config["mutation_rate"]
         # self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
