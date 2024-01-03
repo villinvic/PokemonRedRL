@@ -240,6 +240,7 @@ class Individual:
         })
 
         if self.start_point:
+            print(self.start_point)
             print(self.action_sequence.mutable_start, self.start_point["game_state"]["step_count"])
         for i, action in enumerate(self.action_sequence):
             idx = i + self.action_sequence.mutable_start
@@ -516,7 +517,6 @@ class GoExploreArchive(Archive):
 
                     self.population[identifier]["value"] = value
                     self.population[identifier]["cost"] = cost
-                    print(individual.action_sequence.sequence[:cost])
                     self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
                     self.population[identifier]["start_point"] = d["game_state"]
 
