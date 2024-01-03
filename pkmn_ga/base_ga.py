@@ -242,7 +242,8 @@ class Individual:
         if "game_state" in self.start_point:
             print(self.action_sequence.mutable_start, self.start_point["game_state"]["step_count"])
         else:
-            print(self.start_point)
+            pass
+            #print(self.start_point)
         for i, action in enumerate(self.action_sequence):
             idx = i + self.action_sequence.mutable_start
             # t2 = time()
