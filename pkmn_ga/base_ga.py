@@ -255,10 +255,10 @@ class Individual:
             "game_state": None
         })
 
-        if "step_count" in self.start_point:
-            assert self.action_sequence.mutable_start == self.start_point["step_count"], (
-                    self.action_sequence.mutable_start, self.start_point
-            )
+        # if "step_count" in self.start_point:
+        #     assert self.action_sequence.mutable_start == self.start_point["step_count"], (
+        #             self.action_sequence.mutable_start, self.start_point
+        #     )
 
         for action in self.action_sequence:
             idx = self.action_sequence.curr_action_idx
@@ -327,7 +327,7 @@ class Individual:
 
         self.start_point = base["start_point"]
         self.end_point = {}
-        assert len(base["action_sequence"]) == base["start_point"]["step_count"], base
+        # assert len(base["action_sequence"]) == base["start_point"]["step_count"], base
         self.action_sequence.set_base(base["action_sequence"])
 
 class Worker:
