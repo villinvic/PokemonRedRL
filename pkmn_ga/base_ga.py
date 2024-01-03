@@ -546,7 +546,7 @@ class GoExploreArchive(Archive):
 
                 self.entries_hist.append(identifier)
 
-        return "WAT"
+        return identifier
 
     def compute_scores(self):
         scores = []
