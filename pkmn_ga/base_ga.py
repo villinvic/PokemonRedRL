@@ -188,11 +188,11 @@ class ActionSequence:
             # Retain first parent
             pass
 
-    def set_base(self, base: "ActionSequence"):
+    def set_base(self, base):
         max_length = self.action_sequence_length_limits[1]
-        self.sequence[:] = np.concatenate([base.sequence[:base.seq_len], self.sequence[self.mutable_start:]])[:max_length]
-        self.seq_len = np.minimum(base.seq_len + self.seq_len, max_length)
-        self.mutable_start = base.seq_len
+        self.sequence[:] = np.concatenate([base, self.sequence[self.mutable_start:]])[:max_length]
+        self.seq_len = np.minimum(len(base) + self.seq_len, max_length)
+        self.mutable_start = len(base)
 
 
 
@@ -230,7 +230,13 @@ class Individual:
 
         #t = time()
         go_explore_seen_counts = defaultdict(lambda: 0)
-        for action in self.action_sequence:
+        key_states = defaultdict(lambda: {
+            "cost": np.inf,
+            "stats": {},
+            "game_state": None
+        })
+
+        for i, action in enumerate(self.action_sequence):
             # t2 = time()
             # times.append(t2 - t)
             # t = t2
@@ -239,11 +245,17 @@ class Individual:
             identifier = tuple(environment_instance.game_stats[feature][-1]
                                for feature in self.config["go_explore_relevant_features"])
             go_explore_seen_counts[identifier] += 1
+            if identifier not in key_states:
+                key_states[identifier]["cost"] = i
+                key_states[identifier]["stats"] = environment_instance.get_stats()
+                key_states[identifier]["game_state"] = environment_instance.game_state()
 
         #print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
 
         self.evaluation_dict = environment_instance.get_stats()
         self.evaluation_dict["GO_EXPLORE/" + GoExplorePokemon.TIMES_SEEN] = go_explore_seen_counts
+        self.evaluation_dict["GO_EXPLORE/key_states"] = key_states
+
 
         self.end_point = environment_instance.game_state()
 
@@ -279,11 +291,11 @@ class Individual:
     def pairwise_novelty(self, other: "Individual"):
         return self.action_sequence.distance(other.action_sequence)
 
-    def build_from_base(self, base: "Individual"):
+    def build_from_base(self, base: dict):
 
-        self.start_point = base.end_point
+        self.start_point = base["start_point"]
         self.end_point = {}
-        self.action_sequence.set_base(base.action_sequence)
+        self.action_sequence.set_base(base["action_sequence"])
 
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
@@ -346,6 +358,11 @@ class Population:
             i_id: individual for i_id, individual in self.population.items() if "GA/ID" in individual.evaluation_dict
         }
 
+    def compute_true_fitness(self, stats):
+        return sum([
+                stats[metric] * scale for metric, scale in self.config["fitness_config"].items()
+                if metric != "novelty"
+            ])
     def compute_fitnesses(self):
         evaluated_population = self.evaluated_population()
         for individual_id, individual in evaluated_population.items():
@@ -361,10 +378,7 @@ class Population:
             individual.evaluation_dict["novelty"] = min_distance
             individual.evaluation_dict["length"] = individual.action_sequence.seq_len
 
-            individual.evaluation_dict["GA/TRUE_FITNESS"] = sum([
-                individual.evaluation_dict[metric] * scale for metric, scale in self.config["fitness_config"].items()
-                if metric != "novelty"
-            ])
+            individual.evaluation_dict["GA/TRUE_FITNESS"] = self.compute_true_fitness(individual.evaluation_dict)
             individual.evaluation_dict["GA/FITNESS"] = (
                     individual.evaluation_dict["GA/TRUE_FITNESS"]
                     + self.config["fitness_config"]["novelty"] * individual.evaluation_dict["novelty"])
@@ -454,6 +468,11 @@ class GoExploreArchive(Archive):
         self.relevant_features = config["go_explore_relevant_features"]
         self.base_starting_point=base_starting_point
 
+        self.population = defaultdict(lambda :
+                                      {"cost": np.inf,
+                                       "value": -np.inf,
+                                       "action_sequence": None})
+
 
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN                 : 1.,
@@ -466,30 +485,40 @@ class GoExploreArchive(Archive):
         })
 
     def add_entry(self, individual: Individual):
+
         # Update state counts
         state_stats = individual.evaluation_dict["GO_EXPLORE/"+GoExplorePokemon.TIMES_SEEN]
         for state, count in state_stats.items():
             self.state_stats[state][GoExplorePokemon.TIMES_SEEN] += count
 
-        identifier = tuple(individual.evaluation_dict[feature] for feature in self.relevant_features)
-        print(individual.evaluation_dict)
-        value = individual.evaluation_dict["GA/TRUE_FITNESS"]
-        cost = individual.evaluation_dict["length"]
+        for identifier, d in individual.evaluation_dict["GO_EXPLORE/key_states"].items():
 
-        if identifier in self.population:
-            elite = self.population[identifier]
-            elite_value = elite.evaluation_dict["GA/TRUE_FITNESS"]
-            elite_cost = elite.evaluation_dict["length"]
-            if ((value >= elite_value and cost < elite_cost)
-            or (value > elite_value and cost <= elite_cost)):
+            cost = d["cost"]
+            stats = d["stats"]
+            value = self.compute_true_fitness(stats)
 
-                self.population[identifier].set_as(individual)
-                self.entries_hist.remove(identifier)
+            if identifier in self.population:
+                elite = self.population[identifier]
+                elite_value = elite["value"]
+                elite_cost = elite["cost"]
+                if ((value >= elite_value and cost < elite_cost)
+                or (value > elite_value and cost <= elite_cost)):
+
+                    self.population[identifier]["value"] = value
+                    self.population[identifier]["cost"] = cost
+                    self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
+                    self.population[identifier]["start_point"] = d["game_state"]
+
+                    self.entries_hist.remove(identifier)
+                    self.entries_hist.append(identifier)
+
+            else:
+                self.population[identifier]["value"] = value
+                self.population[identifier]["cost"] = cost
+                self.population[identifier]["action_sequence"] = individual.action_sequence.sequence[:cost]
+                self.population[identifier]["start_point"] = d["game_state"]
+
                 self.entries_hist.append(identifier)
-
-        else:
-            self.population[identifier].set_as(individual)
-            self.entries_hist.append(identifier)
 
         return identifier
 
@@ -528,7 +557,7 @@ class GoExploreArchive(Archive):
 
         string = "------------ARCHIVE------------\n\n"
         for identifier, elite in self.population.items():
-            string += (f"{identifier}-> VALUE: {elite.evaluation_dict['GA/FITNESS']}, COST: {elite.evaluation_dict['length']}"
+            string += (f"{identifier}-> VALUE: {elite['value']}, COST: {elite['cost']}"
                        f"\n")
         return string
 
