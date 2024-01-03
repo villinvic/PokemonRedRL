@@ -543,15 +543,21 @@ class GoExploreArchive(Archive):
             scores.append(score)
 
         return scores
+
+    def get_probs(self):
+        scores = self.compute_scores()
+
+        exp_scores = np.exp(scores)
+        probs = exp_scores / exp_scores.sum()
+
+        return probs
+
     def sample_starting_point(self):
 
         if len(self.population) == 0:
             return self.base_starting_point
 
-        scores = self.compute_scores()
-
-        exp_scores = np.exp(scores)
-        probs = exp_scores / exp_scores.sum()
+        probs = self.get_probs()
 
         starting_point_idx = np.random.choice(len(self.population), p=probs)
         starting_point_id = list(self.population.keys())[starting_point_idx]
@@ -563,8 +569,8 @@ class GoExploreArchive(Archive):
     def __repr__(self):
 
         string = "------------ARCHIVE------------\n\n"
-        for identifier, elite in self.population.items():
-            string += (f"{identifier}-> VALUE: {elite['value']}, COST: {elite['cost']}"
+        for (identifier, elite), p in zip(self.population.items(), self.get_probs()):
+            string += (f"{identifier}-> VALUE: {elite['value']}, COST: {elite['cost']}, SAMPLE CHANCE: {p}"
                        f"\n")
         return string
 
