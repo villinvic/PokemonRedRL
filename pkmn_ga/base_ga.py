@@ -297,7 +297,7 @@ class Individual:
 
     def evolve(self, new_id, parents):
         self.set_as(parents[0])
-        self.action_sequence.crossover(parents[1].action_sequence)
+        #self.action_sequence.crossover(parents[1].action_sequence)
         self.action_sequence.mutate()
         self.evaluation_dict = {}
         self.ID = new_id
