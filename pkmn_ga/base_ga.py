@@ -310,8 +310,11 @@ class Individual:
     def __repr__(self):
         return f"<{self.ID}={self.evaluation_dict}({self.action_sequence.seq_len})>"
 
-    def evolve(self, new_id, parents):
+    def evolve(self, new_id, parents, archive):
         self.set_as(parents[0])
+
+        self.build_from_base(archive.sample_starting_point())
+
         #self.action_sequence.crossover(parents[1].action_sequence)
         self.action_sequence.mutate()
         self.evaluation_dict = {}
@@ -444,9 +447,8 @@ class Population:
     def make_offspring(self, archive: "GoExploreArchive"):
         new_id = str(uuid.uuid4())[:8]
 
-        self.population[new_id].build_from_base(archive.sample_starting_point())
 
-        self.population[new_id].evolve(new_id, parents=self.get_matting())
+        self.population[new_id].evolve(new_id, parents=self.get_matting(), archive=archive)
 
 
 
