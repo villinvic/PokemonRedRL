@@ -61,7 +61,7 @@ class ActionSequence:
         return Levenshtein.distance(self.sequence, other.sequence)
 
     def initialize_randomly(self):
-        self.seq_len = np.random.randint(1, 256)
+        self.seq_len = self.action_sequence_length_limits[0]
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
         self.sequence[self.seq_len] = self.ending_action
@@ -202,6 +202,7 @@ class ActionSequence:
 
         if self.mutable_start < len(base):
             addition = np.minimum(np.random.randint(32, 1024), max_length-len(base))
+            print(addition)
             if addition == 0:
                 raise Exception
             self.sequence[len(base):len(base)+addition] = np.random.randint(0, self.n_actions, addition)
@@ -807,7 +808,7 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (2, 2048*8),
+        "action_sequence_limits"   : (128, 2048*8),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs.state",
             "session_path": Path("sessions/tests"),
