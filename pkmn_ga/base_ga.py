@@ -129,6 +129,7 @@ class ActionSequence:
         self.seq_len = new_seq_len
 
         mutation_indices = np.random.random(self.seq_len-self.mutable_start) < self.config["mutation_rate"]
+        print(mutation_indices.sum(), self.sequence.shape, self.seq_len, self.mutable_start)
         self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
 
     def crossover(self, other: "ActionSequence"):
@@ -563,7 +564,7 @@ class GA:
                 )
                 done_jobs.extend(latest_done_jobs)
 
-                print("done jobs:", len(done_jobs))
+                # print("done jobs:", len(done_jobs))
                 done_workers = []
 
                 for w_id, eval_dict in ray.get(latest_done_jobs):
@@ -649,6 +650,8 @@ class GA:
         self.population.compute_fitnesses()
         for ID, individual in self.population:
             self.go_explore_archive[individual]
+
+        print(self.go_explore_archive)
 
 
 
