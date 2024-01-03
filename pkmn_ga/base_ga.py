@@ -381,7 +381,7 @@ class Population:
             individual.evaluation_dict["GA/TRUE_FITNESS"] = self.compute_true_fitness(individual.evaluation_dict)
             individual.evaluation_dict["GA/FITNESS"] = (
                     individual.evaluation_dict["GA/TRUE_FITNESS"]
-                    + self.config["fitness_config"]["novelty"] * individual.evaluation_dict["novelty"])
+                    + self.config["fitness_novelty_weight"] * individual.evaluation_dict["novelty"])
 
         return evaluated_population
 
@@ -771,9 +771,9 @@ if __name__ == '__main__':
 
             CAUGHT_POKEMONS : 1.0,
             SEEN_POKEMONS   : 1.0,
-            #"novelty"       : 5e-4,
 
         },
+        "fitness_novelty_weight": 5e-4,
         "novelty_n_samples"        : 8,
         "crossover_n_points"       : 4,
         "mutation_rate"            : 0.05,
