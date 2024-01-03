@@ -158,7 +158,9 @@ class ActionSequence:
         # self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
 
     def crossover(self, other: "ActionSequence"):
-        if self.mutable_start == other.mutable_start:
+        if self.mutable_start == other.mutable_start and (
+                np.maximum(self.seq_len, other.seq_len) - self.mutable_start > self.config["crossover_n_points"]
+        ):
             points = np.sort(np.random.choice(np.maximum(self.seq_len, other.seq_len) - self.mutable_start,
                                               self.config["crossover_n_points"], replace=False)) + self.mutable_start
 
@@ -788,7 +790,7 @@ if __name__ == '__main__':
         },
         "fitness_novelty_weight": 5e-4,
         "novelty_n_samples"        : 8,
-        "crossover_n_points"       : 4,
+        "crossover_n_points"       : 2,
         "mutation_rate"            : 0.05,
         "subsequence_mutation_rate": 1e-3,
         "max_subsequence_length"   : 64,
