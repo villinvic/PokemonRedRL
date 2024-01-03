@@ -418,7 +418,7 @@ class GA:
                 )
                 done_jobs.extend(latest_done_jobs)
 
-                print("done jobs:", len(done_jobs))
+                # print("done jobs:", len(done_jobs))
                 done_workers = []
 
                 for w_id, eval_dict in ray.get(latest_done_jobs):
@@ -551,7 +551,7 @@ if __name__ == '__main__':
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 124*4,
+        "population_size"          : 124*2,
         "num_workers"              : 124,
         "fitness_config"           : {
             "episode_reward": 5.,
@@ -563,7 +563,7 @@ if __name__ == '__main__':
             "length"        : -1e-4,
 
         },
-        "novelty_n_samples"        : 64,
+        "novelty_n_samples"        : 8,
         "crossover_n_points"       : 4,
         "mutation_rate"            : 0.01,
         "subsequence_mutation_rate": 1e-3,
