@@ -88,6 +88,7 @@ class ActionSequence:
         self.sequence[:] = other.sequence
         self.seq_len = other.seq_len
         self.curr_action_idx = 0
+        self.mutable_start = other.mutable_start
 
     def mutate(self):
         # old_sequence = self.sequence.copy()[self.mutable_start:]
