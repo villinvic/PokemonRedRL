@@ -258,8 +258,8 @@ class Individual:
             identifier = tuple(environment_instance.game_stats[feature][-1]
                                for feature in self.config["go_explore_relevant_features"])
             go_explore_seen_counts[identifier] += 1
-            if identifier not in key_states:
 
+            if identifier not in key_states:
                 key_states[identifier]["cost"] = idx
                 key_states[identifier]["stats"] = environment_instance.get_stats()
                 key_states[identifier]["game_state"] = environment_instance.game_state()
@@ -490,7 +490,7 @@ class GoExploreArchive(Archive):
 
         self.stat_weights = {
             GoExplorePokemon.TIMES_CHOSEN                 : 1.,
-            GoExplorePokemon.TIMES_SEEN                   : 3.,
+            GoExplorePokemon.TIMES_SEEN                   : 1.,
         }
 
         self.state_stats = defaultdict(lambda: {
@@ -504,6 +504,8 @@ class GoExploreArchive(Archive):
         state_stats = individual.evaluation_dict["GO_EXPLORE/"+GoExplorePokemon.TIMES_SEEN]
         for state, count in state_stats.items():
             self.state_stats[state][GoExplorePokemon.TIMES_SEEN] += count
+
+        print(individual.evaluation_dict["GO_EXPLORE/key_states"].keys())
 
         for identifier, d in individual.evaluation_dict["GO_EXPLORE/key_states"].items():
 
@@ -784,7 +786,7 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (1, 2048*8),
+        "action_sequence_limits"   : (1, 256),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs.state",
             "session_path": Path("sessions/tests"),
