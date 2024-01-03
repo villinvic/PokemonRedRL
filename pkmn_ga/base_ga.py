@@ -582,7 +582,9 @@ class GoExploreArchive(Archive):
 
         starting_point_idx = np.random.choice(len(self.population), p=probs)
         starting_point_id = list(self.population.keys())[starting_point_idx]
+
         self.state_stats[starting_point_id][GoExplorePokemon.TIMES_CHOSEN] += 1
+        print(self.state_stats[starting_point_id])
 
         return self.population[starting_point_id]
 
