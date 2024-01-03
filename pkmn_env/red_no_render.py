@@ -314,7 +314,7 @@ class PkmnRedEnvNoRender(Env):
             #total_healing = 0
             highest_party_level = max(self.game_stats[PARTY_LEVELS][-1])
 
-            if curr_coords not in self.pokemon_centers and self.game_stats[IN_BATTLE]:
+            if curr_coords not in self.pokemon_centers and self.game_stats[IN_BATTLE][-1]:
 
                 for i in range(6):
 

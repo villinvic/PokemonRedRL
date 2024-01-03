@@ -557,8 +557,8 @@ if __name__ == '__main__':
             "episode_reward": 5.,
             BADGE_SUM       : 100.,
 
-            CAUGHT_POKEMONS : 0.5,
-            SEEN_POKEMONS   : 0.1,
+            CAUGHT_POKEMONS : 1.0,
+            SEEN_POKEMONS   : 1.0,
             "novelty"       : 5e-4,
             "length"        : -1e-4,
 
