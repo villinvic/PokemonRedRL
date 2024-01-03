@@ -305,6 +305,7 @@ class Individual:
 
         self.start_point = base["start_point"]
         self.end_point = {}
+        assert len(base["action_sequence"]) == base["start_point"]["step_count"], base
         self.action_sequence.set_base(base["action_sequence"])
 
 class Worker:
@@ -580,7 +581,7 @@ class GoExploreArchive(Archive):
         string = "------------ARCHIVE------------\n\n"
 
         for (identifier, elite), p in zip(self.population.items(), self.get_probs()):
-            string += (f"{identifier}->\t VALUE:{elite['value']},\t COST:{elite['cost']},\t SAMPLE CHANCE:{p:.3f}"
+            string += (f"{identifier}->\t VALUE:{elite['value']:.3f},\t COST:{elite['cost']},\t SAMPLE CHANCE:{p:.3f}"
                        f"\n")
         return string
 

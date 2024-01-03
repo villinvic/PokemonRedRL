@@ -269,6 +269,8 @@ class PkmnRedEnvNoRender(Env):
         curr_coords = pos + [map_id]
         self.game_stats[COORDINATES].append(curr_coords)
 
+        self.visited_maps.add(map_id)
+
         
     def step(self, action):
 
