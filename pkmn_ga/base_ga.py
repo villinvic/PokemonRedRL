@@ -239,6 +239,8 @@ class Individual:
             "game_state": None
         })
 
+        if self.start_point:
+            print(self.action_sequence.mutable_start, self.start_point["game_state"]["step_count"])
         for i, action in enumerate(self.action_sequence):
             idx = i + self.action_sequence.mutable_start
             # t2 = time()
@@ -250,8 +252,7 @@ class Individual:
                                for feature in self.config["go_explore_relevant_features"])
             go_explore_seen_counts[identifier] += 1
             if identifier not in key_states:
-                if idx == 0:
-                    print(identifier, idx, self.start_point)
+
                 key_states[identifier]["cost"] = idx
                 key_states[identifier]["stats"] = environment_instance.get_stats()
                 key_states[identifier]["game_state"] = environment_instance.game_state()
@@ -575,9 +576,9 @@ class GoExploreArchive(Archive):
     def __repr__(self):
 
         string = "------------ARCHIVE------------\n\n"
-        print(self.state_stats)
+
         for (identifier, elite), p in zip(self.population.items(), self.get_probs()):
-            string += (f"{identifier}-> VALUE: {elite['value']},\t COST: {elite['cost']},\t SAMPLE CHANCE: {p}"
+            string += (f"{identifier}->\t VALUE:{elite['value']},\t COST:{elite['cost']},\t SAMPLE CHANCE:{p:.3f}"
                        f"\n")
         return string
 
