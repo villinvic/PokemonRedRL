@@ -60,7 +60,7 @@ class ActionSequence:
         return Levenshtein.distance(self.sequence, other.sequence)
 
     def initialize_randomly(self):
-        self.seq_len = np.random.randint(1, 256)
+        self.seq_len = np.random.randint(1, 1024)
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
         self.sequence[self.seq_len] = self.ending_action
@@ -131,8 +131,12 @@ class ActionSequence:
 
         new_sequence = []
         new_seq_len = self.seq_len
+        mutation_rate = self.config["mutation_rate"]
+        mutation_prob = mutation_rate/3
+        mutation_func = lambda : np.random.choice(4, p=[1-mutation_rate, mutation_prob, mutation_prob, mutation_prob])
+
         for action in self.sequence[self.mutable_start:self.seq_len]:
-            mutation_type = np.random.randint(4)
+            mutation_type = mutation_func()
             if mutation_type == 1:
                 # mutate_action
                 new_sequence.append((action + 1) % self.ending_action)
@@ -739,7 +743,7 @@ if __name__ == '__main__':
             CAUGHT_POKEMONS : 1.0,
             SEEN_POKEMONS   : 1.0,
             "novelty"       : 5e-4,
-            "length"        : -1e-4,
+            "length"        : 0.,
 
         },
         "novelty_n_samples"        : 8,
