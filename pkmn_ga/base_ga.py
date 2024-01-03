@@ -270,7 +270,7 @@ class Individual:
                 key_states[identifier]["game_state"] = environment_instance.game_state()
 
         if len(key_states) == 0:
-            print(self.action_sequence.sequence, self.action_sequence.mutable_start)
+            print(self.action_sequence.sequence[self.action_sequence.mutable_start:], self.action_sequence.mutable_start)
 
         #print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
 
