@@ -202,7 +202,7 @@ class ActionSequence:
         self.sequence[:len(base)] = base
 
         if self.mutable_start < len(base):
-            addition = np.minimum(np.random.randint(32, 1024), max_length-len(base))
+            addition = np.minimum(np.random.randint(32, 512), max_length-len(base))
             if addition == 0:
                 raise Exception
             self.sequence[len(base):len(base)+addition] = np.random.randint(0, self.n_actions, addition)
