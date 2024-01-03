@@ -60,7 +60,7 @@ class ActionSequence:
         return Levenshtein.distance(self.sequence, other.sequence)
 
     def initialize_randomly(self):
-        self.seq_len = self.action_sequence_length_limits[0]
+        self.seq_len = np.random.randint(*self.action_sequence_length_limits)
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
         self.sequence[self.seq_len] = self.ending_action
@@ -129,7 +129,6 @@ class ActionSequence:
         self.seq_len = new_seq_len
 
         mutation_indices = np.random.random(self.seq_len-self.mutable_start) < self.config["mutation_rate"]
-        print(mutation_indices.sum(), self.sequence.shape, self.seq_len, self.mutable_start)
         self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
 
     def crossover(self, other: "ActionSequence"):
@@ -166,7 +165,7 @@ class ActionSequence:
     def set_base(self, base: "ActionSequence"):
         max_length = self.action_sequence_length_limits[1]
         self.sequence[:] = np.concatenate([base.sequence[:base.seq_len], self.sequence[self.mutable_start:]])[:max_length]
-        self.seq_len = base.seq_len + self.seq_len
+        self.seq_len = np.minimum(base.seq_len + self.seq_len, max_length)
         self.mutable_start = base.seq_len
 
 
@@ -501,7 +500,7 @@ class GoExploreArchive(Archive):
 
     def __repr__(self):
 
-        string = "---ARCHIVE---"
+        string = "------------ARCHIVE------------\n\n"
         for identifier, elite in self.population.items():
             string += (f"{identifier}-> VALUE: {elite.evaluation_dict['GA/FITNESS']}, COST: {elite.evaluation_dict['length']}"
                        f"\n")
