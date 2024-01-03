@@ -240,12 +240,12 @@ class Individual:
         })
 
         if "step_count" in self.start_point:
-            print(self.action_sequence.mutable_start, self.start_point["step_count"])
-        else:
-            pass
-            #print(self.start_point)
-        for i, action in enumerate(self.action_sequence):
-            idx = i + self.action_sequence.mutable_start
+            assert self.action_sequence.mutable_start == self.start_point["step_count"], (
+                    self.action_sequence.mutable_start, self.start_point
+            )
+
+        for action in self.action_sequence:
+            idx = self.action_sequence.curr_action_idx
             # t2 = time()
             # times.append(t2 - t)
             # t = t2
