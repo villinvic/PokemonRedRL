@@ -1,3 +1,4 @@
+import os
 import pickle
 import queue
 import uuid
@@ -13,7 +14,8 @@ import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
 import multiprocessing as mp
 
-from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS
+from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS, MAP_ID, TOTAL_EVENTS_TRIGGERED
+from pkmn_env.go_explore import GoExplorePokemon
 from pkmn_env.red_no_render import PkmnRedEnvNoRender
 
 """
@@ -45,6 +47,7 @@ class ActionSequence:
             action_space: gymnasium.Space,
             config,
     ):
+        self.mutable_start = 0
         self.config = config
         self.curr_action_idx = 0
         self.seq_len = 0
@@ -69,7 +72,7 @@ class ActionSequence:
         return sequence
 
     def __iter__(self):
-        self.curr_action_idx = 0
+        self.curr_action_idx = self.mutable_start
         return self
 
     def __next__(self) -> ActType:
@@ -86,11 +89,11 @@ class ActionSequence:
         self.curr_action_idx = 0
 
     def mutate(self):
-        old_sequence = self.sequence.copy()
+        old_sequence = self.sequence.copy()[self.mutable_start:]
         # random addition and removals of subsequences
         idx_delta = 0
         new_seq_len = self.seq_len
-        for idx in range(self.seq_len):
+        for idx in range(self.mutable_start, self.seq_len):
             if np.random.random() < self.config["subsequence_mutation_rate"]:
                 # copy a subsequence and insert it anywhere before or after that subsequence
 
@@ -107,7 +110,7 @@ class ActionSequence:
                     copy_idx_start = np.random.randint(0, self.seq_len - length)
                     copy_idx_end = copy_idx_start + length
 
-                    self.sequence[:] = np.concatenate([self.sequence[:idx], old_sequence[copy_idx_start:copy_idx_end],
+                    self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], old_sequence[copy_idx_start:copy_idx_end],
                                                        self.sequence[idx:-length]])
                     new_seq_len += length
                 else:
@@ -118,38 +121,53 @@ class ActionSequence:
                         continue
                     length = np.random.randint(1, upper+1)
 
-                    self.sequence[:] = np.concatenate([self.sequence[:idx], self.sequence[idx + length:],
+                    self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], self.sequence[idx + length:],
                                                        np.full((length,), fill_value=self.ending_action)])
 
                     new_seq_len -= length
 
         self.seq_len = new_seq_len
 
-        mutation_indices = np.random.random(self.seq_len) < self.config["mutation_rate"]
-        self.sequence[:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
+        mutation_indices = np.random.random(self.seq_len-self.mutable_start) < self.config["mutation_rate"]
+        self.sequence[self.mutable_start:self.seq_len][mutation_indices] = np.random.randint(0, self.n_actions, mutation_indices.sum())
 
     def crossover(self, other: "ActionSequence"):
-        points = np.sort(np.random.choice(np.maximum(self.seq_len, other.seq_len),
-                                          self.config["crossover_n_points"], replace=False))
+        if self.mutable_start == other.mutable_start:
+            points = np.sort(np.random.choice(np.maximum(self.seq_len, other.seq_len) - self.mutable_start,
+                                              self.config["crossover_n_points"], replace=False)) + self.mutable_start
 
-        new_sequence = self.sequence.copy()
+            new_sequence = self.sequence.copy()
 
-        prev_point = 0
-        parents = [self.sequence, other.sequence]
-        np.random.shuffle(parents)
+            prev_point = 0
+            parents = [self.sequence, other.sequence]
+            np.random.shuffle(parents)
 
-        for i, next_point in enumerate(points):
-            parent = parents[i % 2]
-            new_sequence[prev_point: next_point] = parent[prev_point: next_point]
-            prev_point = next_point
+            for i, next_point in enumerate(points):
+                parent = parents[i % 2]
+                new_sequence[prev_point: next_point] = parent[prev_point: next_point]
+                prev_point = next_point
 
-        parent = parents[(len(points) + 1) % 2]
+            parent = parents[(len(points) + 1) % 2]
 
-        new_sequence[prev_point:] = parent[prev_point:]
+            new_sequence[prev_point:] = parent[prev_point:]
 
-        self.sequence[:] = new_sequence
+            self.sequence[self.mutable_start:] = new_sequence[self.mutable_start:]
 
-        self.seq_len = np.min(np.argwhere(self.sequence == self.ending_action))
+            if self.ending_action in self.sequence:
+
+                self.seq_len = np.min(np.argwhere(self.sequence == self.ending_action))
+            else:
+                self.seq_len = self.action_sequence_length_limits[1]
+        else:
+            # Retain first parent
+            pass
+
+    def set_base(self, base: "ActionSequence"):
+        max_length = self.action_sequence_length_limits[1]
+        self.sequence[:] = np.concatenate([base.sequence[:base.seq_len], self.sequence[self.mutable_start:]])[:max_length]
+        self.seq_len = base.seq_len + self.seq_len
+        self.mutable_start = base.seq_len
+
 
 
 class Individual:
@@ -163,7 +181,8 @@ class Individual:
         self._action_sequence = ActionSequence(environment.action_space, config)
         self.config = config
         self.age = age
-
+        self.start_point = {}
+        self.end_point = {}
         self.evaluation_dict = {}
 
     @property
@@ -178,23 +197,29 @@ class Individual:
 
     def eval(self, environment_instance: gymnasium.Env,):
 
-        environment_instance.reset()
+        environment_instance.reset(options=self.start_point)
 
         # Run action sequence
         times = []
 
-        t = time()
+        #t = time()
+        go_explore_seen_counts = defaultdict(lambda: 0)
         for action in self.action_sequence:
-            t2 = time()
-            times.append(t2 - t)
-            t = t2
+            # t2 = time()
+            # times.append(t2 - t)
+            # t = t2
             #print(worker_id, times[-1])
-
             environment_instance.step(action)
+            identifier = tuple(environment_instance.game_stats[feature][-1]
+                               for feature in self.config["go_explore_relevant_features"])
+            go_explore_seen_counts[identifier] += 1
 
-        print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
+        #print(self.ID, "action computation stats", np.max(times), np.mean(times), np.min(times))
 
         self.evaluation_dict = environment_instance.get_stats()
+        self.evaluation_dict["GO_EXPLORE/" + GoExplorePokemon.TIMES_SEEN] = go_explore_seen_counts
+
+        self.end_point = environment_instance.game_state()
 
 
         # Identifies evaluation dicts
@@ -212,6 +237,9 @@ class Individual:
         self.evaluation_dict = individual.evaluation_dict
         self.age = individual.age
 
+        self.start_point = individual.start_point
+        self.end_point = individual.end_point
+
     def __repr__(self):
         return f"<{self.ID}={self.evaluation_dict}({self.action_sequence.seq_len})>"
 
@@ -224,6 +252,12 @@ class Individual:
 
     def pairwise_novelty(self, other: "Individual"):
         return self.action_sequence.distance(other.action_sequence)
+
+    def build_from_base(self, base: "Individual"):
+
+        self.start_point = base.end_point
+        self.end_point = {}
+        self.action_sequence.set_base(base.action_sequence)
 
 class Worker:
     def __init__(self, worker_id, environment_cls, config):
@@ -301,9 +335,14 @@ class Population:
             individual.evaluation_dict["novelty"] = min_distance
             individual.evaluation_dict["length"] = individual.action_sequence.seq_len
 
-            individual.evaluation_dict["GA/FITNESS"] = sum([
+            individual.evaluation_dict["GA/TRUE_FITNESS"] = sum([
                 individual.evaluation_dict[metric] * scale for metric, scale in self.config["fitness_config"].items()
+                if metric != "novelty"
             ])
+            individual.evaluation_dict["GA/FITNESS"] = (
+                    individual.evaluation_dict["GA/TRUE_FITNESS"]
+                    + self.config["fitness_config"]["novelty"] * individual.evaluation_dict["novelty"])
+
         return evaluated_population
 
     def ranking(self):
@@ -333,9 +372,13 @@ class Population:
 
         return [self.population[p] for p in parents]
 
-    def make_offspring(self):
+    def make_offspring(self, archive: "GoExploreArchive"):
         new_id = str(uuid.uuid4())[:8]
         self.population[new_id].evolve(new_id, parents=self.get_matting())
+
+        if np.random.random() > self.config["base_starting_point_sample_chance"]:
+            # Sample a parent from archive
+            self.population[new_id].build_from_base(archive.sample_starting_point())
         return new_id
 
     def save_individual(self, ID, path=""):
@@ -352,16 +395,116 @@ class Archive(Population):
         super().__init__(environment, config)
         self.max_entries = max_size
 
+        self.entries_hist = []
+
     def __getitem__(self, individual: Individual):
         if len(self.population) == self.max_entries:
-            print("Archive full, TBA")
-            return None
-        else:
-            assert individual.ID is None, "Non-initialized individual added to archive !"
-            self.population[individual.ID].set_as(individual)
+            popped = self.entries_hist.pop(0)
+            print("Popped", popped, "out of archive.")
+            self.population.pop(popped)
+
+        assert individual.ID is not None, "Non-initialized individual added to archive !"
+        name = self.add_entry(individual)
+
+        return self.population[name]
+
+    def add_entry(self, individual: Individual):
+        self.population[individual.ID].set_as(individual)
+        self.entries_hist.append(individual.ID)
+        return individual.ID
 
     def __len__(self):
         return len(self.population)
+
+
+class GoExploreArchive(Archive):
+    def __init__(self,
+                 environment: gymnasium.Env,
+                 config: dict,
+                 max_size=4096,
+                 base_starting_point=None
+                 ):
+        super().__init__(environment, config, max_size)
+        self.relevant_features = config["go_explore_relevant_features"]
+        self.base_starting_point=base_starting_point
+
+
+        self.stat_weights = {
+            GoExplorePokemon.TIMES_CHOSEN                 : 1.,
+            GoExplorePokemon.TIMES_SEEN                   : 40.,
+        }
+
+        self.state_stats = defaultdict(lambda: {
+            GoExplorePokemon.TIMES_CHOSEN                 : 0.,
+            GoExplorePokemon.TIMES_SEEN                   : 0,
+        })
+
+    def add_entry(self, individual: Individual):
+        # Update state counts
+        state_stats = individual.evaluation_dict["GO_EXPLORE/"+GoExplorePokemon.TIMES_SEEN]
+        for state, count in state_stats.items():
+            self.state_stats[state][GoExplorePokemon.TIMES_SEEN] += count
+
+        identifier = tuple(individual.evaluation_dict[feature] for feature in self.relevant_features)
+        print(individual.evaluation_dict)
+        value = individual.evaluation_dict["GA/TRUE_FITNESS"]
+        cost = individual.evaluation_dict["length"]
+
+        if identifier in self.population:
+            elite = self.population[identifier]
+            elite_value = elite.evaluation_dict["GA/TRUE_FITNESS"]
+            elite_cost = elite.evaluation_dict["length"]
+            if ((value >= elite_value and cost > elite_cost)
+            or (value > elite_value and cost >= elite_cost)):
+
+                self.population[identifier].set_as(individual)
+                self.entries_hist.remove(identifier)
+                self.entries_hist.append(identifier)
+
+        else:
+            self.population[identifier].set_as(individual)
+            self.entries_hist.append(identifier)
+
+        return identifier
+
+    def compute_scores(self):
+        scores = []
+        for identifier, individual in self.population.items():
+
+            state_stats = self.state_stats[identifier]
+
+            score = 1e-5
+
+            for stat_name, value in state_stats.items():
+                score += self.stat_weights[stat_name] * np.sqrt(1 / (value + 1e-1))
+
+            scores.append(score)
+
+        return scores
+    def sample_starting_point(self):
+
+        if len(self.population) == 0:
+            return self.base_starting_point
+
+        scores = self.compute_scores()
+
+        exp_scores = np.exp(scores)
+        probs = exp_scores / exp_scores.sum()
+
+        starting_point_idx = np.random.choice(len(self.population), p=probs)
+        starting_point_id = list(self.population.keys())[starting_point_idx]
+        self.state_stats[starting_point_id][GoExplorePokemon.TIMES_CHOSEN] += 1
+
+        return self.population[starting_point_id]
+
+
+    def __repr__(self):
+
+        string = "---ARCHIVE---"
+        for identifier, elite in self.population.items():
+            string += (f"{identifier}-> VALUE: {elite.evaluation_dict['GA/FITNESS']}, COST: {elite.evaluation_dict['length']}"
+                       f"\n")
+        return string
 
 
 class GA:
@@ -372,6 +515,8 @@ class GA:
         self.eval_workers = {w_id: Worker.as_remote().remote(w_id, env_cls, config) for w_id in range(config["num_workers"])}
         #self.eval_workers = mp.Pool(config["num_workers"], maxtasksperchild=1)
         self.available_worker_ids = {w_id for w_id in range(config["num_workers"])}
+
+        self.go_explore_archive = GoExploreArchive(base_env, config, config["archive_size"], base_starting_point=base_env.base_starting_point)
 
         self.to_eval_queue = []
 
@@ -418,7 +563,7 @@ class GA:
                 )
                 done_jobs.extend(latest_done_jobs)
 
-                # print("done jobs:", len(done_jobs))
+                print("done jobs:", len(done_jobs))
                 done_workers = []
 
                 for w_id, eval_dict in ray.get(latest_done_jobs):
@@ -465,24 +610,33 @@ class GA:
         return jobs
 
     def __call__(self):
+        past_individuals = list(self.population.population.keys())
 
         while True:
 
             for w_id in self.available_worker_ids:
-                new_id = self.population.make_offspring()
+                new_id = self.population.make_offspring(self.go_explore_archive)
                 self.to_eval_queue.append(new_id)
 
             if len(self.population.evaluated_population()) >= 2 * self.population.size:
                 self.population.select()
 
                 evaluated = self.population.evaluated_population()
-                print("Best individual so far:")
+                #print("Best individual so far:")
                 best = sorted(evaluated, key=lambda i_id: -evaluated[i_id].evaluation_dict["GA/FITNESS"])[0]
                 self.population.save_individual(best, "best_individual.pkl")
-                print(self.population[best])
+
+                for ID, individual in self.population.evaluated_population().items():
+                    if ID not in past_individuals:
+                        self.go_explore_archive[individual]
+                past_individuals = list(self.population.population.keys())
+
+                print(self.go_explore_archive)
+
 
             for evaluated_individual in next(self.runner):
                 self.population[evaluated_individual.ID].evaluation_dict = evaluated_individual.evaluation_dict
+
 
     def init_eval(self):
         self.to_eval_queue = list(self.population.population.keys())
@@ -493,11 +647,12 @@ class GA:
 
         self.num_expected_evals = 1
         self.population.compute_fitnesses()
+        for ID, individual in self.population:
+            self.go_explore_archive[individual]
+
 
 
 if __name__ == '__main__':
-
-    mp.set_start_method("spawn")
 
     class TestEnv(gymnasium.Env):
 
@@ -544,15 +699,15 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (2048*2, 2048*8),
+        "action_sequence_limits"   : (256, 512),
         "env_config"               : {
-            "init_state"  : "deepred_post_parcel_pokeballs",
+            "init_state"  : "deepred_post_parcel_pokeballs.state",
             "session_path": Path("sessions/tests"),
             "gb_path"     : "pokered.gbc",
             "render"      : False
         },
-        "population_size"          : 124*4,
-        "num_workers"              : 124,
+        "population_size"          : 512,
+        "num_workers"              : os.cpu_count()-1,
         "fitness_config"           : {
             "episode_reward": 5.,
             BADGE_SUM       : 100.,
@@ -565,9 +720,17 @@ if __name__ == '__main__':
         },
         "novelty_n_samples"        : 8,
         "crossover_n_points"       : 4,
-        "mutation_rate"            : 0.01,
+        "mutation_rate"            : 0.05,
         "subsequence_mutation_rate": 1e-3,
-        "max_subsequence_length"   : 64
+        "max_subsequence_length"   : 64,
+
+        "go_explore_relevant_features": (
+            MAP_ID,
+            TOTAL_EVENTS_TRIGGERED,
+            BADGE_SUM
+        ),
+        "archive_size": 10_000,
+        "base_starting_point_sample_chance": 1e-2,
     }
 
     ray.init()

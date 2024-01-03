@@ -1,9 +1,11 @@
 import argparse
+import io
 import pickle
 import sys
 import time
 import uuid
 import os
+from copy import deepcopy
 from functools import partial
 from typing import List, Callable
 
@@ -27,7 +29,7 @@ from pyboy.utils import WindowEvent
 
 from pkmn_env.go_explore import GoExplorePokemon
 from pkmn_env.save_state_info import PokemonStateInfo
-from python_utils.collections import DefaultOrderedDict
+#from python_utils.collections import DefaultOrderedDict
 
 from pkmn_env.enums import *
 
@@ -113,28 +115,23 @@ class PkmnRedEnvNoRender(Env):
 
         #self.pyboy.set_emulation_speed(0)
 
-        self.game_stats: DefaultOrderedDict = None
+        self.game_stats = None
         self.step_count = 0
         self.episode_reward = 0
         self.visited_maps = {40}
 
-        self.base_state_info = PokemonStateInfo(
-            save_path=Path(self.init_state),
-            latest_opp_level=3,
-            visited_maps={40}  # red (first and second floor) and blue houses
-        )
+        self.base_starting_point = open(self.init_state, "rb")
 
         self.act_freq = 18
 
-        self.go_explore = GoExplorePokemon(
-            environment=self,
-            path=self.s_path / "go_explore",
-            relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
-            sample_base_state_chance=1.0,
-            recompute_score_freq=1,
-            rendering=False
-        )
-
+        # self.go_explore = GoExplorePokemon(
+        #     environment=self,
+        #     path=self.s_path / "go_explore",
+        #     relevant_state_features=(BADGE_SUM, MAP_ID), # EVENTS ?
+        #     sample_base_state_chance=1.0,
+        #     recompute_score_freq=1,
+        #     rendering=False
+        # )
         #self.init_knn()
 
         self.inited = 0
@@ -149,9 +146,9 @@ class PkmnRedEnvNoRender(Env):
         console_input = self.valid_actions[action]
         self.pyboy.send_input(console_input)
 
-        act_freq = self.act_freq if (self.step_count < 2 or not self.game_stats[IN_BATTLE][-1]) else self.act_freq * 4
+        #act_freq = self.act_freq if (self.step_count < 2 or not self.game_stats[IN_BATTLE][-1]) else self.act_freq * 4
 
-        for i in range(act_freq):
+        for i in range(self.act_freq):
             # release action, so they are stateless
 
             if i == 8:
@@ -173,25 +170,25 @@ class PkmnRedEnvNoRender(Env):
 
         del self.game_stats
 
-        self.game_stats = DefaultOrderedDict(list)
 
-        self.step_count = 0
-        self.episode_reward = 0
-        self.visited_maps = {}
-        self.latest_opp_level = 5
-        self.visited_coordinates = defaultdict(lambda: 0)
-        self.last_walked_coordinates = []
+        if options is None:
+            self.base_starting_point.seek(0)
+            self.pyboy.load_state(self.base_starting_point)
 
-        self.current_goal = None
-        self.task_timesteps = 0
+            self.game_stats = defaultdict(list)
 
-        # we restart the game at a random, relevant state
-        # Will be moved outside of the env
-        self.go_explore.read_session_states()
-        self.go_explore()
+            self.step_count = 0
+            self.episode_reward = 0
+            self.visited_maps = set()
+        else:
+            start_point = options.get("start_point", self.base_starting_point)
+            self.base_starting_point.seek(0)
+            self.pyboy.load_state(start_point)
+            self.game_stats = options.get("game_stats", defaultdict(list))
+            self.episode_reward = options.get("episode_reward", 0.)
+            self.visited_maps = options.get("visited_maps", set())
+            self.step_count = options.get("step_count", 0)
 
-        self.tick()
-        self.tick()
 
         return 0, {}
 
@@ -206,10 +203,7 @@ class PkmnRedEnvNoRender(Env):
 
         opp_level = self.read_opponent_level()
         # in_battle = opp_level not in (0, 255)
-        if in_battle :
-             self.latest_opp_level = np.maximum(opp_level, 1)
 
-        self.game_stats[LEVEL_FRAQ].append(self.latest_opp_level / (max(party_levels)+1e-8))
         self.game_stats[TOTAL_LEVELS].append(sum(party_levels))
         party_experience = self.read_party_experience()
         self.game_stats[PARTY_EXPERIENCE].append(party_experience)
@@ -242,8 +236,8 @@ class PkmnRedEnvNoRender(Env):
         self.game_stats[BADGE_SUM].append(sum(badges))
         self.game_stats[SEEN_POKEMONS].append(self.read_seen())
         self.game_stats[CAUGHT_POKEMONS].append(self.read_caught())
-        #total_events = sum(self.read_events())
-        #self.game_stats[TOTAL_EVENTS_TRIGGERED].append(total_events)
+        total_events = sum(self.read_events())
+        self.game_stats[TOTAL_EVENTS_TRIGGERED].append(total_events)
         self.game_stats[PARTY_FILLS].append(self.read_party_fills())
         self.game_stats[SENT_OUT].append(self.read_sent_out())
         party_health = self.read_party_health()
@@ -261,13 +255,6 @@ class PkmnRedEnvNoRender(Env):
 
         )
 
-        if self.step_count > 2 and (map_id not in self.visited_maps
-            or
-            self.game_stats[BADGE_SUM][-1] != self.game_stats[BADGE_SUM][-2]):
-            pass
-            #self.go_explore.add_starting_point(self.game_stats)
-        self.go_explore.update_stats(self.game_stats)
-
         tmp = self.visited_maps | {map_id}
         self.game_stats[MAPS_VISITED].append(len(tmp))
 
@@ -275,8 +262,6 @@ class PkmnRedEnvNoRender(Env):
         curr_coords = pos + [map_id]
         self.game_stats[COORDINATES].append(curr_coords)
 
-        if len(self.last_walked_coordinates) == 0 or curr_coords != self.last_walked_coordinates[-1]:
-            self.last_walked_coordinates.append(curr_coords)
         
     def step(self, action):
 
@@ -288,9 +273,6 @@ class PkmnRedEnvNoRender(Env):
         self.episode_reward += reward
 
         return 0, reward, False, False, {}
-
-    def on_episode_end(self):
-        self.game_stats[TOTAL_BLACKOUT].append(sum(self.game_stats[BLACKOUT]))
 
     def get_game_state_reward(self):
         """
@@ -372,6 +354,7 @@ class PkmnRedEnvNoRender(Env):
 
         return total_reward
 
+
     def get_stats(self) -> dict:
 
         stats = {"episode_reward": self.episode_reward}
@@ -380,6 +363,20 @@ class PkmnRedEnvNoRender(Env):
         })
 
         return stats
+
+    def game_state(self):
+
+        file_like_object = io.BytesIO()
+        file_like_object.seek(0)
+        self.pyboy.save_state(file_like_object)
+        state = {
+            "state": file_like_object,
+            "visited_maps": self.visited_maps.copy(),
+            "episode_reward": self.episode_reward,
+            "game_stats": deepcopy(self.game_stats),
+            "step_count": self.step_count
+        }
+        return state
 
     def read_m(self, addr):
         return self.pyboy.get_memory_value(addr)
