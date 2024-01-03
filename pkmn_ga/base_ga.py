@@ -14,7 +14,8 @@ import ray
 from gymnasium.core import ObsType, ActType, RenderFrame
 import multiprocessing as mp
 
-from pkmn_env.enums import BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS, MAP_ID, TOTAL_EVENTS_TRIGGERED, MAPS_VISITED
+from pkmn_env.enums import (BADGE_SUM, CAUGHT_POKEMONS, SEEN_POKEMONS, MAP_ID, TOTAL_EVENTS_TRIGGERED, MAPS_VISITED,
+                            TOTAL_LEVELS)
 from pkmn_env.go_explore import GoExplorePokemon
 from pkmn_env.red_no_render import PkmnRedEnvNoRender
 from python_utils.collections import DefaultOrderedDict
@@ -847,20 +848,18 @@ if __name__ == '__main__':
 
             CAUGHT_POKEMONS : 1.0,
             SEEN_POKEMONS   : 1.0,
-            MAPS_VISITED    : 0.1,
-
         },
         "fitness_novelty_weight": 5e-4,
         "novelty_n_samples"        : 0,
         "crossover_n_points"       : 1,
-        "mutation_rate"            : 0.05,
+        "mutation_rate"            : 0.1,
         "subsequence_mutation_rate": 1e-3,
         "max_subsequence_length"   : 64,
 
         "go_explore_relevant_features": (
             MAP_ID,
-            TOTAL_EVENTS_TRIGGERED,
-            BADGE_SUM
+            BADGE_SUM,
+            TOTAL_LEVELS
         ),
         "archive_size": 10_000,
         "base_starting_point_sample_chance": 1.,
