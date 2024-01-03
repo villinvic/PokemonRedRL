@@ -154,7 +154,6 @@ class ActionSequence:
                 # do nothing:
                 new_sequence.append(action)
 
-
         self.sequence[self.mutable_start:self.mutable_start+len(new_sequence)] = new_sequence
         self.seq_len = new_seq_len
         self.sequence[new_seq_len:] = self.ending_action
@@ -436,6 +435,7 @@ class Population:
         if np.random.random() > self.config["base_starting_point_sample_chance"]:
             # Sample a parent from archive
             self.population[new_id].build_from_base(archive.sample_starting_point())
+
         return new_id
 
     def save_individual(self, ID, path=""):
@@ -546,7 +546,7 @@ class GoExploreArchive(Archive):
 
                 self.entries_hist.append(identifier)
 
-        return identifier
+        return None
 
     def compute_scores(self):
         scores = []
@@ -789,7 +789,7 @@ if __name__ == '__main__':
 
 
     config = {
-        "action_sequence_limits"   : (1, 256),
+        "action_sequence_limits"   : (2, 2048),
         "env_config"               : {
             "init_state"  : "deepred_post_parcel_pokeballs.state",
             "session_path": Path("sessions/tests"),
@@ -808,7 +808,7 @@ if __name__ == '__main__':
         },
         "fitness_novelty_weight": 5e-4,
         "novelty_n_samples"        : 8,
-        "crossover_n_points"       : 2,
+        "crossover_n_points"       : 1,
         "mutation_rate"            : 0.05,
         "subsequence_mutation_rate": 1e-3,
         "max_subsequence_length"   : 64,
@@ -819,7 +819,7 @@ if __name__ == '__main__':
             BADGE_SUM
         ),
         "archive_size": 10_000,
-        "base_starting_point_sample_chance": 0.5,
+        "base_starting_point_sample_chance": 1.,
     }
 
     ray.init()
