@@ -197,9 +197,13 @@ class ActionSequence:
 
     def set_base(self, base):
         max_length = self.action_sequence_length_limits[1]
-        overriden = np.minimum(len(base), self.mutable_start)
 
-        new_seq_len = np.minimum(overriden + self.seq_len-self.mutable_start, max_length)
+        if self.mutable_start > len(base):
+            overriden = len(base)
+        else:
+            overriden = 0
+
+        new_seq_len = np.minimum(len(base) + self.seq_len-overriden, max_length)
 
         self.sequence[:] = np.concatenate([base, self.sequence[overriden:],
                                            np.full((max_length-new_seq_len,), fill_value=self.ending_action)
