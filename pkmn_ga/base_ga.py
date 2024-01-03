@@ -508,6 +508,8 @@ class GoExploreArchive(Archive):
         for state, count in state_stats.items():
             self.state_stats[state][GoExplorePokemon.TIMES_SEEN] += count
 
+        print(state_stats)
+
         print(individual.evaluation_dict["GO_EXPLORE/key_states"].keys())
 
         for identifier, d in individual.evaluation_dict["GO_EXPLORE/key_states"].items():
