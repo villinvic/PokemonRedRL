@@ -181,11 +181,13 @@ class PkmnRedEnvNoRender(Env):
             self.episode_reward = 0
             self.visited_maps = set()
         else:
-            print(options)
+
             start_point = options.get("start_point", self.base_starting_point)
             self.base_starting_point.seek(0)
             self.pyboy.load_state(start_point)
             self.game_stats = options.get("game_stats", defaultdict(list))
+            if MAP_ID in self.game_stats:
+                print(self.game_stats[MAP_ID][-1], self.read_map_id())
             self.episode_reward = options.get("episode_reward", 0.)
             self.visited_maps = options.get("visited_maps", set())
             self.step_count = options.get("step_count", 0)
