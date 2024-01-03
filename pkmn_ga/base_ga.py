@@ -237,6 +237,7 @@ class Individual:
         })
 
         for i, action in enumerate(self.action_sequence):
+            idx = i + self.action_sequence.mutable_start
             # t2 = time()
             # times.append(t2 - t)
             # t = t2
@@ -246,7 +247,7 @@ class Individual:
                                for feature in self.config["go_explore_relevant_features"])
             go_explore_seen_counts[identifier] += 1
             if identifier not in key_states:
-                key_states[identifier]["cost"] = i
+                key_states[identifier]["cost"] = idx
                 key_states[identifier]["stats"] = environment_instance.get_stats()
                 key_states[identifier]["game_state"] = environment_instance.game_state()
 
@@ -772,7 +773,6 @@ if __name__ == '__main__':
             CAUGHT_POKEMONS : 1.0,
             SEEN_POKEMONS   : 1.0,
             "novelty"       : 5e-4,
-            "length"        : 0.,
 
         },
         "novelty_n_samples"        : 8,
