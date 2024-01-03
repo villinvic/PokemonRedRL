@@ -147,7 +147,7 @@ class ActionSequence:
                 new_sequence.append(np.random.randint(self.ending_action))
                 new_sequence.append(action)
                 new_seq_len += 1
-            elif new_seq_len > self.action_sequence_length_limits[0]:
+            elif mutation_type == 3 and new_seq_len > self.action_sequence_length_limits[0]:
                 # forget action
                 new_seq_len -= 1
             else:
