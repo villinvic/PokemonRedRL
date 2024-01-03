@@ -121,6 +121,7 @@ class ActionSequence:
                         continue
                     length = np.random.randint(1, upper+1)
 
+                    print(len(self.sequence[self.mutable_start:idx]), len(self.sequence[idx + length:]), length)
                     self.sequence[self.mutable_start:] = np.concatenate([self.sequence[self.mutable_start:idx], self.sequence[idx + length:],
                                                        np.full((length,), fill_value=self.ending_action)])
 
@@ -454,8 +455,8 @@ class GoExploreArchive(Archive):
             elite = self.population[identifier]
             elite_value = elite.evaluation_dict["GA/TRUE_FITNESS"]
             elite_cost = elite.evaluation_dict["length"]
-            if ((value >= elite_value and cost > elite_cost)
-            or (value > elite_value and cost >= elite_cost)):
+            if ((value >= elite_value and cost < elite_cost)
+            or (value > elite_value and cost <= elite_cost)):
 
                 self.population[identifier].set_as(individual)
                 self.entries_hist.remove(identifier)
