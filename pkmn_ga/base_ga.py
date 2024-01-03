@@ -61,7 +61,7 @@ class ActionSequence:
         return Levenshtein.distance(self.sequence, other.sequence)
 
     def initialize_randomly(self):
-        self.seq_len = np.random.randint(1, 128)
+        self.seq_len = np.random.randint(1, 256)
 
         self.sequence[:  self.seq_len] = np.random.randint(0, self.n_actions, self.seq_len)
         self.sequence[self.seq_len] = self.ending_action
@@ -201,7 +201,7 @@ class ActionSequence:
         self.sequence[:len(base)] = base
 
         if self.mutable_start < len(base):
-            addition = np.minimum(np.random.randint(1, 128), max_length-len(base))
+            addition = np.minimum(np.random.randint(32, 1024), max_length-len(base))
             if addition == 0:
                 raise Exception
             self.sequence[len(base):len(base)+addition] = np.random.randint(0, self.n_actions, addition)
@@ -734,6 +734,9 @@ class GA:
                 past_individuals = list(self.population.population.keys())
 
                 print(self.go_explore_archive)
+                lengths = [individual.action_sequence.seq_len for individual in self.population.population.values()]
+                print()
+                print("Seq length stats:", np.min(lengths), np.mean(lengths), np.max(lengths))
 
 
             for evaluated_individual in next(self.runner):
