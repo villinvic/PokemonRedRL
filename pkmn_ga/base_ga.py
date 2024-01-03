@@ -362,7 +362,6 @@ class Population:
     def compute_true_fitness(self, stats):
         return sum([
                 stats[metric] * scale for metric, scale in self.config["fitness_config"].items()
-                if metric != "novelty"
             ])
     def compute_fitnesses(self):
         evaluated_population = self.evaluated_population()
@@ -772,7 +771,7 @@ if __name__ == '__main__':
 
             CAUGHT_POKEMONS : 1.0,
             SEEN_POKEMONS   : 1.0,
-            "novelty"       : 5e-4,
+            #"novelty"       : 5e-4,
 
         },
         "novelty_n_samples"        : 8,
